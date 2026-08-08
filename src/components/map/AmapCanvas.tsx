@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { getAnnual, locations, SHENZHEN_BAY_CENTER } from "@/data/locations";
+import {
+  getAnnual,
+  locations,
+  SHENZHEN_BAY_BOUNDARY,
+  SHENZHEN_BAY_CENTER,
+  SHENZHEN_BAY_DEFAULT_ZOOM,
+} from "@/data/locations";
 import type { EcoLocation, LocationType } from "@/data/types";
 import { loadAMap, type AMapMap, type AMapNamespace, type AMapOverlay } from "@/lib/amap-loader";
 import type { MapCanvasProps } from "@/components/map/MapCanvas";
@@ -16,17 +22,6 @@ const COLORS: Record<LocationType, string> = {
   outfall: "#0B8F91",
   task: "#FF6B4A",
 };
-
-const BAY_PATH: [number, number][] = [
-  [113.9235, 22.4885],
-  [113.9705, 22.4975],
-  [114.0225, 22.5065],
-  [114.0435, 22.5285],
-  [114.0475, 22.5205],
-  [114.0195, 22.4995],
-  [113.9605, 22.4835],
-  [113.9245, 22.4795],
-];
 
 function createMarkerElement(
   loc: EcoLocation,
@@ -90,13 +85,15 @@ export default function AmapCanvas({
         if (cancelled || !elRef.current) return;
         map = new AMap.Map(elRef.current, {
           center: [SHENZHEN_BAY_CENTER[1], SHENZHEN_BAY_CENTER[0]],
-          zoom: 13,
+          zoom: SHENZHEN_BAY_DEFAULT_ZOOM,
           mapStyle: "amap://styles/whitesmoke",
           viewMode: "2D",
           resizeEnable: true,
         });
         const bay = new AMap.Polygon({
-          path: BAY_PATH,
+          path: SHENZHEN_BAY_BOUNDARY.map(
+            ([latitude, longitude]) => [longitude, latitude] as [number, number],
+          ),
           strokeColor: "#0B8F91",
           strokeWeight: 2,
           fillColor: "#0B8F91",
@@ -136,6 +133,11 @@ export default function AmapCanvas({
       .map((location) => {
         const annual = getAnnual(location, year);
         const selected = selectedId === location.id || currentRouteId === location.id;
+        const markerCode =
+          location.type === "outfall"
+            ? (location.indicators?.find((indicator) => indicator.label === "调查编号")?.value ??
+              location.id.toUpperCase())
+            : location.id.toUpperCase();
         const content = createMarkerElement(
           location,
           {
@@ -146,21 +148,20 @@ export default function AmapCanvas({
           },
           () => selectRef.current(location.id),
         );
+        const labelText = selected
+          ? `${location.name}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}｜${year} 年 水质 ${annual.waterQuality} 分`
+          : markerCode;
         const marker = new AMap.Marker({
           position: [location.longitude, location.latitude],
           content,
           offset: new AMap.Pixel(-((selected ? 24 : 16) / 2), -((selected ? 24 : 16) / 2)),
           title: location.name,
           zIndex: selected ? 160 : routeIds.includes(location.id) ? 140 : 120,
-          ...(selected
-            ? {
-                label: {
-                  content: `<div style="white-space:nowrap;border:1px solid rgba(11,143,145,.35);border-radius:6px;background:rgba(255,255,255,.96);padding:5px 8px;color:#082f3a;font-size:11px;font-weight:600;box-shadow:0 2px 8px rgba(6,41,54,.16)">${location.name}｜${year} 年 水质 ${annual.waterQuality} 分</div>`,
-                  direction: "top" as const,
-                  offset: [0, -8] as [number, number],
-                },
-              }
-            : {}),
+          label: {
+            content: `<div style="white-space:nowrap;border:1px solid rgba(11,143,145,.35);border-radius:6px;background:rgba(255,255,255,.96);padding:${selected ? "5px 8px" : "2px 5px"};color:#082f3a;font-size:${selected ? "11px" : "10px"};font-weight:600;box-shadow:0 2px 8px rgba(6,41,54,.16)">${labelText}</div>`,
+            direction: "top" as const,
+            offset: [0, -8] as [number, number],
+          },
         });
         marker.on("click", () => selectRef.current(location.id));
         return marker;
@@ -189,7 +190,10 @@ export default function AmapCanvas({
 
   useEffect(() => {
     if (recenterSignal > 0) {
-      mapRef.current?.setZoomAndCenter(13, [SHENZHEN_BAY_CENTER[1], SHENZHEN_BAY_CENTER[0]]);
+      mapRef.current?.setZoomAndCenter(SHENZHEN_BAY_DEFAULT_ZOOM, [
+        SHENZHEN_BAY_CENTER[1],
+        SHENZHEN_BAY_CENTER[0],
+      ]);
     }
   }, [recenterSignal]);
 

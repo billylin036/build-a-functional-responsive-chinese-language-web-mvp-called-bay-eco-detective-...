@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
-import { locations, getAnnual, SHENZHEN_BAY_CENTER } from "@/data/locations";
+import {
+  locations,
+  getAnnual,
+  SHENZHEN_BAY_BOUNDARY,
+  SHENZHEN_BAY_CENTER,
+  SHENZHEN_BAY_DEFAULT_ZOOM,
+} from "@/data/locations";
 import type { EcoLocation, LocationType } from "@/data/types";
 
 export interface MapCanvasProps {
@@ -70,7 +76,7 @@ export default function MapCanvas({
         const L = leaflet;
         map = L.map(elRef.current, {
           center: SHENZHEN_BAY_CENTER,
-          zoom: 13,
+          zoom: SHENZHEN_BAY_DEFAULT_ZOOM,
           zoomControl: false,
           attributionControl: true,
         });
@@ -115,20 +121,13 @@ export default function MapCanvas({
         tiles.on("load", clearTileSnapshot);
         tiles.once("tileload", () => tilesReadyRef.current?.());
         tiles.addTo(map);
-        L.polygon(
-          [
-            [22.4885, 113.9235],
-            [22.4975, 113.9705],
-            [22.5065, 114.0225],
-            [22.5285, 114.0435],
-            [22.5205, 114.0475],
-            [22.4995, 114.0195],
-            [22.4835, 113.9605],
-            [22.4795, 113.9245],
-          ],
-          { color: "#0B8F91", weight: 1.5, fillColor: "#0B8F91", fillOpacity: 0.08 },
-        )
-          .bindTooltip("深圳湾水域（示意）")
+        L.polygon(SHENZHEN_BAY_BOUNDARY, {
+          color: "#0B8F91",
+          weight: 1.5,
+          fillColor: "#0B8F91",
+          fillOpacity: 0.06,
+        })
+          .bindTooltip("深圳湾水域｜OpenStreetMap 海湾边界")
           .addTo(map);
 
         leafletRef.current = leaflet;
@@ -164,6 +163,11 @@ export default function MapCanvas({
         const dry = annual.waterFlow !== "有水";
         const selected = selectedId === loc.id || currentRouteId === loc.id;
         const markerSize = selected ? 22 : 14;
+        const markerCode =
+          loc.type === "outfall"
+            ? (loc.indicators?.find((indicator) => indicator.label === "调查编号")?.value ??
+              loc.id.toUpperCase())
+            : loc.id.toUpperCase();
         const marker = L.marker([loc.latitude, loc.longitude], {
           icon: L.divIcon({
             className: "eco-marker",
@@ -176,10 +180,18 @@ export default function MapCanvas({
           title: loc.name,
         });
         marker.bindTooltip(
-          `${loc.name}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}｜${year} 年 水质 ${annual.waterQuality} 分${
-            loc.type === "outfall" ? `｜${annual.waterFlow}` : ""
-          }`,
-          { direction: "top", permanent: selected, className: "eco-data-label" },
+          selected
+            ? `${loc.name}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}｜${year} 年 水质 ${annual.waterQuality} 分${
+                loc.type === "outfall" ? `｜${annual.waterFlow}` : ""
+              }`
+            : markerCode,
+          {
+            direction: "top",
+            permanent: true,
+            className: selected
+              ? "eco-data-label eco-data-label--selected"
+              : "eco-data-label eco-data-label--compact",
+          },
         );
         marker.on("click", () => selectRef.current(loc.id));
         marker.addTo(group);
@@ -189,7 +201,11 @@ export default function MapCanvas({
 
   // 回到深圳湾
   useEffect(() => {
-    if (recenterSignal > 0) mapRef.current?.flyTo(SHENZHEN_BAY_CENTER, 13, { duration: 0.8 });
+    if (recenterSignal > 0) {
+      mapRef.current?.flyTo(SHENZHEN_BAY_CENTER, SHENZHEN_BAY_DEFAULT_ZOOM, {
+        duration: 0.8,
+      });
+    }
   }, [recenterSignal]);
 
   // 聚焦选中地点

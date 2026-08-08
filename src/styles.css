@@ -384,3 +384,12 @@ svg.leaflet-zoom-animated {
   padding: 5px 8px;
   box-shadow: 0 2px 8px rgba(6, 41, 54, 0.16);
 }
+
+.leaflet-tooltip.eco-data-label--compact {
+  font-size: 9px;
+  padding: 2px 5px;
+}
+
+.leaflet-tooltip.eco-data-label--selected {
+  z-index: 1000;
+}
