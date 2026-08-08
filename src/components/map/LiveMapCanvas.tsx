@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import AmapCanvas from "@/components/map/AmapCanvas";
-import LeafletMapCanvas, { type MapCanvasProps } from "@/components/map/MapCanvas";
+import StableMapCanvas from "@/components/map/StableMapCanvas";
+import type { MapCanvasProps } from "@/components/map/MapCanvas";
 
 const env = import.meta.env as Record<string, string | undefined>;
 
@@ -23,10 +24,10 @@ export default function LiveMapCanvas(props: MapCanvasProps) {
           onLoadError={handleLoadError}
         />
       ) : (
-        <LeafletMapCanvas {...props} />
+        <StableMapCanvas {...props} />
       )}
       <div className="pointer-events-none absolute bottom-2 left-2 z-400 rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
-        {useAMap ? "高德地图实时底图" : "开源实时底图 · 高德未配置时自动启用"}
+        {useAMap ? "高德地图实时底图" : "深圳湾内置互动底图 · 无外部加载依赖"}
       </div>
     </div>
   );
