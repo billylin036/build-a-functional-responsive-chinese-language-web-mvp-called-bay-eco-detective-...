@@ -103,12 +103,12 @@ export const BADGES = [
   {
     id: "湾区观察员",
     desc: "完成任意 1 项公众观察任务",
-    rule: (completed: string[]) => completed.length >= 1,
+    rule: (completed: string[], _routeDone: boolean) => completed.length >= 1,
   },
   {
     id: "水环境侦探",
     desc: "完成 1 项水环境相关任务或路线水质站点",
-    rule: (completed: string[]) =>
+    rule: (completed: string[], _routeDone: boolean) =>
       completed.some((id) => ["task-water-color", "task-outfall"].includes(id)),
   },
   {
