@@ -50,6 +50,7 @@ export default function MapCanvas({
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  const tileSnapshotRef = useRef<HTMLDivElement | null>(null);
   const [mapVersion, setMapVersion] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
   const selectRef = useRef(onSelect);
@@ -70,15 +71,48 @@ export default function MapCanvas({
         map = L.map(elRef.current, {
           center: SHENZHEN_BAY_CENTER,
           zoom: 13,
-          zoomControl: true,
+          zoomControl: false,
           attributionControl: true,
         });
+        L.control
+          .zoom({
+            position: "bottomright",
+            zoomInTitle: "放大地图",
+            zoomOutTitle: "缩小地图",
+          })
+          .addTo(map);
         const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 18,
-          keepBuffer: 6,
+          keepBuffer: 2,
+          updateWhenIdle: true,
           updateWhenZooming: false,
           attribution: "© OpenStreetMap 贡献者 | 底图为开源地图，站点数据为示例数据",
         });
+        let tileErrorsInCycle = 0;
+        const captureTileSnapshot = () => {
+          const mapElement = elRef.current;
+          const snapshot = tileSnapshotRef.current;
+          const mapPane = mapElement?.querySelector<HTMLElement>(".leaflet-map-pane");
+          const tilePane = mapElement?.querySelector<HTMLElement>(".leaflet-tile-pane");
+          if (!snapshot || !mapPane || !tilePane?.querySelector(".leaflet-tile-loaded")) return;
+
+          const clone = tilePane.cloneNode(true) as HTMLElement;
+          clone.setAttribute("aria-hidden", "true");
+          snapshot.replaceChildren(clone);
+          snapshot.style.transform = mapPane.style.transform;
+        };
+        const clearTileSnapshot = () => {
+          if (tileErrorsInCycle === 0) tileSnapshotRef.current?.replaceChildren();
+        };
+
+        map.on("zoomstart", captureTileSnapshot);
+        tiles.on("loading", () => {
+          tileErrorsInCycle = 0;
+        });
+        tiles.on("tileerror", () => {
+          tileErrorsInCycle += 1;
+        });
+        tiles.on("load", clearTileSnapshot);
         tiles.once("tileload", () => tilesReadyRef.current?.());
         tiles.addTo(map);
         L.polygon(
@@ -164,7 +198,17 @@ export default function MapCanvas({
 
   return (
     <div className="relative h-full w-full bg-paleeco">
-      <div ref={elRef} className="h-full w-full" aria-label="深圳湾生态地图" role="application" />
+      <div
+        ref={tileSnapshotRef}
+        className="pointer-events-none absolute inset-0 isolate z-0 overflow-hidden"
+        aria-hidden="true"
+      />
+      <div
+        ref={elRef}
+        className="relative z-10 h-full w-full"
+        aria-label="深圳湾生态地图"
+        role="application"
+      />
       {mapVersion === 0 && !loadFailed && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center bg-paleeco/80 text-sm text-muted-foreground">
           正在连接实时地图…
