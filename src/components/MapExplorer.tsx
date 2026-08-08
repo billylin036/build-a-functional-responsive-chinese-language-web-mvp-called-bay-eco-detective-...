@@ -1,4 +1,13 @@
-import { useCallback, useMemo, useState, lazy, Suspense } from "react";
+import {
+  Component,
+  useCallback,
+  useMemo,
+  useState,
+  lazy,
+  Suspense,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
 import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { Crosshair, Compass, Info } from "lucide-react";
 import { locations, getAnnual, YEARS } from "@/data/locations";
@@ -16,10 +25,53 @@ const MapCanvas = lazy(() => import("@/components/map/LiveMapCanvas"));
 
 function MapFallback() {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-paleeco">
-      <p className="text-sm text-muted-foreground">地图加载中…</p>
+    <div className="relative h-full w-full overflow-hidden bg-paleeco">
+      <iframe
+        title="深圳湾实时互动底图"
+        src="https://www.openstreetmap.org/export/embed.html?bbox=113.91%2C22.47%2C114.06%2C22.54&layer=mapnik&marker=22.512%2C113.995"
+        className="h-full w-full border-0"
+        loading="eager"
+      />
+      <div
+        className="pointer-events-none absolute bottom-2 left-2 rounded bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm"
+        role="status"
+        aria-live="polite"
+      >
+        正在加载生态地点与互动图层…
+      </div>
     </div>
   );
+}
+
+class MapErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  override componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("互动地图加载失败，已启用实时底图。", error, info);
+  }
+
+  override render() {
+    if (this.state.failed) {
+      return (
+        <div className="relative h-full w-full">
+          <MapFallback />
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute right-2 top-2 z-500"
+            onClick={() => window.location.reload()}
+          >
+            重新加载互动图层
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export function MapExplorer() {
@@ -60,18 +112,20 @@ export function MapExplorer() {
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       <div className="relative min-h-0 flex-1">
         <ClientOnly fallback={<MapFallback />}>
-          <Suspense fallback={<MapFallback />}>
-            <MapCanvas
-              activeLayers={layers}
-              year={year}
-              selectedId={selectedId}
-              routeIds={routeIds}
-              currentRouteId={currentRouteId}
-              onSelect={pick}
-              recenterSignal={recenter}
-              focusSignal={focus}
-            />
-          </Suspense>
+          <MapErrorBoundary>
+            <Suspense fallback={<MapFallback />}>
+              <MapCanvas
+                activeLayers={layers}
+                year={year}
+                selectedId={selectedId}
+                routeIds={routeIds}
+                currentRouteId={currentRouteId}
+                onSelect={pick}
+                recenterSignal={recenter}
+                focusSignal={focus}
+              />
+            </Suspense>
+          </MapErrorBoundary>
         </ClientOnly>
 
         {/* 左上：搜索 + 图层 + 图例 */}
