@@ -14,7 +14,7 @@ export interface AnnualData {
   survivalRate: number;
   /** 当年公众观察记录数 */
   observationCount: number;
-  event?: string;
+  event?: string | undefined;
 }
 
 export interface EcoLocation {

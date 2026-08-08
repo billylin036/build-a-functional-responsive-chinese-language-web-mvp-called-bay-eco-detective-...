@@ -23,8 +23,8 @@ function buildAnnual(
     endCoverage: number;
     baseSurvival: number;
     endSurvival: number;
-    dryFrom?: number;
-    events?: Record<number, string>;
+    dryFrom?: number | undefined;
+    events?: Record<number, string | undefined> | undefined;
   },
 ): AnnualData[] {
   const rnd = seeded(seed);
@@ -298,7 +298,7 @@ const outfallLocations: EcoLocation[] = outfallNames.map((n, i) => {
       2024: "水质达标率提升至 96.7%（示例项目数据）",
     } as Record<number, string>,
   });
-  const last = annual[annual.length - 1];
+  const last = annual[annual.length - 1]!;
   return {
     id: `of-${String(i + 1).padStart(2, "0")}`,
     name: `${n}排口 OF-${String(i + 1).padStart(2, "0")}`,
