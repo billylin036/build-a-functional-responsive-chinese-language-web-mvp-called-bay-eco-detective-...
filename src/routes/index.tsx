@@ -1,24 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { MapExplorer } from "@/components/MapExplorer";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "湾区生态侦探 | 深圳湾互动科普地图" },
+      {
+        name: "description",
+        content:
+          "一张能探索、会讲故事、还能参与保护的深圳湾生态地图：红树林修复、入湾排口水质、十年时间轴与公众观察任务。",
+      },
+      { property: "og:title", content: "湾区生态侦探 | 深圳湾互动科普地图" },
+      {
+        property: "og:description",
+        content: "探索深圳湾红树林修复、排口水质与公众观察任务，用时间轴发现十年生态变化。",
+      },
+    ],
+  }),
+  component: MapExplorer,
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
