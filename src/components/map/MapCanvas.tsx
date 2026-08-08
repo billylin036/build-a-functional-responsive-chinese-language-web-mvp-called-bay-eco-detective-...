@@ -14,6 +14,10 @@ export interface MapCanvasProps {
   focusSignal: number;
 }
 
+interface LeafletMapCanvasProps extends MapCanvasProps {
+  onTilesReady?: (() => void) | undefined;
+}
+
 const COLORS: Record<LocationType, string> = {
   mangrove: "#67A85B",
   outfall: "#0B8F91",
@@ -40,7 +44,8 @@ export default function MapCanvas({
   onSelect,
   recenterSignal,
   focusSignal,
-}: MapCanvasProps) {
+  onTilesReady,
+}: LeafletMapCanvasProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
@@ -48,7 +53,9 @@ export default function MapCanvas({
   const [mapVersion, setMapVersion] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
   const selectRef = useRef(onSelect);
+  const tilesReadyRef = useRef(onTilesReady);
   selectRef.current = onSelect;
+  tilesReadyRef.current = onTilesReady;
 
   useEffect(() => {
     if (!elRef.current || mapRef.current) return;
@@ -66,12 +73,14 @@ export default function MapCanvas({
           zoomControl: true,
           attributionControl: true,
         });
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 18,
           keepBuffer: 6,
           updateWhenZooming: false,
           attribution: "© OpenStreetMap 贡献者 | 底图为开源地图，站点数据为示例数据",
-        }).addTo(map);
+        });
+        tiles.once("tileload", () => tilesReadyRef.current?.());
+        tiles.addTo(map);
         L.polygon(
           [
             [22.4885, 113.9235],
