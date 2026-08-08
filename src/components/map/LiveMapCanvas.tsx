@@ -30,10 +30,10 @@ export default function LiveMapCanvas(props: MapCanvasProps) {
       )}
       <div className="pointer-events-none absolute bottom-2 left-2 z-400 rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
         {useAMap
-          ? "高德地图实时底图"
+          ? "高德在线地图"
           : leafletReady
-            ? "OpenStreetMap 实时底图"
-            : "正在连接 OpenStreetMap 实时底图"}
+            ? "OpenStreetMap 在线地图"
+            : "正在连接 OpenStreetMap 在线地图"}
       </div>
     </div>
   );

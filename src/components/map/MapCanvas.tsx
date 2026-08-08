@@ -92,7 +92,8 @@ export default function MapCanvas({
           keepBuffer: 2,
           updateWhenIdle: true,
           updateWhenZooming: false,
-          attribution: "© OpenStreetMap 贡献者 | 底图为开源地图，站点数据为示例数据",
+          attribution:
+            "© OpenStreetMap 贡献者 | 在线地图数据来自 OpenStreetMap，部分站点数据为示例数据",
         });
         let tileErrorsInCycle = 0;
         const captureTileSnapshot = () => {

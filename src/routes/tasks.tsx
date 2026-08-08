@@ -27,7 +27,7 @@ function TasksPage() {
     <main className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-2xl font-semibold text-navy">公众任务</h1>
       <p className="mt-1 text-sm leading-6 text-muted-foreground">
-        每个任务都对应一个真实地点。完成后提交观察记录，机构会在审核后用于生态保护与公众科普。
+        每个任务都对应地图上的一个观察地点。完成后提交观察记录，机构会在审核后用于生态保护与公众科普。
       </p>
 
       <section className="mt-5 flex flex-col gap-3 rounded-lg border border-teal/25 bg-paleeco p-4 sm:flex-row sm:items-center sm:justify-between">
