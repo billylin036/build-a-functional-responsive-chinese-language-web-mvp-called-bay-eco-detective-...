@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAppState } from "@/lib/app-state";
 
-export const Route = createFileRoute("/route")({
+export const Route = createFileRoute("")({
   head: () => ({
     meta: [
       { title: "深圳湾生态变化侦探路线 | 湾区生态侦探" },
