@@ -1,0 +1,133 @@
+import { useEffect, useRef } from "react";
+import L from "leaflet";
+import { locations, getAnnual, SHENZHEN_BAY_CENTER } from "@/data/locations";
+import type { EcoLocation, LocationType } from "@/data/types";
+
+export interface MapCanvasProps {
+  activeLayers: LocationType[];
+  year: number;
+  selectedId: string | null;
+  routeIds: string[];
+  currentRouteId: string | null;
+  onSelect: (id: string) => void;
+  recenterSignal: number;
+  focusSignal: number;
+}
+
+const COLORS: Record<LocationType, string> = {
+  mangrove: "#67A85B",
+  outfall: "#0B8F91",
+  task: "#FF6B4A",
+};
+
+function markerHtml(loc: EcoLocation, opts: { selected: boolean; onRoute: boolean; dry: boolean }) {
+  const color = opts.dry && loc.type === "outfall" ? "#C7803F" : COLORS[loc.type];
+  const size = opts.selected ? 22 : 14;
+  const ring = opts.selected
+    ? "box-shadow:0 0 0 4px rgba(11,143,145,.35);"
+    : opts.onRoute
+      ? "box-shadow:0 0 0 3px rgba(255,107,74,.55);"
+      : "";
+  return `<span style="display:block;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;${ring}"></span>`;
+}
+
+export default function MapCanvas({
+  activeLayers,
+  year,
+  selectedId,
+  routeIds,
+  currentRouteId,
+  onSelect,
+  recenterSignal,
+  focusSignal,
+}: MapCanvasProps) {
+  const elRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const layerRef = useRef<L.LayerGroup | null>(null);
+  const selectRef = useRef(onSelect);
+  selectRef.current = onSelect;
+
+  useEffect(() => {
+    if (!elRef.current || mapRef.current) return;
+    const map = L.map(elRef.current, {
+      center: SHENZHEN_BAY_CENTER,
+      zoom: 13,
+      zoomControl: true,
+      attributionControl: true,
+    });
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: "© OpenStreetMap 贡献者 | 底图为开源地图，站点数据为示例数据",
+    }).addTo(map);
+
+    // 深圳湾水域示意范围
+    L.polygon(
+      [
+        [22.4885, 113.9235],
+        [22.4975, 113.9705],
+        [22.5065, 114.0225],
+        [22.5285, 114.0435],
+        [22.5205, 114.0475],
+        [22.4995, 114.0195],
+        [22.4835, 113.9605],
+        [22.4795, 113.9245],
+      ],
+      { color: "#0B8F91", weight: 1.5, fillColor: "#0B8F91", fillOpacity: 0.08 },
+    )
+      .bindTooltip("深圳湾水域（示意）")
+      .addTo(map);
+
+    layerRef.current = L.layerGroup().addTo(map);
+    mapRef.current = map;
+    setTimeout(() => map.invalidateSize(), 200);
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // 渲染标记：图层 / 年份 / 选中 / 路线 变化都会重绘
+  useEffect(() => {
+    const group = layerRef.current;
+    if (!group) return;
+    group.clearLayers();
+    locations
+      .filter((l) => activeLayers.includes(l.type))
+      .forEach((loc) => {
+        const annual = getAnnual(loc, year);
+        const dry = annual.waterFlow !== "有水";
+        const selected = selectedId === loc.id || currentRouteId === loc.id;
+        const marker = L.marker([loc.latitude, loc.longitude], {
+          icon: L.divIcon({
+            className: "eco-marker",
+            html: markerHtml(loc, { selected, onRoute: routeIds.includes(loc.id), dry }),
+            iconSize: [selected ? 22 : 14, selected ? 22 : 14],
+          }),
+          keyboard: true,
+          title: loc.name,
+        });
+        marker.bindTooltip(
+          `${loc.name}｜${year} 年 水质 ${annual.waterQuality} 分${
+            loc.type === "outfall" ? `｜${annual.waterFlow}` : ""
+          }`,
+          { direction: "top" },
+        );
+        marker.on("click", () => selectRef.current(loc.id));
+        marker.addTo(group);
+      });
+  }, [activeLayers, year, selectedId, routeIds, currentRouteId]);
+
+  // 回到深圳湾
+  useEffect(() => {
+    if (recenterSignal > 0) mapRef.current?.flyTo(SHENZHEN_BAY_CENTER, 13, { duration: 0.8 });
+  }, [recenterSignal]);
+
+  // 聚焦选中地点
+  useEffect(() => {
+    if (!selectedId || focusSignal === 0) return;
+    const loc = locations.find((l) => l.id === selectedId);
+    if (loc) mapRef.current?.flyTo([loc.latitude, loc.longitude], 15, { duration: 0.8 });
+  }, [selectedId, focusSignal]);
+
+  return <div ref={elRef} className="h-full w-full" aria-label="深圳湾生态地图" role="application" />;
+}
