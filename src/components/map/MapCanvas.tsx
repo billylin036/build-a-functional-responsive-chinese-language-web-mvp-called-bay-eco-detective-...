@@ -163,17 +163,20 @@ export default function MapCanvas({
         const annual = getAnnual(loc, year);
         const dry = annual.waterFlow !== "有水";
         const selected = selectedId === loc.id || currentRouteId === loc.id;
+        const markerSize = selected ? 22 : 14;
         const marker = L.marker([loc.latitude, loc.longitude], {
           icon: L.divIcon({
             className: "eco-marker",
             html: markerHtml(loc, { selected, onRoute: routeIds.includes(loc.id), dry }),
-            iconSize: [selected ? 22 : 14, selected ? 22 : 14],
+            iconSize: [markerSize, markerSize],
+            iconAnchor: [markerSize / 2, markerSize / 2],
+            tooltipAnchor: [0, -(markerSize / 2 + 4)],
           }),
           keyboard: true,
           title: loc.name,
         });
         marker.bindTooltip(
-          `${loc.name}｜${year} 年 水质 ${annual.waterQuality} 分${
+          `${loc.name}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}｜${year} 年 水质 ${annual.waterQuality} 分${
             loc.type === "outfall" ? `｜${annual.waterFlow}` : ""
           }`,
           { direction: "top", permanent: selected, className: "eco-data-label" },

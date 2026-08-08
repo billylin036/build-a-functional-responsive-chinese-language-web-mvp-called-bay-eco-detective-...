@@ -243,43 +243,26 @@ const mangroveLocations: EcoLocation[] = mangroveSeeds.map((m, i) => ({
   relatedTasks: [i % 2 === 0 ? "task-mangrove-photo" : "task-waste", "task-quiz"],
 }));
 
-const outfallNames = [
-  "新洲河",
-  "大沙河",
-  "凤塘河",
-  "双界河",
-  "后海",
-  "科苑",
-  "白石洲",
-  "沙河西",
-  "湾厦",
-  "东角头",
-  "红树西",
-  "红树东",
-  "深云",
-  "福荣",
-  "香蜜",
-  "侨城",
-  "北环",
-  "农轩",
-  "月亮湾",
-  "南油",
-  "蛇口",
-  "四海",
-  "太子湾",
-  "海上世界",
-  "望海",
-  "招商",
-  "妈湾",
-  "前海",
-  "桂庙",
-  "西丽渠",
-];
+/**
+ * 绿源 2015 年深圳湾排水口调查正文中公开了 11 个 GPS 坐标。
+ * 原报告采用度和十进制分格式，这里转换为 WGS84 十进制度，直接与 OSM 对齐。
+ * 调查共记录 30 个排水口；未公开坐标的点不再用随机位置代替。
+ */
+const outfallSeeds = [
+  { code: "B1", name: "红树林保护区排口 B1", lng: 113.9970167, lat: 22.5287 },
+  { code: "B2", name: "红树林保护区排口 B2", lng: 114.0037333, lat: 22.52915 },
+  { code: "B3", name: "红树林保护区排口 B3", lng: 114.0170667, lat: 22.5266333 },
+  { code: "B4", name: "红树林保护区排口 B4", lng: 114.0241833, lat: 22.5221167 },
+  { code: "D1", name: "大沙河入海口旁排口 D1", lng: 113.95085, lat: 22.5227 },
+  { code: "4-1", name: "深圳湾北岸排口 4-1", lng: 113.9591167, lat: 22.5212833 },
+  { code: "4-2", name: "深圳湾北岸排口 4-2", lng: 113.96245, lat: 22.5220333 },
+  { code: "4-3", name: "深圳湾北岸排口 4-3", lng: 113.9699, lat: 22.52205 },
+  { code: "4-4", name: "深圳湾北岸排口 4-4", lng: 113.9786167, lat: 22.5216667 },
+  { code: "4-5", name: "深圳湾北岸排口 4-5", lng: 113.9893667, lat: 22.5237 },
+  { code: "4-6", name: "深圳湾北岸排口 4-6", lng: 113.99465, lat: 22.5233833 },
+] as const;
 
-const outfallLocations: EcoLocation[] = outfallNames.map((n, i) => {
-  const rnd = seeded(900 + i * 13);
-  const lng = 113.925 + ((i * 37) % 100) / 100 * 0.115 + (rnd() - 0.5) * 0.006;
-  const lat = 22.4935 + ((i * 53) % 100) / 100 * 0.03 + (rnd() - 0.5) * 0.004;
+const outfallLocations: EcoLocation[] = outfallSeeds.map((site, i) => {
   const dry = i % 3 === 0 ? 2021 + (i % 3) : undefined;
   const risk: RiskLevel = i % 7 === 0 ? "高" : i % 3 === 0 ? "中" : "低";
   const end = risk === "高" ? 68 : risk === "中" ? 82 : 93;
@@ -301,10 +284,10 @@ const outfallLocations: EcoLocation[] = outfallNames.map((n, i) => {
   const last = annual[annual.length - 1]!;
   return {
     id: `of-${String(i + 1).padStart(2, "0")}`,
-    name: `${n}排口 OF-${String(i + 1).padStart(2, "0")}`,
+    name: site.name,
     type: "outfall",
-    longitude: Number(lng.toFixed(5)),
-    latitude: Number(lat.toFixed(5)),
+    longitude: site.lng,
+    latitude: site.lat,
     category: "入湾排口",
     image: "outfall",
     summary:
@@ -314,7 +297,8 @@ const outfallLocations: EcoLocation[] = outfallNames.map((n, i) => {
     riskLevel: risk,
     waterStatus: last.waterFlow,
     indicators: [
-      { label: "排口编号", value: `OF-${String(i + 1).padStart(2, "0")}` },
+      { label: "调查编号", value: site.code },
+      { label: "公开坐标", value: `${site.lat.toFixed(5)}, ${site.lng.toFixed(5)}` },
       { label: "最新水质评分", value: `${last.waterQuality} 分` },
       { label: "过水状态", value: last.waterFlow },
       { label: "风险等级", value: risk },

@@ -6,7 +6,7 @@ import { useState } from "react";
 
 const LAYER_META: { id: LocationType; label: string; color: string; desc: string }[] = [
   { id: "mangrove", label: "红树林修复地", color: "bg-mangrove", desc: "8 处修复地块" },
-  { id: "outfall", label: "入湾排口与水质", color: "bg-teal", desc: "30 个监测排口" },
+  { id: "outfall", label: "入湾排口与水质", color: "bg-teal", desc: "11 个公开坐标样点" },
   { id: "task", label: "公众观察任务点", color: "bg-coral", desc: "公众可参与" },
 ];
 
@@ -64,6 +64,17 @@ export function LayerControls({
           <span className="size-2.5 rounded-full bg-coral" />
           公众任务点
         </div>
+        <p className="mt-2 border-t border-border pt-2 leading-4">
+          2015 年调查共记录 30 个排水口；地图仅展示报告正文公开 GPS 坐标的 11 个样点。
+          <a
+            href="https://www.szhb.org/5383.html"
+            target="_blank"
+            rel="noreferrer"
+            className="ml-1 font-medium text-teal underline underline-offset-2"
+          >
+            查看坐标来源
+          </a>
+        </p>
       </div>
     </div>
   );
@@ -88,7 +99,7 @@ export function LocationSearch({ onPick }: { onPick: (id: string) => void }) {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="搜索地点，如「红树林」「OF-04」"
+          placeholder="搜索地点，如「红树林」「B4」"
           className="h-9 border-0 px-0 shadow-none focus-visible:ring-0"
           aria-label="搜索地点"
         />
