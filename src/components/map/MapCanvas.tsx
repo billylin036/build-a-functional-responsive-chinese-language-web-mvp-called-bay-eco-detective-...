@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import L from "leaflet";
+import { useEffect, useRef, useState } from "react";
+import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import { locations, getAnnual, SHENZHEN_BAY_CENTER } from "@/data/locations";
 import type { EcoLocation, LocationType } from "@/data/types";
 
@@ -42,54 +42,77 @@ export default function MapCanvas({
   focusSignal,
 }: MapCanvasProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const layerRef = useRef<L.LayerGroup | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const layerRef = useRef<LayerGroup | null>(null);
+  const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  const [mapVersion, setMapVersion] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
 
   useEffect(() => {
     if (!elRef.current || mapRef.current) return;
-    const map = L.map(elRef.current, {
-      center: SHENZHEN_BAY_CENTER,
-      zoom: 13,
-      zoomControl: true,
-      attributionControl: true,
-    });
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 18,
-      attribution: "© OpenStreetMap 贡献者 | 底图为开源地图，站点数据为示例数据",
-    }).addTo(map);
+    let cancelled = false;
+    let map: LeafletMap | null = null;
+    let resizeObserver: ResizeObserver | null = null;
 
-    // 深圳湾水域示意范围
-    L.polygon(
-      [
-        [22.4885, 113.9235],
-        [22.4975, 113.9705],
-        [22.5065, 114.0225],
-        [22.5285, 114.0435],
-        [22.5205, 114.0475],
-        [22.4995, 114.0195],
-        [22.4835, 113.9605],
-        [22.4795, 113.9245],
-      ],
-      { color: "#0B8F91", weight: 1.5, fillColor: "#0B8F91", fillOpacity: 0.08 },
-    )
-      .bindTooltip("深圳湾水域（示意）")
-      .addTo(map);
+    void import("leaflet")
+      .then((leaflet) => {
+        if (cancelled || !elRef.current) return;
+        const L = leaflet;
+        map = L.map(elRef.current, {
+          center: SHENZHEN_BAY_CENTER,
+          zoom: 13,
+          zoomControl: true,
+          attributionControl: true,
+        });
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 18,
+          keepBuffer: 6,
+          updateWhenZooming: false,
+          attribution: "© OpenStreetMap 贡献者 | 底图为开源地图，站点数据为示例数据",
+        }).addTo(map);
+        L.polygon(
+          [
+            [22.4885, 113.9235],
+            [22.4975, 113.9705],
+            [22.5065, 114.0225],
+            [22.5285, 114.0435],
+            [22.5205, 114.0475],
+            [22.4995, 114.0195],
+            [22.4835, 113.9605],
+            [22.4795, 113.9245],
+          ],
+          { color: "#0B8F91", weight: 1.5, fillColor: "#0B8F91", fillOpacity: 0.08 },
+        )
+          .bindTooltip("深圳湾水域（示意）")
+          .addTo(map);
 
-    layerRef.current = L.layerGroup().addTo(map);
-    mapRef.current = map;
-    setTimeout(() => map.invalidateSize(), 200);
+        leafletRef.current = leaflet;
+        layerRef.current = L.layerGroup().addTo(map);
+        mapRef.current = map;
+        resizeObserver = new ResizeObserver(() => map?.invalidateSize({ pan: false }));
+        resizeObserver.observe(elRef.current);
+        setMapVersion((version) => version + 1);
+      })
+      .catch(() => setLoadFailed(true));
+
     return () => {
-      map.remove();
+      cancelled = true;
+      resizeObserver?.disconnect();
+      map?.remove();
       mapRef.current = null;
+      layerRef.current = null;
+      leafletRef.current = null;
     };
   }, []);
 
   // 渲染标记：图层 / 年份 / 选中 / 路线 变化都会重绘
   useEffect(() => {
     const group = layerRef.current;
-    if (!group) return;
+    const leaflet = leafletRef.current;
+    if (!group || !leaflet) return;
+    const L = leaflet;
     group.clearLayers();
     locations
       .filter((l) => activeLayers.includes(l.type))
@@ -110,12 +133,12 @@ export default function MapCanvas({
           `${loc.name}｜${year} 年 水质 ${annual.waterQuality} 分${
             loc.type === "outfall" ? `｜${annual.waterFlow}` : ""
           }`,
-          { direction: "top" },
+          { direction: "top", permanent: selected, className: "eco-data-label" },
         );
         marker.on("click", () => selectRef.current(loc.id));
         marker.addTo(group);
       });
-  }, [activeLayers, year, selectedId, routeIds, currentRouteId]);
+  }, [activeLayers, year, selectedId, routeIds, currentRouteId, mapVersion]);
 
   // 回到深圳湾
   useEffect(() => {
@@ -129,5 +152,23 @@ export default function MapCanvas({
     if (loc) mapRef.current?.flyTo([loc.latitude, loc.longitude], 15, { duration: 0.8 });
   }, [selectedId, focusSignal]);
 
-  return <div ref={elRef} className="h-full w-full" aria-label="深圳湾生态地图" role="application" />;
+  return (
+    <div className="relative h-full w-full bg-paleeco">
+      <div ref={elRef} className="h-full w-full" aria-label="深圳湾生态地图" role="application" />
+      {mapVersion === 0 && !loadFailed && (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center bg-paleeco/80 text-sm text-muted-foreground">
+          正在连接实时地图…
+        </div>
+      )}
+      {loadFailed && (
+        <button
+          type="button"
+          className="absolute inset-x-4 top-1/2 mx-auto w-fit -translate-y-1/2 rounded-md border border-border bg-card px-4 py-2 text-sm shadow"
+          onClick={() => window.location.reload()}
+        >
+          地图连接失败，点击重试
+        </button>
+      )}
+    </div>
+  );
 }

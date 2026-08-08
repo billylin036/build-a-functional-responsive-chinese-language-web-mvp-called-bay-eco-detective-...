@@ -152,6 +152,15 @@ export default function AmapCanvas({
           offset: new AMap.Pixel(-((selected ? 24 : 16) / 2), -((selected ? 24 : 16) / 2)),
           title: location.name,
           zIndex: selected ? 160 : routeIds.includes(location.id) ? 140 : 120,
+          ...(selected
+            ? {
+                label: {
+                  content: `<div style="white-space:nowrap;border:1px solid rgba(11,143,145,.35);border-radius:6px;background:rgba(255,255,255,.96);padding:5px 8px;color:#082f3a;font-size:11px;font-weight:600;box-shadow:0 2px 8px rgba(6,41,54,.16)">${location.name}｜${year} 年 水质 ${annual.waterQuality} 分</div>`,
+                  direction: "top" as const,
+                  offset: [0, -8] as [number, number],
+                },
+              }
+            : {}),
         });
         marker.on("click", () => selectRef.current(location.id));
         return marker;

@@ -26,6 +26,11 @@ interface AMapMarkerOptions {
   offset?: AMapPixel;
   title?: string;
   zIndex?: number;
+  label?: {
+    content: string;
+    direction: "top" | "right" | "bottom" | "left" | "center";
+    offset?: [number, number];
+  };
 }
 
 interface AMapPolygonOptions {

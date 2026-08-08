@@ -104,7 +104,6 @@
   --sidebar-ring: oklch(0.59 0.099 196.6);
 }
 
-
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -371,4 +370,16 @@ svg.leaflet-zoom-animated {
 .eco-marker {
   border: none;
   background: transparent;
+}
+
+.leaflet-tooltip.eco-data-label {
+  border: 1px solid rgba(11, 143, 145, 0.35);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #082f3a;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 5px 8px;
+  box-shadow: 0 2px 8px rgba(6, 41, 54, 0.16);
 }
