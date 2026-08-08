@@ -10,33 +10,102 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as MeRouteImport } from './routes/me'
+import { Route as SubmitRouteImport } from './routes/submit'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as LocationIdRouteImport } from './routes/location.$id'
+import { Route as RouteIndexRouteImport } from './routes/route/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubmitRoute = SubmitRouteImport.update({
+  id: '/submit',
+  path: '/submit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationIdRoute = LocationIdRouteImport.update({
+  id: '/location/$id',
+  path: '/location/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RouteIndexRoute = RouteIndexRouteImport.update({
+  id: '/route/',
+  path: '/route/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/me': typeof MeRoute
+  '/submit': typeof SubmitRoute
+  '/tasks': typeof TasksRoute
+  '/location/$id': typeof LocationIdRoute
+  '/route/': typeof RouteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/me': typeof MeRoute
+  '/submit': typeof SubmitRoute
+  '/tasks': typeof TasksRoute
+  '/location/$id': typeof LocationIdRoute
+  '/route': typeof RouteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/me': typeof MeRoute
+  '/submit': typeof SubmitRoute
+  '/tasks': typeof TasksRoute
+  '/location/$id': typeof LocationIdRoute
+  '/route/': typeof RouteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/about' | '/me' | '/submit' | '/tasks' | '/location/$id' | '/route/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/about' | '/me' | '/submit' | '/tasks' | '/location/$id' | '/route'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/me'
+    | '/submit'
+    | '/tasks'
+    | '/location/$id'
+    | '/route/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  MeRoute: typeof MeRoute
+  SubmitRoute: typeof SubmitRoute
+  TasksRoute: typeof TasksRoute
+  LocationIdRoute: typeof LocationIdRoute
+  RouteIndexRoute: typeof RouteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +117,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/submit': {
+      id: '/submit'
+      path: '/submit'
+      fullPath: '/submit'
+      preLoaderRoute: typeof SubmitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/location/$id': {
+      id: '/location/$id'
+      path: '/location/$id'
+      fullPath: '/location/$id'
+      preLoaderRoute: typeof LocationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/route/': {
+      id: '/route/'
+      path: '/route'
+      fullPath: '/route/'
+      preLoaderRoute: typeof RouteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  MeRoute: MeRoute,
+  SubmitRoute: SubmitRoute,
+  TasksRoute: TasksRoute,
+  LocationIdRoute: LocationIdRoute,
+  RouteIndexRoute: RouteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
