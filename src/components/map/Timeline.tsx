@@ -76,7 +76,7 @@ export function Timeline({
           </div>
         </div>
       </div>
-      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground" aria-live="polite">
         {event ? `${year} 年大事：${event}` : `${year} 年：无重点事件记录，可拖动时间轴查看变化`}
       </p>
     </div>

@@ -49,17 +49,20 @@ export function LayerControls({
       <div className="mt-3 border-t border-border pt-2 text-[11px] leading-5 text-muted-foreground">
         <div className="mb-1 font-medium text-navy">图例</div>
         <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-mangrove" />红树林修复地
+          <span className="size-2.5 rounded-full bg-mangrove" />
+          红树林修复地
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-teal" />排口（当年有水）
+          <span className="size-2.5 rounded-full bg-teal" />
+          排口（当年有水）
         </div>
         <div className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full" style={{ background: "#C7803F" }} />
           排口（微流/干涸）
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-coral" />公众任务点
+          <span className="size-2.5 rounded-full bg-coral" />
+          公众任务点
         </div>
       </div>
     </div>
@@ -68,8 +71,15 @@ export function LayerControls({
 
 export function LocationSearch({ onPick }: { onPick: (id: string) => void }) {
   const [q, setQ] = useState("");
-  const results = q.trim()
-    ? locations.filter((l) => l.name.includes(q.trim()) || l.id.includes(q.trim())).slice(0, 8)
+  const normalizedQuery = q.trim().toLocaleLowerCase("zh-CN");
+  const results = normalizedQuery
+    ? locations
+        .filter((location) =>
+          [location.name, location.id, location.category, location.summary].some((value) =>
+            value.toLocaleLowerCase("zh-CN").includes(normalizedQuery),
+          ),
+        )
+        .slice(0, 8)
     : [];
   return (
     <div className="relative">
@@ -88,22 +98,32 @@ export function LocationSearch({ onPick }: { onPick: (id: string) => void }) {
           </button>
         )}
       </div>
-      {q.trim() && (
-        <div className="absolute z-500 mt-1 max-h-64 w-full overflow-auto rounded-md border border-border bg-card shadow-md">
+      {normalizedQuery && (
+        <div
+          className="absolute z-500 mt-1 max-h-64 w-full overflow-auto rounded-md border border-border bg-card shadow-md"
+          role="listbox"
+          aria-label="搜索结果"
+        >
           {results.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-muted-foreground">没有找到匹配的地点，换个关键词试试。</p>
+            <p className="px-3 py-3 text-xs text-muted-foreground">
+              没有找到匹配的地点，换个关键词试试。
+            </p>
           ) : (
             results.map((r) => (
               <button
                 key={r.id}
+                type="button"
+                role="option"
                 onClick={() => {
                   onPick(r.id);
                   setQ("");
                 }}
                 className="block w-full px-3 py-2 text-left text-xs hover:bg-paleeco"
               >
-                <span className="font-medium">{r.name}</span>
-                <span className="ml-1 text-muted-foreground">{r.category}</span>
+                <span className="block font-medium">{r.name}</span>
+                <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                  {r.category} · {r.id.toUpperCase()}
+                </span>
               </button>
             ))
           )}

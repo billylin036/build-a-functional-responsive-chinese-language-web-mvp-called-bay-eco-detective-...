@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { X, MapPin, AlertTriangle, CheckCircle2 } from "lucide-react";
 import type { EcoLocation } from "@/data/types";
@@ -23,10 +23,28 @@ const IMAGES: Record<string, string> = {
 
 function QuizBlock({ loc }: { loc: EcoLocation }) {
   const stop = routeStops.find((s) => s.locationId === loc.id);
-  const { answerQuiz, answeredQuiz } = useAppState();
-  const [picked, setPicked] = useState<number | null>(null);
-  if (!stop) return null;
+  const { answerQuiz, answeredQuiz, completeTask } = useAppState();
   const done = answeredQuiz.includes(loc.id);
+  const [picked, setPicked] = useState<number | null>(() =>
+    done && stop ? stop.quiz.answerIndex : null,
+  );
+
+  useEffect(() => {
+    setPicked(done && stop ? stop.quiz.answerIndex : null);
+  }, [done, loc.id, stop]);
+
+  if (!stop) return null;
+
+  const chooseAnswer = (index: number) => {
+    if (done) return;
+    setPicked(index);
+    if (index !== stop.quiz.answerIndex) return;
+    answerQuiz(loc.id, `答对「${loc.name}」小问答`);
+    if (getTask("task-quiz")?.locationId === loc.id) {
+      completeTask("task-quiz", "完成地点科普小问答");
+    }
+  };
+
   return (
     <div className="rounded-md border border-border bg-paleeco p-3">
       <p className="text-sm font-semibold text-navy">地点小问答</p>
@@ -35,16 +53,16 @@ function QuizBlock({ loc }: { loc: EcoLocation }) {
         {stop.quiz.options.map((o, i) => (
           <button
             key={o}
-            onClick={() => {
-              setPicked(i);
-              if (i === stop.quiz.answerIndex) answerQuiz(loc.id, `答对「${loc.name}」小问答`);
-            }}
+            type="button"
+            disabled={done}
+            aria-pressed={picked === i}
+            onClick={() => chooseAnswer(i)}
             className={`block w-full rounded-sm border px-2 py-1.5 text-left text-xs transition-colors ${
               picked === i
                 ? i === stop.quiz.answerIndex
                   ? "border-mangrove bg-card"
                   : "border-coral bg-card"
-                : "border-border bg-card hover:bg-secondary"
+                : "border-border bg-card hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-70"
             }`}
           >
             {o}
@@ -52,8 +70,12 @@ function QuizBlock({ loc }: { loc: EcoLocation }) {
         ))}
       </div>
       {picked !== null && (
-        <p className="mt-2 text-xs leading-5 text-foreground">
-          {picked === stop.quiz.answerIndex ? "回答正确。" : "再想想。"}
+        <p className="mt-2 text-xs leading-5 text-foreground" role="status" aria-live="polite">
+          <span className={picked === stop.quiz.answerIndex ? "text-mangrove" : "text-coral"}>
+            {picked === stop.quiz.answerIndex
+              ? "回答正确。"
+              : `还差一点，正确答案是“${stop.quiz.options[stop.quiz.answerIndex]}”。`}
+          </span>
           {stop.quiz.explain}
         </p>
       )}
@@ -63,6 +85,57 @@ function QuizBlock({ loc }: { loc: EcoLocation }) {
         </p>
       )}
     </div>
+  );
+}
+
+function RestorationComparison({ location }: { location: EcoLocation }) {
+  const [view, setView] = useState<"before" | "after">("after");
+
+  useEffect(() => setView("after"), [location.id]);
+
+  const before = view === "before";
+  return (
+    <section className="overflow-hidden rounded-md border border-border bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
+        <div>
+          <p className="text-sm font-semibold text-navy">修复前后对比</p>
+          <p className="text-[11px] text-muted-foreground">
+            示意图片用于解释修复过程，不代表同机位监测照片
+          </p>
+        </div>
+        <div
+          className="flex shrink-0 rounded-sm border border-border p-0.5"
+          role="group"
+          aria-label="选择对比阶段"
+        >
+          {(["before", "after"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={view === mode}
+              onClick={() => setView(mode)}
+              className={`rounded-[3px] px-2 py-1 text-xs ${
+                view === mode ? "bg-teal text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {mode === "before" ? "修复前" : "修复后"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="relative">
+        <img
+          src={before ? coastImg : mangroveImg}
+          alt={`${location.name}${before ? "修复前" : "修复后"}生态环境示意图`}
+          className="h-40 w-full object-cover"
+        />
+        <span className="absolute bottom-2 left-2 rounded-sm bg-navy/90 px-2 py-1 text-xs text-white">
+          {before
+            ? `修复启动前 · ${location.restorationYear ?? "项目"}年以前`
+            : "修复后 · 长期维护阶段"}
+        </span>
+      </div>
+    </section>
   );
 }
 
@@ -104,7 +177,8 @@ export function StoryPanel({
               variant={location.riskLevel === "高" ? "destructive" : "outline"}
               className="gap-1"
             >
-              <AlertTriangle className="size-3" />风险 {location.riskLevel}
+              <AlertTriangle className="size-3" />
+              风险 {location.riskLevel}
             </Badge>
             <span className="text-xs text-muted-foreground">{year} 年数据</span>
           </div>
@@ -149,6 +223,8 @@ export function StoryPanel({
             {location.risks.join("、")}
           </p>
         )}
+
+        {location.type === "mangrove" && <RestorationComparison location={location} />}
 
         <div>
           <p className="mb-1 text-sm font-semibold text-navy">十年趋势（{year} 年为标记线）</p>

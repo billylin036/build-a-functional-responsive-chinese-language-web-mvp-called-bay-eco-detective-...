@@ -720,3 +720,17 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## 高德地图配置
+
+地图会优先使用高德地图 JS API 2.0；未配置或加载失败时，会自动切换到 Leaflet 与 OpenStreetMap，避免出现空白地图。
+
+1. 在高德开放平台创建“Web 端（JS API）”Key。
+2. 复制 `.env.example` 为 `.env.local`。
+3. 填写 `VITE_AMAP_KEY`。
+4. 生产环境建议填写 `VITE_AMAP_SERVICE_HOST`，将安全密钥保存在服务端；`VITE_AMAP_SECURITY_CODE` 仅用于本地开发。
+
+```sh
+VITE_AMAP_KEY=your_web_js_key
+VITE_AMAP_SERVICE_HOST=https://your-domain.example/_AMapService
+```

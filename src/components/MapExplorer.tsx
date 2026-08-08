@@ -8,11 +8,11 @@ import { Timeline } from "@/components/map/Timeline";
 import { LayerControls, LocationSearch } from "@/components/map/MapControls";
 import { StoryPanel } from "@/components/StoryPanel";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAppState } from "@/lib/app-state";
 
-const MapCanvas = lazy(() => import("@/components/map/MapCanvas"));
+const MapCanvas = lazy(() => import("@/components/map/LiveMapCanvas"));
 
 function MapFallback() {
   return (
@@ -44,6 +44,12 @@ export function MapExplorer() {
   }, [selected, year]);
 
   const pick = useCallback((id: string) => {
+    const location = locations.find((item) => item.id === id);
+    if (location) {
+      setLayers((current) =>
+        current.includes(location.type) ? current : [...current, location.type],
+      );
+    }
     setSelectedId(id);
     setFocus((f) => f + 1);
   }, []);
@@ -116,10 +122,12 @@ export function MapExplorer() {
         {/* 右上：操作 */}
         <div className="absolute right-2 top-2 z-500 flex flex-col items-end gap-2">
           <Button size="sm" variant="secondary" onClick={() => setRecenter((r) => r + 1)}>
-            <Crosshair className="size-4" />回到深圳湾
+            <Crosshair className="size-4" />
+            回到深圳湾
           </Button>
           <Button size="sm" onClick={() => navigate({ to: "/route" })}>
-            <Compass className="size-4" />开始侦探路线
+            <Compass className="size-4" />
+            开始侦探路线
           </Button>
         </div>
 
@@ -149,7 +157,13 @@ export function MapExplorer() {
         open={isMobile ? Boolean(selected) : false}
         onOpenChange={(o) => !o && setSelectedId(null)}
       >
-        <SheetContent side="bottom" className="h-[82vh] p-0">
+        <SheetContent
+          side="bottom"
+          className="h-[min(68dvh,38rem)] max-h-[calc(100dvh-8rem)] rounded-t-xl p-0"
+        >
+          <SheetTitle className="sr-only">
+            {selected ? `${selected.name}地点故事` : "地点故事"}
+          </SheetTitle>
           {selected && (
             <StoryPanel location={selected} year={year} onClose={() => setSelectedId(null)} />
           )}
