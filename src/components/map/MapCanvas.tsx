@@ -137,6 +137,7 @@ export default function MapCanvas({
         );
         marker.on("click", () => selectRef.current(loc.id));
         marker.addTo(group);
+        if (selected) marker.openTooltip();
       });
   }, [activeLayers, year, selectedId, routeIds, currentRouteId, mapVersion]);
 
