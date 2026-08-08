@@ -230,7 +230,7 @@ const mangroveLocations: EcoLocation[] = mangroveSeeds.map((m, i) => ({
       2018: i % 3 === 0 ? "台风“山竹”过境，部分幼苗倒伏" : undefined,
       2021: i % 2 === 0 ? "开展第一次系统化补植与抚育" : undefined,
       2025: "完成第 10 年长期监测样方复查",
-    } as Record<number, string>,
+    },
   }),
   story: {
     what: m.what,
@@ -296,7 +296,7 @@ const outfallLocations: EcoLocation[] = outfallNames.map((n, i) => {
       2019: i % 4 === 0 ? "上游雨污分流改造完成" : undefined,
       2022: dry ? "巡查记录首次出现“无水/微流”状态" : undefined,
       2024: "水质达标率提升至 96.7%（示例项目数据）",
-    } as Record<number, string>,
+    },
   });
   const last = annual[annual.length - 1]!;
   return {
@@ -403,6 +403,6 @@ export const locations: EcoLocation[] = [
 export const getLocation = (id: string) => locations.find((l) => l.id === id);
 
 export const getAnnual = (loc: EcoLocation, year: number) =>
-  loc.annualData.find((a) => a.year === year) ?? loc.annualData[loc.annualData.length - 1];
+  loc.annualData.find((a) => a.year === year) ?? loc.annualData[loc.annualData.length - 1]!;
 
 export const SHENZHEN_BAY_CENTER: [number, number] = [22.512, 113.995];
