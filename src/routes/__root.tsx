@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AppStateProvider } from "../lib/app-state";
+import { Toaster } from "../components/ui/sonner";
+
 
 function NotFoundComponent() {
   return (
@@ -107,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <head>
         <HeadContent />
       </head>
@@ -119,13 +122,51 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+const NAV = [
+  { to: "/", label: "地图" },
+  { to: "/route", label: "侦探路线" },
+  { to: "/tasks", label: "公众任务" },
+  { to: "/me", label: "我的记录" },
+  { to: "/about", label: "关于" },
+] as const;
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AppStateProvider>
+        <div className="flex min-h-screen flex-col">
+          <header className="sticky top-0 z-[1200] border-b border-border bg-navy">
+            <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5">
+              <Link to="/" className="min-w-0 truncate text-sm font-semibold text-white">
+                湾区生态侦探
+                <span className="ml-2 hidden text-xs font-normal opacity-80 sm:inline">
+                  深圳湾互动科普地图
+                </span>
+              </Link>
+              <nav className="flex shrink-0 gap-1 overflow-x-auto text-xs">
+                {NAV.map((n) => (
+                  <Link
+                    key={n.to}
+                    to={n.to}
+                    activeOptions={{ exact: n.to === "/" }}
+                    className="rounded-sm px-2 py-1 text-white/75 transition-colors hover:bg-white/10 hover:text-white data-[status=active]:bg-white/15 data-[status=active]:text-white"
+                  >
+                    {n.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          </header>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <div className="flex-1">
+            <Outlet />
+          </div>
+        </div>
+        <Toaster position="top-center" />
+      </AppStateProvider>
     </QueryClientProvider>
   );
 }
+
