@@ -240,7 +240,6 @@ const mangroveLocations: EcoLocation[] = mangroveSeeds.map((m, i) => ({
     action:
       "参与定点拍摄记录幼苗长势、不进入滩涂踩踏、发现缠绕垃圾时拍照上报，都能让修复团队更早发现问题。",
   },
-  relatedTasks: [i % 2 === 0 ? "task-mangrove-photo" : "task-waste", "task-quiz"],
 }));
 
 /**
@@ -263,25 +262,6 @@ const outfallSeeds = [
 ] as const;
 
 const outfallLocations: EcoLocation[] = outfallSeeds.map((site, i) => {
-  const dry = i % 3 === 0 ? 2021 + (i % 3) : undefined;
-  const risk: RiskLevel = i % 7 === 0 ? "高" : i % 3 === 0 ? "中" : "低";
-  const end = risk === "高" ? 68 : risk === "中" ? 82 : 93;
-  const annual = buildAnnual(500 + i * 11, {
-    baseQuality: 34 + (i % 9),
-    endQuality: end,
-    baseCoverage: 8,
-    endCoverage: 20,
-    baseSurvival: 0,
-    endSurvival: 0,
-    dryFrom: dry,
-    events: {
-      2016: "纳入 30 个入湾排口常态化监测网络（示例项目数据）",
-      2019: i % 4 === 0 ? "上游雨污分流改造完成" : undefined,
-      2022: dry ? "巡查记录首次出现“无水/微流”状态" : undefined,
-      2024: "水质达标率提升至 96.7%（示例项目数据）",
-    },
-  });
-  const last = annual[annual.length - 1]!;
   return {
     id: `of-${String(i + 1).padStart(2, "0")}`,
     name: site.name,
@@ -290,98 +270,69 @@ const outfallLocations: EcoLocation[] = outfallSeeds.map((site, i) => {
     latitude: site.lat,
     category: "入湾排口",
     image: "outfall",
-    summary:
-      last.waterFlow === "干涸"
-        ? "水质指标达标，但巡查时长期无水——这正是需要追问的地方。"
-        : "常态化监测排口，近十年水质指标持续改善。",
-    riskLevel: risk,
-    waterStatus: last.waterFlow,
+    summary: "2015 年深圳湾排水口调查正文公开了该排口的编号与 GPS 坐标。",
+    riskLevel: "低",
     indicators: [
       { label: "调查编号", value: site.code },
       { label: "公开坐标", value: `${site.lat.toFixed(5)}, ${site.lng.toFixed(5)}` },
-      { label: "最新水质评分", value: `${last.waterQuality} 分` },
-      { label: "过水状态", value: last.waterFlow },
-      { label: "风险等级", value: risk },
+      { label: "水质原始数据", value: "待数据负责人补充" },
     ],
-    annualData: annual,
+    annualData: YEARS.map((year) => ({ year })),
     story: {
-      what:
-        last.waterFlow === "干涸"
-          ? "2015 年这里还是黑臭水体，如今取样指标达标，但巡查时经常“无水可取”。"
-          : "从 2015 年到 2025 年，这个排口的水质评分持续上升，异味与黑臭现象基本消失。",
-      why: "雨污分流、截污管网与河道整治让污水不再直排；但截流同时也把原本汇入湾区的径流带走了，部分排口因此长期干涸。",
+      what: "公开调查确认了该排口的位置和调查编号，便于后续资料按同一地点归档。",
+      why: "排口连接城市排水系统与深圳湾水环境，是理解陆地活动如何影响海湾的重要观察位置。",
       matter:
-        "示例项目数据显示：水质达标率从 53.3% 提升到 96.7%，然而不少排口被记录为干涸。指标变好，不等于生态水文过程恢复——淡水输入减少会改变滩涂盐度，影响红树林和底栖生物。",
-      action:
-        "路过时拍一张排口照片、记录当天是否有水与水色，就能帮助长期比对“达标”背后的真实水情。",
+        "坐标只能说明排口在哪里，不能证明水质好坏。判断水质需要监测日期、采样条件、检测指标和判定标准。",
+      action: "阅读环境数据时，先区分公开事实、示例内容和仍待补充的数据，再作出判断。",
     },
-    relatedTasks: ["task-water-color", "task-outfall"],
   };
 });
 
-const taskLocations: EcoLocation[] = [
+const learningLocations: EcoLocation[] = [
   {
     id: "tp-01",
     name: "深圳湾观鸟点（西）",
-    type: "task",
+    type: "learning",
     longitude: 113.9926,
     latitude: 22.5031,
-    category: "公众观察点",
+    category: "生物多样性学习点",
     image: "bird",
     summary: "冬季候鸟停歇高峰观察点，适合家庭与学校活动。",
     riskLevel: "低",
     indicators: [{ label: "最佳时段", value: "退潮前后 1 小时" }],
-    annualData: buildAnnual(77, {
-      baseQuality: 55,
-      endQuality: 88,
-      baseCoverage: 20,
-      endCoverage: 40,
-      baseSurvival: 0,
-      endSurvival: 0,
-      events: { 2020: "黑脸琵鹭稳定记录数创新高（示例项目数据）" },
-    }),
+    annualData: YEARS.map((year) => ({ year })),
     story: {
       what: "退潮后滩涂裸露，鹭类、鸻鹬类集中觅食。",
       why: "滩涂底栖生物恢复，为候鸟提供了稳定食物来源。",
       matter: "鸟类是湿地健康最直观的指示物种之一。",
       action: "保持 30 米以上距离、不使用闪光灯、不投喂，记录你看到的种类与数量。",
     },
-    relatedTasks: ["task-bird"],
   },
   {
     id: "tp-02",
-    name: "红树林步道垃圾巡查段",
-    type: "task",
+    name: "红树林步道岸线观察点",
+    type: "learning",
     longitude: 114.0155,
     latitude: 22.5099,
-    category: "公众观察点",
+    category: "岸线环境学习点",
     image: "coast",
-    summary: "潮汐带来的海漂垃圾在此堆积，适合开展岸线记录任务。",
+    summary: "通过岸线垃圾的类型与分布，理解潮汐、城市活动和滨海生态之间的联系。",
     riskLevel: "中",
     indicators: [{ label: "建议时长", value: "40 分钟" }],
-    annualData: buildAnnual(78, {
-      baseQuality: 50,
-      endQuality: 80,
-      baseCoverage: 15,
-      endCoverage: 28,
-      baseSurvival: 0,
-      endSurvival: 0,
-      events: { 2023: "累计开展 120 场公众净滩与记录活动（示例项目数据）" },
-    }),
+    annualData: YEARS.map((year) => ({ year })),
     story: {
       what: "每次大潮后，塑料瓶、泡沫与渔网碎片会缠绕在红树幼苗基部。",
       why: "上游雨水管网与海面漂浮物在潮汐作用下集中沉积于此。",
       matter: "缠绕会导致幼苗窒息死亡，也会被鸟类误食。",
       action: "拍照记录垃圾类型与数量，参与有组织的净滩，不要独自进入软泥滩。",
     },
-    relatedTasks: ["task-waste"],
   },
 ];
 
 export const locations: EcoLocation[] = [
   ...mangroveLocations,
   ...outfallLocations,
-  ...taskLocations,
+  ...learningLocations,
 ];
 
 export const getLocation = (id: string) => locations.find((l) => l.id === id);

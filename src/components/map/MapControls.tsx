@@ -6,8 +6,8 @@ import { useState } from "react";
 
 const LAYER_META: { id: LocationType; label: string; color: string; desc: string }[] = [
   { id: "mangrove", label: "红树林修复地", color: "bg-mangrove", desc: "8 处修复地块" },
-  { id: "outfall", label: "入湾排口与水质", color: "bg-teal", desc: "11 个公开坐标样点" },
-  { id: "task", label: "公众观察任务点", color: "bg-coral", desc: "公众可参与" },
+  { id: "outfall", label: "入湾排口", color: "bg-teal", desc: "11 个公开坐标样点" },
+  { id: "learning", label: "综合学习点", color: "bg-coral", desc: "鸟类与岸线环境" },
 ];
 
 export function LayerControls({
@@ -54,15 +54,11 @@ export function LayerControls({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-teal" />
-          排口（当年有水）
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full" style={{ background: "#C7803F" }} />
-          排口（微流/干涸）
+          公开排口坐标
         </div>
         <div className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-coral" />
-          公众任务点
+          综合学习点
         </div>
         <p className="mt-2 border-t border-border pt-2 leading-4">
           2015 年调查共记录 30 个排水口；地图仅展示报告正文公开 GPS 坐标的 11 个样点。

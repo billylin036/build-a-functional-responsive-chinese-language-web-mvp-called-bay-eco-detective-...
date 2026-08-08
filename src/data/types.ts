@@ -1,19 +1,19 @@
-export type LocationType = "mangrove" | "outfall" | "task";
+export type LocationType = "mangrove" | "outfall" | "learning";
 
 export type RiskLevel = "低" | "中" | "高";
 
 export interface AnnualData {
   year: number;
   /** 水质综合评分 0-100 */
-  waterQuality: number;
+  waterQuality?: number;
   /** 排口过水情况：有水 / 微流 / 干涸 */
-  waterFlow: "有水" | "微流" | "干涸";
+  waterFlow?: "有水" | "微流" | "干涸";
   /** 红树林覆盖度 % */
-  mangroveCoverage: number;
+  mangroveCoverage?: number;
   /** 成活率 % */
-  survivalRate: number;
+  survivalRate?: number;
   /** 当年公众观察记录数 */
-  observationCount: number;
+  observationCount?: number;
   event?: string | undefined;
 }
 
@@ -43,30 +43,4 @@ export interface EcoLocation {
   indicators?: { label: string; value: string }[];
   riskLevel: RiskLevel;
   annualData: AnnualData[];
-  relatedTasks: string[];
-}
-
-export interface EcoTask {
-  id: string;
-  title: string;
-  locationId: string;
-  category: string;
-  difficulty: "入门" | "进阶" | "挑战";
-  duration: string;
-  description: string;
-  instructions: string[];
-  safetyNotes: string;
-  badge: string;
-}
-
-export interface RouteStop {
-  locationId: string;
-  question: string;
-  hint: string;
-  quiz: {
-    question: string;
-    options: string[];
-    answerIndex: number;
-    explain: string;
-  };
 }

@@ -55,36 +55,30 @@ function AboutPage() {
           <strong>不构成监测结论或官方发布数据</strong>。
         </li>
         <li>
-          页面中出现的「水质达标率从 53.3% 提升到 96.7%」为示例项目数据；同期不少排口被记录为干涸，
-          说明指标改善不等于生态水文过程完全恢复。
+          目前尚未获得各排口可公开使用的原始水质指标，因此网站不展示推测的水质评分或达标结论。
         </li>
         <li>
           排口图层展示报告正文公开 GPS 坐标的 11
-          个样点；红树林修复点和公众任务点目前仍使用示例位置， 不代表机构正式发布的精确点位。
+          个样点；红树林修复点和综合学习点目前仍使用示例位置， 不代表机构正式发布的精确点位。
         </li>
         <li>在线地图使用 OpenStreetMap 开源地图数据，版权归其贡献者所有。</li>
-        <li>
-          公众提交的观察记录在本演示中仅保存于你的浏览器本机，未经审核不会作为经过验证的科学结论使用。
-        </li>
-        <li>数据层与界面代码分离，后续可直接替换为真实 API 或数据库。</li>
+        <li>学生的学习进度、答题结果与证书信息仅保存在当前浏览器中。</li>
+        <li>缺少的监测数据会明确标记为“待补充”，不会使用估算值代替。</li>
       </ul>
 
       <h2 className="mt-8 text-lg font-semibold text-navy">适合谁使用</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7">
         <li>学生与家庭：围绕深圳湾地点发现红树林、水质与生物多样性的故事。</li>
-        <li>志愿者与公众：沿着观察路线记录环境状况、上传照片、提交观察记录。</li>
-        <li>学校与自然教育机构：用主题路线与任务卡组织户外环境教育活动。</li>
+        <li>学生：通过地图阅读、地点测验与综合评估建立生态数据素养。</li>
+        <li>学校与自然教育机构：组织课堂学习、项目式学习与深圳湾主题课程。</li>
       </ul>
 
       <div className="mt-8 flex flex-wrap gap-3 text-sm">
         <Link className="text-teal underline" to="/">
           返回地图
         </Link>
-        <Link className="text-teal underline" to="/route">
-          走一遍侦探路线
-        </Link>
-        <Link className="text-teal underline" to="/tasks">
-          查看公众任务
+        <Link className="text-teal underline" to="/learn">
+          开始学习闯关
         </Link>
       </div>
     </main>

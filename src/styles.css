@@ -393,3 +393,26 @@ svg.leaflet-zoom-animated {
 .leaflet-tooltip.eco-data-label--selected {
   z-index: 1000;
 }
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .certificate-print {
+    margin: 0 !important;
+    min-height: 95vh;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+}

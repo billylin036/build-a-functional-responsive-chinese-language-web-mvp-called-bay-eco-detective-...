@@ -14,7 +14,7 @@ export function TrendChart({
   data,
   year,
   dataKey = "waterQuality",
-  label = "水质评分",
+  label = "指标值",
 }: {
   data: AnnualData[];
   year: number;

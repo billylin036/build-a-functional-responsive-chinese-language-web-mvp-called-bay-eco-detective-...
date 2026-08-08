@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Crosshair, Compass, Info } from "lucide-react";
+import { Crosshair, GraduationCap, Info } from "lucide-react";
 import { locations, getAnnual, YEARS } from "@/data/locations";
 import type { LocationType } from "@/data/types";
-import { routeStops } from "@/data/route";
+import { TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { Timeline } from "@/components/map/Timeline";
 import { LayerControls, LocationSearch } from "@/components/map/MapControls";
 import { StoryPanel } from "@/components/StoryPanel";
@@ -13,27 +13,30 @@ import { useAppState } from "@/lib/app-state";
 import MapCanvas from "@/components/map/LiveMapCanvas";
 
 export function MapExplorer() {
-  const [layers, setLayers] = useState<LocationType[]>(["mangrove", "outfall", "task"]);
+  const [layers, setLayers] = useState<LocationType[]>(["mangrove", "outfall", "learning"]);
   const [year, setYear] = useState(2025);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [recenter, setRecenter] = useState(0);
   const [focus, setFocus] = useState(0);
   const isCompactMap = useIsCompactMap();
   const navigate = useNavigate();
-  const { routeStarted, routeProgress } = useAppState();
+  const { completedLocationQuizzes } = useAppState();
 
   const selected = useMemo(() => locations.find((l) => l.id === selectedId) ?? null, [selectedId]);
-  const routeIds = useMemo(
-    () => (routeStarted ? routeStops.map((stop) => stop.locationId) : []),
-    [routeStarted],
-  );
-  const currentRouteId = routeStarted ? (routeStops[routeProgress]?.locationId ?? null) : null;
+  const routeIds = completedLocationQuizzes;
+  const currentRouteId = null;
 
   const yearEvent = useMemo(() => {
-    const source = selected ?? locations[0]!;
+    const source =
+      selected?.type === "mangrove"
+        ? selected
+        : locations.find((location) => location.type === "mangrove")!;
     const own = getAnnual(source, year).event;
     if (own) return own;
-    return locations.map((l) => getAnnual(l, year).event).find(Boolean);
+    return locations
+      .filter((location) => location.type === "mangrove")
+      .map((location) => getAnnual(location, year).event)
+      .find(Boolean);
   }, [selected, year]);
 
   const pick = useCallback((id: string) => {
@@ -89,7 +92,7 @@ export function MapExplorer() {
               [
                 ["mangrove", "红树林"],
                 ["outfall", "排口水质"],
-                ["task", "公众任务"],
+                ["learning", "综合学习点"],
               ] as [LocationType, string][]
             ).map(([id, label]) => (
               <button
@@ -115,10 +118,13 @@ export function MapExplorer() {
               <Crosshair className="size-4" />
               回到深圳湾
             </Button>
-            <Button size="sm" onClick={() => navigate({ to: "/route" })}>
-              <Compass className="size-4" />
-              开始侦探路线
+            <Button size="sm" onClick={() => navigate({ to: "/learn" })}>
+              <GraduationCap className="size-4" />
+              学习闯关
             </Button>
+            <div className="rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
+              已完成 {completedLocationQuizzes.length} / {TOTAL_LEARNING_POINTS}
+            </div>
           </div>
 
           {isCompactMap && selected && (
@@ -140,8 +146,8 @@ export function MapExplorer() {
               <Info className="size-6 text-teal" />
               <p className="text-sm font-medium text-navy">点击地图上的任意标记</p>
               <p className="text-xs leading-6 text-muted-foreground">
-                你可以切换左侧数据图层、拖动下方时间轴（{YEARS[0]}–{YEARS[YEARS.length - 1]}），
-                观察同一个地点在十年间的变化，再决定要不要参与一个公众任务。
+                选择一个数据点，阅读地点资料并完成对应测验。全部 {TOTAL_LEARNING_POINTS}{" "}
+                个数据点完成后， 可在“学习闯关”中参加综合测验并获得证书。
               </p>
             </div>
           )}

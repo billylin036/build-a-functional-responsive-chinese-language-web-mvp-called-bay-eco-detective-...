@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import {
   locations,
-  getAnnual,
   SHENZHEN_BAY_BOUNDARY,
   SHENZHEN_BAY_CENTER,
   SHENZHEN_BAY_DEFAULT_ZOOM,
@@ -27,11 +26,11 @@ interface LeafletMapCanvasProps extends MapCanvasProps {
 const COLORS: Record<LocationType, string> = {
   mangrove: "#67A85B",
   outfall: "#0B8F91",
-  task: "#FF6B4A",
+  learning: "#FF6B4A",
 };
 
 function markerHtml(loc: EcoLocation, opts: { selected: boolean; onRoute: boolean; dry: boolean }) {
-  const color = opts.dry && loc.type === "outfall" ? "#C7803F" : COLORS[loc.type];
+  const color = COLORS[loc.type];
   const size = opts.selected ? 22 : 14;
   const ring = opts.selected
     ? "box-shadow:0 0 0 4px rgba(11,143,145,.35);"
@@ -160,8 +159,7 @@ export default function MapCanvas({
     locations
       .filter((l) => activeLayers.includes(l.type))
       .forEach((loc) => {
-        const annual = getAnnual(loc, year);
-        const dry = annual.waterFlow !== "有水";
+        const dry = false;
         const selected = selectedId === loc.id || currentRouteId === loc.id;
         const markerSize = selected ? 22 : 14;
         const markerCode =
@@ -182,9 +180,7 @@ export default function MapCanvas({
         });
         marker.bindTooltip(
           selected
-            ? `${loc.name}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}｜${year} 年 水质 ${annual.waterQuality} 分${
-                loc.type === "outfall" ? `｜${annual.waterFlow}` : ""
-              }`
+            ? `${loc.name}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
             : markerCode,
           {
             direction: "top",

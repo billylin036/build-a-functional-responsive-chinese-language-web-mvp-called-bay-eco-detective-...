@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  getAnnual,
   locations,
   SHENZHEN_BAY_BOUNDARY,
   SHENZHEN_BAY_CENTER,
@@ -20,7 +19,7 @@ interface AmapCanvasProps extends MapCanvasProps {
 const COLORS: Record<LocationType, string> = {
   mangrove: "#67A85B",
   outfall: "#0B8F91",
-  task: "#FF6B4A",
+  learning: "#FF6B4A",
 };
 
 function createMarkerElement(
@@ -28,7 +27,7 @@ function createMarkerElement(
   options: { selected: boolean; onRoute: boolean; dry: boolean; year: number },
   onSelect: () => void,
 ) {
-  const color = options.dry && loc.type === "outfall" ? "#C7803F" : COLORS[loc.type];
+  const color = COLORS[loc.type];
   const size = options.selected ? 24 : 16;
   const button = document.createElement("button");
   button.type = "button";
@@ -131,7 +130,6 @@ export default function AmapCanvas({
     markerRef.current = locations
       .filter((location) => activeLayers.includes(location.type))
       .map((location) => {
-        const annual = getAnnual(location, year);
         const selected = selectedId === location.id || currentRouteId === location.id;
         const markerCode =
           location.type === "outfall"
@@ -143,13 +141,13 @@ export default function AmapCanvas({
           {
             selected,
             onRoute: routeIds.includes(location.id),
-            dry: annual.waterFlow !== "有水",
+            dry: false,
             year,
           },
           () => selectRef.current(location.id),
         );
         const labelText = selected
-          ? `${location.name}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}｜${year} 年 水质 ${annual.waterQuality} 分`
+          ? `${location.name}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
           : markerCode;
         const marker = new AMap.Marker({
           position: [location.longitude, location.latitude],

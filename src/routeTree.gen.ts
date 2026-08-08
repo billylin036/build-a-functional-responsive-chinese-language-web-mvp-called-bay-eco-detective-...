@@ -11,12 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as LearnRouteImport } from './routes/learn'
 import { Route as MeRouteImport } from './routes/me'
-import { Route as StationsRouteImport } from './routes/stations'
-import { Route as SubmitRouteImport } from './routes/submit'
-import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as LocationIdRouteImport } from './routes/location.$id'
-import { Route as RouteIndexRouteImport } from './routes/route/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,24 +25,14 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnRoute = LearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StationsRoute = StationsRouteImport.update({
-  id: '/stations',
-  path: '/stations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SubmitRoute = SubmitRouteImport.update({
-  id: '/submit',
-  path: '/submit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocationIdRoute = LocationIdRouteImport.update({
@@ -53,85 +40,43 @@ const LocationIdRoute = LocationIdRouteImport.update({
   path: '/location/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RouteIndexRoute = RouteIndexRouteImport.update({
-  id: '/route/',
-  path: '/route/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/learn': typeof LearnRoute
   '/me': typeof MeRoute
-  '/stations': typeof StationsRoute
-  '/submit': typeof SubmitRoute
-  '/tasks': typeof TasksRoute
   '/location/$id': typeof LocationIdRoute
-  '/route/': typeof RouteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/learn': typeof LearnRoute
   '/me': typeof MeRoute
-  '/stations': typeof StationsRoute
-  '/submit': typeof SubmitRoute
-  '/tasks': typeof TasksRoute
   '/location/$id': typeof LocationIdRoute
-  '/route': typeof RouteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/learn': typeof LearnRoute
   '/me': typeof MeRoute
-  '/stations': typeof StationsRoute
-  '/submit': typeof SubmitRoute
-  '/tasks': typeof TasksRoute
   '/location/$id': typeof LocationIdRoute
-  '/route/': typeof RouteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/me'
-    | '/stations'
-    | '/submit'
-    | '/tasks'
-    | '/location/$id'
-    | '/route/'
+  fullPaths: '/' | '/about' | '/learn' | '/me' | '/location/$id'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/about'
-    | '/me'
-    | '/stations'
-    | '/submit'
-    | '/tasks'
-    | '/location/$id'
-    | '/route'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/me'
-    | '/stations'
-    | '/submit'
-    | '/tasks'
-    | '/location/$id'
-    | '/route/'
+  to: '/' | '/about' | '/learn' | '/me' | '/location/$id'
+  id: '__root__' | '/' | '/about' | '/learn' | '/me' | '/location/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  LearnRoute: typeof LearnRoute
   MeRoute: typeof MeRoute
-  StationsRoute: typeof StationsRoute
-  SubmitRoute: typeof SubmitRoute
-  TasksRoute: typeof TasksRoute
   LocationIdRoute: typeof LocationIdRoute
-  RouteIndexRoute: typeof RouteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -150,32 +95,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn': {
+      id: '/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof LearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/me': {
       id: '/me'
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/stations': {
-      id: '/stations'
-      path: '/stations'
-      fullPath: '/stations'
-      preLoaderRoute: typeof StationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/submit': {
-      id: '/submit'
-      path: '/submit'
-      fullPath: '/submit'
-      preLoaderRoute: typeof SubmitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/location/$id': {
@@ -185,25 +116,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/route/': {
-      id: '/route/'
-      path: '/route'
-      fullPath: '/route/'
-      preLoaderRoute: typeof RouteIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  LearnRoute: LearnRoute,
   MeRoute: MeRoute,
-  StationsRoute: StationsRoute,
-  SubmitRoute: SubmitRoute,
-  TasksRoute: TasksRoute,
   LocationIdRoute: LocationIdRoute,
-  RouteIndexRoute: RouteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
