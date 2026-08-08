@@ -23,7 +23,8 @@ function AboutPage() {
       <p className="mt-3 text-sm leading-7">
         「湾区生态侦探」由 <strong>Billy Lin</strong> 开发，并与
         <strong>深圳市绿源环保志愿者协会</strong>
-        开展数据合作。网站把生态保护资料转化为一张能探索、会讲故事、还能参与保护的深圳湾生态地图。
+        开展数据合作。网站把生态保护资料转化为一张面向学校的深圳湾学习地图：学生需要阅读证据、
+        解决情境题，并完成可重复的观察记录。
       </p>
       <div className="mt-4 grid gap-3 rounded-lg border border-teal/25 bg-paleeco p-4 sm:grid-cols-2">
         <div>
@@ -44,8 +45,10 @@ function AboutPage() {
         个红树林修复点、30 个深圳湾入湾排口的巡查监测资料，以及 2015—2025 年的水环境监测资料。
       </p>
       <p className="mt-3 text-sm leading-7">
-        这些信息此前分散在报告、表格与项目文档中。本产品的目标，是把它们转化成公众可以点击、比对、追问的地图故事：
-        <span className="font-medium text-navy">选择地点 → 比较变化 → 理解原因 → 参与行动。</span>
+        这些信息此前分散在报告、表格与项目文档中。本产品的目标，是把它们转化成学生可以点击、比对、追问的学习任务：
+        <span className="font-medium text-navy">
+          读取证据 → 提出解释 → 完成挑战 → 规范观察 → 反思局限。
+        </span>
       </p>
 
       <h2 className="mt-8 text-lg font-semibold text-navy">数据说明</h2>
@@ -68,8 +71,8 @@ function AboutPage() {
 
       <h2 className="mt-8 text-lg font-semibold text-navy">适合谁使用</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7">
-        <li>学生与家庭：围绕深圳湾地点发现红树林、水质与生物多样性的故事。</li>
-        <li>学生：通过地图阅读、地点测验与综合评估建立生态数据素养。</li>
+        <li>学生与家庭：围绕深圳湾地点发现红树林、水环境与生物多样性的故事。</li>
+        <li>学生：通过情境题、数据比较和短时观察活动建立生态数据素养。</li>
         <li>学校与自然教育机构：组织课堂学习、项目式学习与深圳湾主题课程。</li>
       </ul>
 
@@ -79,6 +82,9 @@ function AboutPage() {
         </Link>
         <Link className="text-teal underline" to="/learn">
           开始学习闯关
+        </Link>
+        <Link className="text-teal underline" to="/resources">
+          查看可靠资料库
         </Link>
       </div>
     </main>

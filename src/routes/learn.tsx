@@ -4,6 +4,7 @@ import {
   Award,
   BookOpenCheck,
   CheckCircle2,
+  ClipboardCheck,
   GraduationCap,
   LockKeyhole,
   MapPin,
@@ -15,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   FINAL_PASS_SCORE,
   finalQuestions,
+  getLearningModule,
   learningChapters,
   TOTAL_LEARNING_POINTS,
 } from "@/data/learning";
@@ -37,6 +39,7 @@ function LearnPage() {
   const {
     completedLocationQuizzes,
     finalAssessment,
+    activityRecords,
     learnerProfile,
     learningComplete,
     updateLearnerProfile,
@@ -44,6 +47,7 @@ function LearnPage() {
   } = useAppState();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [message, setMessage] = useState("");
+  const [review, setReview] = useState<Record<string, boolean> | null>(null);
   const progress = Math.round((completedLocationQuizzes.length / TOTAL_LEARNING_POINTS) * 100);
 
   return (
@@ -54,9 +58,8 @@ function LearnPage() {
           <div>
             <h1 className="text-2xl font-semibold text-navy sm:text-3xl">深圳湾生态学习闯关</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-              在地图中逐一阅读 {TOTAL_LEARNING_POINTS}{" "}
-              个数据点，每学完一个地点就完成一道基于页面内容的测验。
-              全部完成后解锁综合测验，并获得学习徽章和证书。
+              在地图中逐一完成 {TOTAL_LEARNING_POINTS} 个差异化学习模块：阅读可靠知识卡、
+              解决情境挑战题，还可以完成安全的观察活动并保存记录。全部完成后解锁综合测验。
             </p>
           </div>
           <div className="rounded-lg border border-white/70 bg-white/80 p-4 shadow-sm">
@@ -68,6 +71,10 @@ function LearnPage() {
             </div>
             <Progress value={progress} className="mt-2" />
             <p className="mt-2 text-xs text-muted-foreground">{progress}% 完成</p>
+            <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <ClipboardCheck className="size-3.5" />
+              已保存 {activityRecords.length} 次互动观察
+            </p>
           </div>
         </div>
       </section>
@@ -127,6 +134,7 @@ function LearnPage() {
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {chapter.locations.map((location, index) => {
                   const done = completedLocationQuizzes.includes(location.id);
+                  const module = getLearningModule(location.id);
                   return (
                     <article
                       key={location.id}
@@ -152,6 +160,14 @@ function LearnPage() {
                       </p>
                       <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
                         {location.summary}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <Badge variant="outline">{module.quiz.skill}</Badge>
+                        <Badge variant="secondary">{module.quiz.difficulty}</Badge>
+                      </div>
+                      <p className="mt-2 flex items-start gap-1 text-[11px] leading-4 text-muted-foreground">
+                        <ClipboardCheck className="mt-0.5 size-3 shrink-0" />
+                        可选活动：{module.activity.title}
                       </p>
                       <Button
                         asChild
@@ -183,7 +199,7 @@ function LearnPage() {
             <h2 className="text-xl font-semibold text-navy">最终综合测验</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
               完成全部数据点后解锁。共 {finalQuestions.length} 题，答对 {FINAL_PASS_SCORE}{" "}
-              题即可获得证书。
+              题即可获得证书。题目重点考查迁移、比较和证据判断，不要求死记编号。
             </p>
           </div>
         </div>
@@ -224,12 +240,21 @@ function LearnPage() {
               const score = finalQuestions.filter(
                 (question) => answers[question.id] === question.answerIndex,
               ).length;
+              setReview(
+                Object.fromEntries(
+                  finalQuestions.map((question) => [
+                    question.id,
+                    answers[question.id] === question.answerIndex,
+                  ]),
+                ),
+              );
               if (score >= FINAL_PASS_SCORE) {
                 completeFinalAssessment(score, finalQuestions.length);
                 setMessage(`恭喜通过！成绩 ${score}/${finalQuestions.length}。`);
               } else {
-                setMessage(`本次成绩 ${score}/${finalQuestions.length}，请复习后重新作答。`);
-                setAnswers({});
+                setMessage(
+                  `本次成绩 ${score}/${finalQuestions.length}。查看每题反馈、修改答案后可再次提交。`,
+                );
               }
             }}
           >
@@ -244,9 +269,11 @@ function LearnPage() {
                       key={option}
                       type="button"
                       aria-pressed={answers[question.id] === optionIndex}
-                      onClick={() =>
-                        setAnswers((current) => ({ ...current, [question.id]: optionIndex }))
-                      }
+                      onClick={() => {
+                        setAnswers((current) => ({ ...current, [question.id]: optionIndex }));
+                        setReview(null);
+                        setMessage("");
+                      }}
                       className={`rounded-md border px-3 py-2 text-left text-xs ${
                         answers[question.id] === optionIndex
                           ? "border-teal bg-paleeco"
@@ -257,6 +284,14 @@ function LearnPage() {
                     </button>
                   ))}
                 </div>
+                {review && (
+                  <p
+                    className={`mt-3 text-xs leading-5 ${review[question.id] ? "text-mangrove" : "text-coral"}`}
+                  >
+                    {review[question.id] ? "回答正确。" : `需要复习：${question.hint}`}{" "}
+                    {review[question.id] ? question.explanation : ""}
+                  </p>
+                )}
               </fieldset>
             ))}
             {message && (

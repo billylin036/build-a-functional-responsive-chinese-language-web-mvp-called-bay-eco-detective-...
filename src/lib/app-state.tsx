@@ -17,9 +17,18 @@ export interface FinalAssessmentResult {
 
 export interface LearningHistoryItem {
   id: string;
-  type: "地点测验" | "综合测验";
+  type: "地点测验" | "互动观察" | "综合测验";
   label: string;
   at: string;
+}
+
+export interface ActivityRecord {
+  id: string;
+  locationId: string;
+  locationName: string;
+  activityTitle: string;
+  responses: Record<string, string>;
+  completedAt: string;
 }
 
 interface AppState {
@@ -28,6 +37,7 @@ interface AppState {
   finalAssessment: FinalAssessmentResult | null;
   learnerProfile: LearnerProfile;
   learningHistory: LearningHistoryItem[];
+  activityRecords: ActivityRecord[];
 }
 
 const EMPTY: AppState = {
@@ -36,15 +46,22 @@ const EMPTY: AppState = {
   finalAssessment: null,
   learnerProfile: { name: "", school: "", className: "" },
   learningHistory: [],
+  activityRecords: [],
 };
 
-const KEY = "bay-eco-school-learning-v2";
+const KEY = "bay-eco-school-learning-v3";
 
 interface Ctx extends AppState {
   hydrated: boolean;
   learningComplete: boolean;
   badges: { id: string; desc: string; earned: boolean }[];
   recordLocationAnswer: (locationId: string, locationName: string, correct: boolean) => void;
+  saveActivityRecord: (
+    locationId: string,
+    locationName: string,
+    activityTitle: string,
+    responses: Record<string, string>,
+  ) => void;
   completeFinalAssessment: (score: number, total: number) => void;
   updateLearnerProfile: (profile: LearnerProfile) => void;
   resetLearning: () => void;
@@ -121,6 +138,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const saveActivityRecord = useCallback(
+    (
+      locationId: string,
+      locationName: string,
+      activityTitle: string,
+      responses: Record<string, string>,
+    ) => {
+      const completedAt = new Date().toISOString();
+      const record: ActivityRecord = {
+        id: `activity-${locationId}-${Date.now()}`,
+        locationId,
+        locationName,
+        activityTitle,
+        responses,
+        completedAt,
+      };
+      setState((current) => ({
+        ...current,
+        activityRecords: [record, ...current.activityRecords].slice(0, 100),
+        learningHistory: [
+          {
+            id: record.id,
+            type: "互动观察" as const,
+            label: `完成「${locationName}」${activityTitle}`,
+            at: completedAt,
+          },
+          ...current.learningHistory,
+        ].slice(0, 100),
+      }));
+    },
+    [],
+  );
+
   const updateLearnerProfile = useCallback((profile: LearnerProfile) => {
     setState((current) => ({ ...current, learnerProfile: profile }));
   }, []);
@@ -145,8 +195,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         desc: "通过深圳湾生态综合测验并获得学习证书",
         earned: Boolean(state.finalAssessment),
       },
+      {
+        id: "公民科学观察员",
+        desc: "完成至少 3 次互动观察并保存规范记录",
+        earned: state.activityRecords.length >= 3,
+      },
     ],
-    [learningComplete, state.completedLocationQuizzes.length, state.finalAssessment],
+    [
+      learningComplete,
+      state.activityRecords.length,
+      state.completedLocationQuizzes.length,
+      state.finalAssessment,
+    ],
   );
 
   const value: Ctx = {
@@ -155,6 +215,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     learningComplete,
     badges,
     recordLocationAnswer,
+    saveActivityRecord,
     completeFinalAssessment,
     updateLearnerProfile,
     resetLearning,

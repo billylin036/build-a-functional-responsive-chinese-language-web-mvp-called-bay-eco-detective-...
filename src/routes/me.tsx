@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Award, CheckCircle2, History, Printer, RotateCcw } from "lucide-react";
+import { Award, CheckCircle2, ClipboardCheck, History, Printer, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TOTAL_LEARNING_POINTS } from "@/data/learning";
@@ -26,6 +26,7 @@ function LearningResultsPage() {
     finalAssessment,
     learnerProfile,
     learningHistory,
+    activityRecords,
     badges,
     resetLearning,
   } = useAppState();
@@ -62,12 +63,13 @@ function LearningResultsPage() {
         </Button>
       </div>
 
-      <section className="no-print mt-6 grid gap-3 sm:grid-cols-3">
+      <section className="no-print mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="完成数据点"
           value={`${completedLocationQuizzes.length} / ${TOTAL_LEARNING_POINTS}`}
         />
         <Stat label="地点答题次数" value={`${totalAttempts} 次`} />
+        <Stat label="互动观察记录" value={`${activityRecords.length} 条`} />
         <Stat
           label="综合测验"
           value={
@@ -81,7 +83,7 @@ function LearningResultsPage() {
           <Award className="size-5" />
           学习徽章
         </h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {badges.map((badge) => (
             <article
               key={badge.id}
@@ -152,6 +154,37 @@ function LearningResultsPage() {
           </Button>
         </section>
       )}
+
+      <section className="no-print mt-10">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-navy">
+          <ClipboardCheck className="size-5" />
+          互动观察记录
+        </h2>
+        {activityRecords.length === 0 ? (
+          <div className="mt-3 rounded-md border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            还没有观察记录。每个地图数据点都有一个 3–8 分钟的安全活动。
+          </div>
+        ) : (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {activityRecords.slice(0, 12).map((record) => (
+              <article key={record.id} className="rounded-lg border border-border bg-card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-navy">{record.activityTitle}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{record.locationName}</p>
+                  </div>
+                  <Badge variant="outline">
+                    {new Date(record.completedAt).toLocaleDateString("zh-CN")}
+                  </Badge>
+                </div>
+                <p className="mt-3 line-clamp-3 text-xs leading-5 text-muted-foreground">
+                  {Object.values(record.responses).join(" · ")}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="no-print mt-10">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-navy">

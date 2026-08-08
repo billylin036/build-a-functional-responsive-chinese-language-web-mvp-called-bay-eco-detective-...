@@ -1,9 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, BookOpen, CheckCircle2, MapPin, X } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
+  ExternalLink,
+  Lightbulb,
+  MapPin,
+  ShieldAlert,
+  X,
+} from "lucide-react";
 import type { EcoLocation } from "@/data/types";
 import { getAnnual } from "@/data/locations";
-import { getLocationQuiz, TOTAL_LEARNING_POINTS } from "@/data/learning";
+import {
+  getLearningModule,
+  getLearningSources,
+  getLocationQuiz,
+  TOTAL_LEARNING_POINTS,
+} from "@/data/learning";
 import { TrendChart } from "@/components/TrendChart";
 import { Badge } from "@/components/ui/badge";
 import { useAppState } from "@/lib/app-state";
@@ -21,6 +36,7 @@ const IMAGES: Record<string, string> = {
 
 function QuizBlock({ location }: { location: EcoLocation }) {
   const quiz = getLocationQuiz(location);
+  const module = getLearningModule(location.id);
   const { completedLocationQuizzes, recordLocationAnswer } = useAppState();
   const done = completedLocationQuizzes.includes(location.id);
   const [ready, setReady] = useState(done);
@@ -39,7 +55,7 @@ function QuizBlock({ location }: { location: EcoLocation }) {
           <div>
             <p className="text-sm font-semibold text-navy">完成本数据点学习</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              请先阅读上方的数据、趋势说明与地点故事，再通过一道基于本页内容的测验。
+              请先阅读地点资料和“深度知识卡”，再完成挑战题。本题学习目标：{module.objective}
             </p>
             <button
               type="button"
@@ -59,7 +75,12 @@ function QuizBlock({ location }: { location: EcoLocation }) {
   return (
     <section className="rounded-lg border border-border bg-paleeco p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-navy">数据点测验</p>
+        <div>
+          <p className="text-sm font-semibold text-navy">地点挑战题</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {quiz.skill} · {quiz.difficulty}
+          </p>
+        </div>
         <Badge variant={done ? "default" : "secondary"}>{done ? "已完成" : "答对后完成"}</Badge>
       </div>
       <p className="mt-2 text-sm leading-6">{quiz.question}</p>
@@ -92,7 +113,7 @@ function QuizBlock({ location }: { location: EcoLocation }) {
           {correct ? (
             <p className="text-mangrove">回答正确。{quiz.explanation}</p>
           ) : (
-            <p className="text-coral">回答不正确。请重新查看上方资料，再选择一次。</p>
+            <p className="text-coral">回答不正确。提示：{quiz.hint}</p>
           )}
         </div>
       )}
@@ -109,6 +130,179 @@ function QuizBlock({ location }: { location: EcoLocation }) {
             返回学习闯关中心
           </Link>
         </div>
+      )}
+    </section>
+  );
+}
+
+function KnowledgeBlock({ location }: { location: EcoLocation }) {
+  const module = getLearningModule(location.id);
+  const sources = getLearningSources(module.knowledge.sourceIds);
+
+  return (
+    <section className="rounded-lg border border-coral/25 bg-coral/5 p-4">
+      <div className="flex items-start gap-3">
+        <Lightbulb className="mt-0.5 size-5 shrink-0 text-coral" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-coral">深度知识卡</p>
+          <h3 className="mt-1 text-sm font-semibold text-navy">{module.knowledge.title}</h3>
+          <p className="mt-2 text-sm leading-6">{module.knowledge.fact}</p>
+          <div className="mt-3 rounded-md bg-white/80 px-3 py-2">
+            <p className="text-[11px] font-medium text-navy">想一想</p>
+            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+              {module.knowledge.think}
+            </p>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {sources.map((source) => (
+              <a
+                key={source.id}
+                href={source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-teal underline"
+              >
+                {source.publisher}
+                <ExternalLink className="size-3" />
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ActivityBlock({ location }: { location: EcoLocation }) {
+  const activity = getLearningModule(location.id).activity;
+  const { activityRecords, saveActivityRecord } = useAppState();
+  const [started, setStarted] = useState(false);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState(false);
+  const records = activityRecords.filter((record) => record.locationId === location.id);
+
+  useEffect(() => {
+    setStarted(false);
+    setResponses({});
+    setSaved(false);
+  }, [location.id]);
+
+  const complete = activity.fields.every((field) => responses[field.id]?.trim());
+
+  return (
+    <section className="rounded-lg border border-teal/25 bg-teal/5 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <Activity className="mt-0.5 size-5 shrink-0 text-teal" />
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-teal">
+              互动观察活动
+            </p>
+            <h3 className="mt-1 text-sm font-semibold text-navy">{activity.title}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {activity.mode} · {activity.duration}
+            </p>
+          </div>
+        </div>
+        {records.length > 0 && <Badge variant="outline">已记录 {records.length} 次</Badge>}
+      </div>
+
+      <p className="mt-3 text-xs leading-5">{activity.objective}</p>
+      <ol className="mt-3 space-y-1 text-xs leading-5 text-muted-foreground">
+        {activity.steps.map((step, index) => (
+          <li key={step}>
+            {index + 1}. {step}
+          </li>
+        ))}
+      </ol>
+      <div className="mt-3 flex items-start gap-2 rounded-md bg-white/80 p-2.5 text-[11px] leading-5 text-muted-foreground">
+        <ShieldAlert className="mt-0.5 size-3.5 shrink-0 text-coral" />
+        {activity.safety}
+      </div>
+
+      {!started ? (
+        <button
+          type="button"
+          onClick={() => setStarted(true)}
+          className="mt-3 rounded-md bg-navy px-3 py-2 text-xs font-medium text-white hover:bg-navy/90"
+        >
+          开始记录
+        </button>
+      ) : (
+        <form
+          className="mt-4 space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!complete) return;
+            saveActivityRecord(location.id, location.name, activity.title, responses);
+            setSaved(true);
+          }}
+        >
+          {activity.fields.map((field) => (
+            <div key={field.id}>
+              <label
+                className="text-xs font-medium text-navy"
+                htmlFor={`${location.id}-${field.id}`}
+              >
+                {field.label}
+                {field.unit ? `（${field.unit}）` : ""}
+              </label>
+              {field.kind === "choice" ? (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {field.options?.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      aria-pressed={responses[field.id] === option}
+                      onClick={() => {
+                        setResponses((current) => ({ ...current, [field.id]: option }));
+                        setSaved(false);
+                      }}
+                      className={`rounded-md border px-2.5 py-1.5 text-xs ${
+                        responses[field.id] === option
+                          ? "border-teal bg-white text-navy"
+                          : "border-border bg-white text-muted-foreground hover:border-teal"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <input
+                    id={`${location.id}-${field.id}`}
+                    type={field.kind === "number" ? "number" : "text"}
+                    min={field.kind === "number" ? 0 : undefined}
+                    value={responses[field.id] ?? ""}
+                    placeholder={field.placeholder}
+                    onChange={(event) => {
+                      setResponses((current) => ({ ...current, [field.id]: event.target.value }));
+                      setSaved(false);
+                    }}
+                    className="min-w-0 flex-1 rounded-md border border-border bg-white px-3 py-2 text-xs outline-none focus:border-teal"
+                  />
+                  {field.unit && (
+                    <span className="text-xs text-muted-foreground">{field.unit}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          <button
+            type="submit"
+            disabled={!complete || saved}
+            className="rounded-md bg-teal px-3 py-2 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saved ? "本次记录已保存" : "保存观察记录"}
+          </button>
+          {saved && (
+            <p role="status" className="flex items-center gap-1 text-xs text-mangrove">
+              <CheckCircle2 className="size-3.5" />
+              已加入“学习成果”，可再次进入此地点进行新的重复观察。
+            </p>
+          )}
+        </form>
       )}
     </section>
   );
@@ -290,7 +484,9 @@ export function StoryPanel({
         <StoryBlock title="这为什么重要？" text={location.story.matter} />
         <StoryBlock title="进一步思考" text={location.story.action} />
 
+        <KnowledgeBlock location={location} />
         <QuizBlock location={location} />
+        <ActivityBlock location={location} />
 
         <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
           {location.type === "outfall"

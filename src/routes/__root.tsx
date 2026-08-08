@@ -80,12 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "湾区生态侦探 · 深圳湾互动科普地图" },
       {
         name: "description",
-        content: "面向学校与学生的深圳湾生态学习地图：逐点阅读、即时测验、综合评估与学习证书。",
+        content:
+          "面向学校与学生的深圳湾生态学习地图：可靠知识卡、差异化挑战题、互动观察、综合评估与学习证书。",
       },
       { property: "og:title", content: "湾区生态侦探 · 深圳湾互动科普地图" },
       {
         property: "og:description",
-        content: "选择地点、比较变化、理解原因、参与行动。",
+        content: "读取证据、提出解释、完成挑战、规范观察。",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -122,6 +123,7 @@ function RootShell({ children }: { children: ReactNode }) {
 const NAV = [
   { to: "/", label: "地图" },
   { to: "/learn", label: "学习闯关" },
+  { to: "/resources", label: "资料库" },
   { to: "/me", label: "学习成果" },
   { to: "/about", label: "关于" },
 ] as const;
