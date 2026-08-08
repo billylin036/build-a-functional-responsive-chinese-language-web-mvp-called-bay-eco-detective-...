@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Clock, Repeat2, ShieldAlert } from "lucide-react";
 import { tasks } from "@/data/tasks";
 import { getLocation } from "@/data/locations";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,21 @@ function TasksPage() {
       <p className="mt-1 text-sm leading-6 text-muted-foreground">
         每个任务都对应一个真实地点。完成后提交观察记录，机构会在审核后用于生态保护与公众科普。
       </p>
+
+      <section className="mt-5 flex flex-col gap-3 rounded-lg border border-teal/25 bg-paleeco p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <Repeat2 className="mt-0.5 size-5 shrink-0 text-teal" />
+          <div>
+            <h2 className="text-sm font-semibold text-navy">想让一次任务变成长期贡献？</h2>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              认领生态共测站，按固定周期和统一方法重复观察，让记录形成可比较的时间序列。
+            </p>
+          </div>
+        </div>
+        <Button asChild size="sm" className="shrink-0">
+          <Link to="/stations">进入生态共测站</Link>
+        </Button>
+      </section>
 
       <div className="mt-6 space-y-4">
         {tasks.map((t) => {
@@ -89,7 +104,8 @@ function TasksPage() {
                 )}
                 {done && (
                   <span className="flex items-center gap-1 text-xs text-mangrove">
-                    <CheckCircle2 className="size-3.5" />已记录在「我的记录」
+                    <CheckCircle2 className="size-3.5" />
+                    已记录在「我的记录」
                   </span>
                 )}
               </div>

@@ -15,11 +15,21 @@ export interface Submission {
   contact: string;
   photoName: string;
   createdAt: string;
+  stationId?: string;
+  weather?: string;
+  tide?: string;
+  waterFlow?: string;
+  odor?: string;
+}
+
+export interface StationClaim {
+  stationId: string;
+  claimedAt: string;
 }
 
 export interface HistoryItem {
   id: string;
-  type: "任务" | "路线" | "问答" | "观察记录";
+  type: "任务" | "路线" | "问答" | "观察记录" | "认领";
   label: string;
   at: string;
 }
@@ -31,6 +41,7 @@ interface AppState {
   submissions: Submission[];
   history: HistoryItem[];
   answeredQuiz: string[];
+  claimedStations: StationClaim[];
 }
 
 const EMPTY: AppState = {
@@ -40,6 +51,7 @@ const EMPTY: AppState = {
   submissions: [],
   history: [],
   answeredQuiz: [],
+  claimedStations: [],
 };
 
 const KEY = "bay-eco-detective-v1";
@@ -54,6 +66,8 @@ interface Ctx extends AppState {
   advanceRoute: () => void;
   answerQuiz: (locationId: string, label: string) => void;
   addSubmission: (s: Omit<Submission, "id" | "createdAt">) => void;
+  claimStation: (stationId: string, label: string) => void;
+  releaseStation: (stationId: string) => void;
   clearAll: () => void;
 }
 
@@ -145,7 +159,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const addSubmission = useCallback(
     (s: Omit<Submission, "id" | "createdAt">) => {
-      const rec: Submission = { ...s, id: `sub-${Date.now()}`, createdAt: new Date().toISOString() };
+      const rec: Submission = {
+        ...s,
+        id: `sub-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+      };
       setState((prev) => {
         const withTask = prev.completedTasks.includes(rec.taskId)
           ? prev
@@ -164,19 +182,54 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [push],
   );
 
+  const claimStation = useCallback(
+    (stationId: string, label: string) => {
+      setState((state) => {
+        if (state.claimedStations.some((claim) => claim.stationId === stationId)) return state;
+        const claimedAt = new Date().toISOString();
+        return push(
+          {
+            ...state,
+            claimedStations: [{ stationId, claimedAt }, ...state.claimedStations],
+          },
+          {
+            id: `claim-${stationId}-${Date.now()}`,
+            type: "认领",
+            label: `认领「${label}」`,
+            at: claimedAt,
+          },
+        );
+      });
+    },
+    [push],
+  );
+
+  const releaseStation = useCallback((stationId: string) => {
+    setState((state) => ({
+      ...state,
+      claimedStations: state.claimedStations.filter((claim) => claim.stationId !== stationId),
+    }));
+  }, []);
+
   const clearAll = useCallback(() => setState(EMPTY), []);
 
   const routeDone = state.routeProgress >= routeStops.length;
 
-  const badges = useMemo(
-    () =>
-      BADGES.map((b) => ({
+  const badges = useMemo(() => {
+    const stationRecords = state.submissions.filter((submission) => submission.stationId).length;
+    return [
+      ...BADGES.map((b) => ({
         id: b.id,
         desc: b.desc,
         earned: b.rule(state.completedTasks, routeDone),
       })),
-    [state.completedTasks, routeDone],
-  );
+      {
+        id: "共测守护者",
+        desc: "认领至少 1 个共测站并完成 1 次标准化观察",
+        earned: state.claimedStations.length > 0 && stationRecords > 0,
+      },
+    ];
+  }, [state.completedTasks, state.submissions, state.claimedStations, routeDone]);
 
   const value: Ctx = {
     ...state,
@@ -189,6 +242,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     resetRoute,
     answerQuiz,
     addSubmission,
+    claimStation,
+    releaseStation,
     clearAll,
   };
 

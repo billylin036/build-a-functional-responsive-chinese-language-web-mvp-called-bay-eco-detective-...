@@ -123,6 +123,7 @@ const NAV = [
   { to: "/", label: "地图" },
   { to: "/route", label: "侦探路线" },
   { to: "/tasks", label: "公众任务" },
+  { to: "/stations", label: "共测站" },
   { to: "/me", label: "我的记录" },
   { to: "/about", label: "关于" },
 ] as const;
@@ -142,7 +143,7 @@ function RootComponent() {
                   深圳湾互动科普地图
                 </span>
               </Link>
-              <nav className="flex shrink-0 gap-1 overflow-x-auto text-xs">
+              <nav className="flex min-w-0 max-w-[68vw] gap-1 overflow-x-auto text-xs">
                 {NAV.map((n) => (
                   <Link
                     key={n.to}
