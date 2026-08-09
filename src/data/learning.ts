@@ -1522,10 +1522,76 @@ const modules: Record<string, LearningModule> = {
   },
 };
 
+function createWaterSampleModule(locationId: string): LearningModule | null {
+  const location = locations.find((item) => item.id === locationId);
+  const sample = location?.waterSample;
+  if (!location || !sample) return null;
+
+  return {
+    objective: `准确读取${location.name}的快速检测记录，并区分“现场筛查线索”和“官方水质结论”。`,
+    knowledge: {
+      title: "快速检测范围不是完整水质等级",
+      fact: "pH、总磷、COD 和氨氮反映水体的不同特征。现场快速检测适合发现异常线索，但正式评价还需要明确单位、采样条件、质量控制、检测方法和适用标准。",
+      think: "如果两次结果不同，除了水体真的变化，还有哪些采样时间、水位或方法因素可能造成差异？",
+      sourceIds: ["sengo-2023-observation", "mee-monitoring", "mee-indicators"],
+    },
+    quiz: {
+      skill: "数据读取与证据边界",
+      difficulty: "进阶",
+      question: `关于报告中${location.name}的记录，哪项表述最准确？`,
+      options: [
+        `pH ${sample.pH}、TP ${sample.totalPhosphorus}、COD ${sample.cod}、NH₃-N ${sample.ammoniaNitrogen}；这些是 2023 年现场快速检测表值`,
+        "这些数值已经证明该点当前属于官方Ⅰ类水质",
+        "只看 pH 就能判断所有污染物的浓度",
+        "报告未在表头标单位，因此所有范围都应改写为 0",
+      ],
+      answerIndex: 0,
+      hint: "先准确读取四个字段，再检查时间、方法和结论有没有被扩大。",
+      explanation:
+        "第一项既保留了报告原值，也保留了年份和快速检测的方法边界；其余选项都把有限证据过度解释了。",
+    },
+    activity: {
+      title: "快速检测数据审读卡",
+      mode: "室内 / 现场",
+      duration: "8 分钟",
+      objective: "练习把原始表值、现场条件与解释分开记录。",
+      steps: [
+        "核对本点四项报告表值",
+        "记录一次现场可见条件或资料中的缺失信息",
+        "写出一个需要复测或实验室检测才能回答的问题",
+      ],
+      fields: [
+        {
+          id: "condition",
+          label: "现场条件或资料缺失",
+          kind: "text",
+          placeholder: "例如：采样时间、降雨、水位、单位或方法说明",
+        },
+        {
+          id: "indicator",
+          label: "最想复核的指标",
+          kind: "choice",
+          options: ["pH", "总磷（TP）", "COD", "氨氮（NH₃-N）"],
+        },
+        {
+          id: "question",
+          label: "后续调查问题",
+          kind: "text",
+          placeholder: "写成一个可通过重复采样或规范检测回答的问题",
+        },
+      ],
+      safety:
+        "学生不得自行进入河道、排口、湿地软泥或陡岸取样；现场活动应由教师组织并遵守场地管理要求。",
+    },
+  };
+}
+
 export function getLearningModule(locationId: string) {
   const module = modules[locationId];
-  if (!module) throw new Error(`缺少地点 ${locationId} 的学习模块`);
-  return module;
+  if (module) return module;
+  const waterSampleModule = createWaterSampleModule(locationId);
+  if (waterSampleModule) return waterSampleModule;
+  throw new Error(`缺少地点 ${locationId} 的学习模块`);
 }
 
 export function getLearningSources(sourceIds: string[]) {

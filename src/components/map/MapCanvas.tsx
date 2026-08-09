@@ -29,6 +29,7 @@ const COLORS: Record<LocationType, string> = {
   mangrove: "#67A85B",
   outfall: "#0B8F91",
   learning: "#FF6B4A",
+  sampling: "#4F46E5",
 };
 
 const TILE_PROVIDERS = [
@@ -71,7 +72,8 @@ function markerCode(loc: EcoLocation) {
     );
   }
   const number = loc.id.split("-")[1] ?? loc.id;
-  return `${loc.type === "mangrove" ? "红" : "学"}${Number(number)}`;
+  const prefix = loc.type === "mangrove" ? "红" : loc.type === "sampling" ? "测" : "学";
+  return `${prefix}${Number(number)}`;
 }
 
 export default function MapCanvas({
@@ -295,7 +297,7 @@ export default function MapCanvas({
             : labelCode,
           {
             direction: "top",
-            permanent: !compactLabels || selected,
+            permanent: loc.type !== "sampling" && (!compactLabels || selected),
             className: selected
               ? "eco-data-label eco-data-label--selected"
               : "eco-data-label eco-data-label--compact",

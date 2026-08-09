@@ -11,7 +11,7 @@ import { useIsCompactMap } from "@/hooks/use-mobile";
 import { useAppState } from "@/lib/app-state";
 import MapCanvas from "@/components/map/LiveMapCanvas";
 
-const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall", "mangrove", "learning"];
+const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall", "mangrove", "learning", "sampling"];
 const SURVEY_YEAR = 2015;
 
 export function MapExplorer() {
@@ -36,6 +36,7 @@ export function MapExplorer() {
       outfall: locations.filter((location) => location.type === "outfall").length,
       mangrove: locations.filter((location) => location.type === "mangrove").length,
       learning: locations.filter((location) => location.type === "learning").length,
+      sampling: locations.filter((location) => location.type === "sampling").length,
     }),
     [],
   );
@@ -73,6 +74,10 @@ export function MapExplorer() {
               <span className="inline-flex items-center gap-1">
                 <span className="size-2 rounded-full bg-coral" />
                 {layerCounts.learning} 个综合学习点
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2 rounded-full bg-[#4F46E5]" />
+                {layerCounts.sampling} 个 2023 快速检测点
               </span>
             </div>
             <a

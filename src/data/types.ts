@@ -1,4 +1,4 @@
-export type LocationType = "mangrove" | "outfall" | "learning";
+export type LocationType = "mangrove" | "outfall" | "learning" | "sampling";
 
 export type RiskLevel = "低" | "中" | "高";
 
@@ -41,6 +41,18 @@ export interface EcoLocation {
   risks?: string[];
   waterStatus?: string;
   indicators?: { label: string; value: string }[];
+  waterSample?: {
+    sampleNumber: number;
+    year: 2023;
+    basin: string;
+    pH: string;
+    totalPhosphorus: string;
+    cod: string;
+    ammoniaNitrogen: string;
+    method: string;
+    sourceLabel: string;
+    coordinateNote: string;
+  };
   riskLevel: RiskLevel;
   annualData: AnnualData[];
 }

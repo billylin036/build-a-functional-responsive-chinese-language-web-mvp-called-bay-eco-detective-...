@@ -24,12 +24,14 @@ import mangroveImg from "@/assets/mangrove.jpg";
 import outfallImg from "@/assets/outfall.jpg";
 import birdImg from "@/assets/bird.jpg";
 import coastImg from "@/assets/coast.jpg";
+import waterSampleImg from "@/assets/2023-citizen-observation-rapid-test-table.png";
 
 const IMAGES: Record<string, string> = {
   mangrove: mangroveImg,
   outfall: outfallImg,
   bird: birdImg,
   coast: coastImg,
+  "water-sample": waterSampleImg,
 };
 
 function QuizBlock({ location }: { location: EcoLocation }) {
@@ -367,6 +369,34 @@ function OutfallDecadeComparison() {
   );
 }
 
+function WaterSampleCard({ location }: { location: EcoLocation }) {
+  const sample = location.waterSample;
+  if (!sample) return null;
+
+  return (
+    <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-navy">2023 现场快速检测</p>
+        <Badge variant="outline">报告序号 {sample.sampleNumber}</Badge>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Metric label="pH" value={sample.pH} />
+        <Metric label="总磷（TP）" value={sample.totalPhosphorus} />
+        <Metric label="COD" value={sample.cod} />
+        <Metric label="氨氮（NH₃-N）" value={sample.ammoniaNitrogen} />
+      </div>
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+        {sample.method}
+        ；数值与范围按报告表格原样录入。报告截图未在表头标注单位，因此本站不自行补写单位。
+      </p>
+      <p className="mt-2 rounded-md border-l-4 border-[#4F46E5] bg-card px-3 py-2 text-xs leading-5 text-muted-foreground">
+        {sample.coordinateNote}
+      </p>
+      <p className="mt-2 text-[11px] text-muted-foreground">来源：{sample.sourceLabel}</p>
+    </section>
+  );
+}
+
 export function StoryPanel({
   location,
   onClose,
@@ -405,6 +435,7 @@ export function StoryPanel({
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{location.category}</Badge>
             {location.type === "mangrove" && <Badge variant="outline">教学示例 · 非监测站</Badge>}
+            {location.type === "sampling" && <Badge variant="outline">2023 · 报告实测表</Badge>}
           </div>
           <h2 className="mt-2 text-lg font-semibold text-navy">{location.name}</h2>
           <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
@@ -428,6 +459,8 @@ export function StoryPanel({
 
         {location.type === "outfall" && <OutfallDecadeComparison />}
 
+        {location.type === "sampling" && <WaterSampleCard location={location} />}
+
         {location.type === "learning" && learningIndicator && (
           <div className="grid grid-cols-2 gap-2">
             <Metric label={learningIndicator.label} value={learningIndicator.value} />
@@ -449,7 +482,9 @@ export function StoryPanel({
             ? "数据说明：逐点卡片展示 2015 年公开坐标与历史现场描述；2025 年仅展示合作资料中的 30 个排口整体结果，未把总体数据冒充为本点现状。"
             : location.type === "mangrove"
               ? "数据说明：本点是基于红树林修复议题设计的空间学习锚点，不是官方样地坐标或水质监测站；8 区项目数字仅作为整体背景。"
-              : "数据说明：本点用于现场学习与规范观察，不展示没有来源的水质数值。"}
+              : location.type === "sampling"
+                ? "数据说明：pH、TP、COD 与 NH₃-N 来自 2023 年报告快速检测表；地图位置是按真实地名匹配的参考位置，报告未公开原始采样 GPS。"
+                : "数据说明：本点用于现场学习与规范观察，不展示没有来源的水质数值。"}
         </p>
       </div>
     </div>

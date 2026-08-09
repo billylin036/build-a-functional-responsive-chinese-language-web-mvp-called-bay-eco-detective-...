@@ -22,7 +22,7 @@ export function LocationSearch({ onPick }: { onPick: (id: string) => void }) {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="搜索排口或学习点"
+          placeholder="搜索河流、取样点或排口"
           className="h-9 border-0 px-0 shadow-none focus-visible:ring-0"
           aria-label="搜索地点"
         />

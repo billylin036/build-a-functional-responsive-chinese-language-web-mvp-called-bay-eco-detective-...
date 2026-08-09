@@ -1,4 +1,5 @@
 import type { EcoLocation } from "./types";
+import { WATER_SAMPLES_2023 } from "./water-samples-2023";
 
 export const YEARS = Array.from({ length: 11 }, (_, i) => 2015 + i);
 
@@ -276,6 +277,45 @@ const learningLocations: EcoLocation[] = [
   },
 ];
 
+const waterSampleLocations: EcoLocation[] = WATER_SAMPLES_2023.map((sample) => ({
+  id: `ws-${String(sample.sampleNumber).padStart(2, "0")}`,
+  name: sample.name,
+  type: "sampling",
+  longitude: sample.longitude,
+  latitude: sample.latitude,
+  category: `${sample.basin} · 2023 快速检测`,
+  image: "water-sample",
+  summary:
+    "绿源 2023 年民间微观察记录的珠江流域现场快速检测点。卡片保留报告中的范围值，不把快速检测结果改写为官方水质等级。",
+  riskLevel: "中",
+  indicators: [
+    { label: "报告序号", value: String(sample.sampleNumber) },
+    { label: "所在流域", value: sample.basin },
+  ],
+  waterSample: {
+    sampleNumber: sample.sampleNumber,
+    year: 2023,
+    basin: sample.basin,
+    pH: sample.pH,
+    totalPhosphorus: sample.totalPhosphorus,
+    cod: sample.cod,
+    ammoniaNitrogen: sample.ammoniaNitrogen,
+    method: "DNA 取样点现场水质快速检测",
+    sourceLabel: "深圳市绿源环保志愿者协会《碧水流深｜2023年度民间微观察》",
+    coordinateNote:
+      "原报告未刊出经纬度；地图位置按报告地名匹配到对应河段或地标，仅作参考定位，不是原始采样 GPS。",
+  },
+  annualData: [{ year: 2023 }],
+  story: {
+    what: `2023 年现场快速检测记录：pH ${sample.pH}，总磷 ${sample.totalPhosphorus}，COD ${sample.cod}，氨氮 ${sample.ammoniaNitrogen}。`,
+    why: "pH、总磷、COD 与氨氮从酸碱条件、营养盐和有机污染等不同侧面提供线索；单个指标不能独立代表整个水生态系统。",
+    matter:
+      "报告给出的是现场快速检测的数值或范围。它适合用于发现问题和设计后续调查，但不能替代规范实验室检测，也不能脱离单位、方法和采样条件直接判定水质等级。",
+    action:
+      "比较不同点位时先确认指标、单位和检测方法一致；需要判断变化趋势时，还应在相近季节、水位和天气条件下重复采样。",
+  },
+}));
+
 /**
  * 排口是历史调查点；红树林与综合点是教学示例点，不冒充水质监测站。
  * 三类点使用不同颜色，并在地点卡中分别说明证据边界。
@@ -284,6 +324,7 @@ export const locations: EcoLocation[] = [
   ...mangroveLocations,
   ...outfallLocations,
   ...learningLocations,
+  ...waterSampleLocations,
 ];
 
 export const getLocation = (id: string) => locations.find((l) => l.id === id);
@@ -356,11 +397,11 @@ export const SHENZHEN_BAY_BOUNDARY: [number, number][] = [
 
 export const SHENZHEN_BAY_CENTER: [number, number] = [22.467176, 113.941171];
 export const SHENZHEN_BAY_DEFAULT_ZOOM = 12;
-export const MAP_LIMIT_RADIUS_KM = 200;
-export const MAP_MIN_ZOOM = 9;
+export const MAP_LIMIT_RADIUS_KM = 430;
+export const MAP_MIN_ZOOM = 7;
 
 /**
- * 地图活动范围：以深圳湾为中心，向东、西、南、北各约 200 千米。
+ * 地图活动范围：以深圳湾为中心，覆盖 2023 年珠江流域 38 个快速检测点。
  * Leaflet 与高德均使用矩形边界限制拖拽；经度跨度按深圳湾纬度换算。
  */
 const latitudeRadius = MAP_LIMIT_RADIUS_KM / 111.32;
