@@ -164,6 +164,15 @@ export const learningSources: LearningSource[] = [
     kind: "绿源官方资料",
   },
   {
+    id: "sengo-2023-observation",
+    title: "碧水流深｜2023年度民间微观察",
+    publisher: "深圳市绿源环保志愿者协会",
+    url: "https://mp.weixin.qq.com/s/6e_1tieqb8zGIk2zBL4Hhg",
+    useFor: "2023 年民间河长行动规模、巡护问题分类、珠江流域 38 个点位快速检测与生物多样性调查",
+    kind: "绿源官方资料",
+    publishedAt: "2024-01-24",
+  },
+  {
     id: "sengo-patrol-2025-01",
     title: "红树林巡护员：播撒文明生态种子，守护湿地水天一色",
     publisher: "深圳市绿源环保志愿者协会",
@@ -299,7 +308,7 @@ export const learningChapters: CourseChapter[] = [
     subtitle: "把历史现场描述、快速检测与科学结论分开",
     description: "沿着 B1—B4、D1 与北岸排口的公开记录，学习如何阅读调查方法、误差与时空对照。",
     duration: "约 15 分钟",
-    sourceIds: ["outfall-source", "mee-monitoring", "sengo-water"],
+    sourceIds: ["outfall-source", "mee-monitoring", "sengo-water", "sengo-2023-observation"],
     goals: ["还原调查步骤", "识别快速检测的限制", "用谨慎语言描述历史证据"],
     facts: [
       {
@@ -313,6 +322,10 @@ export const learningChapters: CourseChapter[] = [
       {
         title: "历史描述不能改写成当前状态",
         text: "2015 年记录中，B2、B3、B4 的现场污染迹象较明显；D1 与 4-1 当时排水较清、无臭。网站将这些内容标为历史观察，不作当前水质评分。",
+      },
+      {
+        title: "38 个点位表是采样时的快速检测",
+        text: "《2023年度民间微观察》展示了珠江流域 38 个 eDNA 采样点的现场快速检测表，指标包括 pH、总磷、COD 和氨氮。它是有时间、地点与方法边界的历史记录，不是深圳湾实时水质等级。",
       },
     ],
     fieldTask: {
@@ -354,20 +367,21 @@ export const learningChapters: CourseChapter[] = [
         sourceIds: ["outfall-source", "mee-monitoring"],
       },
       {
-        id: "historical-wording",
-        skill: "科学表达",
+        id: "rapid-table-boundary",
+        skill: "数据解释",
         difficulty: "挑战",
-        question: "根据 2015 年记录，哪句话最符合证据边界？",
+        question: "网站应怎样呈现《2023年度民间微观察》中的 38 个点位快速检测表？",
         options: [
-          "B2、B3、B4 今天仍然持续排放同样污水",
-          "2015 年调查期，B2、B3、B4 出现较明显污染迹象；当前状态需要复查",
-          "B1 永远没有污染",
-          "所有排口的水质都相同",
+          "直接改写成今天的深圳湾水质排名",
+          "保留采样年份、点位、指标和快速检测口径，并说明不能替代当前规范监测",
+          "只展示被标色的格子，不保留表头和地点",
+          "把未测项目自动填成 0",
         ],
         answerIndex: 1,
-        hint: "保留调查年份，并避免把历史观察延伸到今天。",
-        explanation: "注明时间和复查需求，既保留原始事实，也避免把旧资料误当实时监测。",
-        sourceIds: ["outfall-source"],
+        hint: "先问数据何时、何地、用什么方法获得。",
+        explanation:
+          "该表来自 2023 年 eDNA 采样时的现场快速检测。保留元数据与方法局限，才能避免把历史筛查误读为实时等级。",
+        sourceIds: ["sengo-2023-observation", "mee-monitoring"],
       },
       {
         id: "comparison-design",
@@ -489,13 +503,14 @@ export const learningChapters: CourseChapter[] = [
     title: "第四章 · 从学习到守护",
     subtitle: "把热情变成安全、规范、可复核的公众行动",
     description:
-      "参考绿源 2024—2025 年巡护与公众活动记录，学习物种观察、海岸垃圾记录和环境信息反馈。",
+      "参考绿源 2023—2025 年巡护与公众活动记录，学习物种观察、海岸垃圾记录和环境信息反馈。",
     duration: "约 13 分钟",
     sourceIds: [
       "sengo-patrol-2025-01",
       "sengo-patrol-2025-04",
       "sengo-patrol-2025-05",
       "sengo-2024-q3",
+      "sengo-2023-observation",
       "inat-quality",
     ],
     goals: ["认识真实公众参与路径", "制作可复核观察记录", "遵守湿地观察安全与伦理"],
@@ -511,6 +526,10 @@ export const learningChapters: CourseChapter[] = [
       {
         title: "公众活动也需要可追溯记录",
         text: "绿源 2024 年第三季度简报记录 9 期“守护白沙湾”活动，由 100 多名志愿者带领超过 1000 名公众参与。数字反映该季度活动规模，不代表全年或所有项目。",
+      },
+      {
+        title: "行动规模不等于生态成效",
+        text: "《2023年度民间微观察》记录全年 40 场次民间水环境巡护及调查，为 1177 人次提供环境志愿服务，累计 5172 小时，涉水行程 33,312 公里。这些是项目行动量，不能单独证明水质已经改善。",
       },
     ],
     fieldTask: {
@@ -556,20 +575,21 @@ export const learningChapters: CourseChapter[] = [
         sourceIds: ["sengo-patrol-2025-04"],
       },
       {
-        id: "activity-scale",
+        id: "annual-action-scale",
         skill: "数据口径",
         difficulty: "挑战",
-        question: "如何准确引用 2024 年第三季度“守护白沙湾”活动数据？",
+        question: "如何准确解读《2023年度民间微观察》的年度行动数据？",
         options: [
-          "全年共有 9 场、恰好 100 名公众",
-          "该季度开展 9 期，100 多名志愿者带领超过 1000 名公众参与",
-          "深圳所有湿地活动共有 1000 场",
-          "这些数字证明生态系统已经完全恢复",
+          "1177 人次等于 1177 名从未重复参与的个人",
+          "40 场次、1177 人次、5172 小时和 33,312 公里反映年度项目行动规模，不直接等于水质改善",
+          "33,312 公里是一条河流的长度",
+          "17 次属地处理证明只发现了 17 个环境问题",
         ],
         answerIndex: 1,
-        hint: "保留时间范围、“多于”口径和人员角色。",
-        explanation: "准确引用必须说明季度范围，并区分志愿者与公众参与者。",
-        sourceIds: ["sengo-2024-q3"],
+        hint: "注意“人次”与“人数”、“行动量”与“生态结果”的区别。",
+        explanation:
+          "报告中的场次、人次、时长和行程用于描述 2023 年项目规模；生态变化还需要规范监测与长期对照。",
+        sourceIds: ["sengo-2023-observation"],
       },
       {
         id: "quality-record",

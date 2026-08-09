@@ -3,6 +3,19 @@ import type { ReactNode } from "react";
 import { BookOpenCheck, ExternalLink, Microscope, ShieldCheck } from "lucide-react";
 import { learningSources } from "@/data/learning";
 import { Badge } from "@/components/ui/badge";
+import reportPatrolFindings from "@/assets/2023-citizen-observation-patrol-findings.png";
+import reportRapidTestTable from "@/assets/2023-citizen-observation-rapid-test-table.png";
+import reportSitesMap from "@/assets/2023-citizen-observation-sites-map.png";
+
+const reportStats = [
+  { value: "73 起", label: "水环境污染信息" },
+  { value: "33 起", label: "生态环境损害举报" },
+  { value: "17 次", label: "推动属地处理" },
+  { value: "40 场次", label: "水环境巡护及调查" },
+  { value: "1177 人次", label: "环境志愿服务" },
+  { value: "5172 小时", label: "志愿服务时长" },
+  { value: "33,312 公里", label: "涉水行程" },
+];
 
 export const Route = createFileRoute("/resources")({
   head: () => ({
@@ -58,6 +71,95 @@ function ResourcesPage() {
           title="允许未知"
           text="缺失、未测和未公开不是 0。明确数据边界本身就是科学素养。"
         />
+      </section>
+
+      <section className="mt-10 overflow-hidden rounded-xl border border-teal/20 bg-card">
+        <div className="border-b border-border bg-gradient-to-r from-paleeco to-card p-6 sm:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-3xl">
+              <Badge className="bg-teal text-white">绿源 2023 年度报告</Badge>
+              <h2 className="mt-3 text-xl font-semibold text-navy sm:text-2xl">
+                碧水流深 · 民间微观察
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                以下数字与图件来自深圳市绿源环保志愿者协会发布的《2023年度民间微观察》。它们记录的是
+                2023 年项目行动和采样快照，不是实时监测数据。
+              </p>
+            </div>
+            <a
+              href="https://mp.weixin.qq.com/s/6e_1tieqb8zGIk2zBL4Hhg"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-teal/30 bg-white px-3 py-2 text-sm font-medium text-teal hover:border-teal"
+            >
+              查看原始报告
+              <ExternalLink className="size-4" />
+            </a>
+          </div>
+        </div>
+
+        <div className="p-6 sm:p-8">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {reportStats.map((stat) => (
+              <article
+                key={stat.label}
+                className="rounded-lg border border-border bg-background p-4"
+              >
+                <p className="font-mono text-lg font-semibold text-teal">{stat.value}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{stat.label}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-8 grid gap-5 lg:grid-cols-2">
+            <figure className="overflow-hidden rounded-lg border border-border bg-background">
+              <img
+                src={reportSitesMap}
+                alt="报告中的 2014 至 2023 年民间河长行动足迹、2023 年走巡路线与水生生物调查点位图"
+                className="h-auto w-full"
+                loading="lazy"
+              />
+              <figcaption className="border-t border-border p-4 text-xs leading-5 text-muted-foreground">
+                报告第 11 页：2014—2023 年行动足迹、2023 年走巡路线及水生生物调查点位。
+                点位分布用于说明调查范围，不代表每个地点都有连续监测。
+              </figcaption>
+            </figure>
+
+            <figure className="overflow-hidden rounded-lg border border-border bg-background">
+              <img
+                src={reportRapidTestTable}
+                alt="报告中的珠江流域 38 个点位水质快速检测结果表"
+                className="h-auto w-full"
+                loading="lazy"
+              />
+              <figcaption className="border-t border-border p-4 text-xs leading-5 text-muted-foreground">
+                报告第 12 页：珠江流域 38 个 eDNA 采样点的现场快速检测表，列出 pH、总磷、COD
+                和氨氮。网站保留原表，不自行增补水质等级。
+              </figcaption>
+            </figure>
+          </div>
+
+          <figure className="mt-5 overflow-hidden rounded-lg border border-border bg-background lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+            <img
+              src={reportPatrolFindings}
+              alt="报告记录的 2023 年巡河中发现的问题现场照片"
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <figcaption className="flex flex-col justify-center border-t border-border p-5 text-sm leading-7 text-muted-foreground lg:border-l lg:border-t-0">
+              <span className="font-semibold text-navy">巡护照片是问题线索，不是污染源鉴定。</span>
+              报告将 2023
+              年民间河长巡护问题归纳为污水溢流、渗漏、直排、面源污染、工程泥浆水及综合管理问题。
+              照片可帮助记录位置与现象，原因仍需现场核查、规范采样和部门调查。
+            </figcaption>
+          </figure>
+
+          <div className="mt-5 rounded-lg border border-coral/25 bg-coral/5 p-4 text-xs leading-6 text-muted-foreground">
+            <span className="font-semibold text-navy">阅读边界：</span>
+            “1177 人次”不是 1177 名不重复个人；“33,312 公里”是年度涉水行程，不是河流长度；38
+            点位表是 eDNA 采样时的快速筛查，不能替代当前水质评价或实验室监测。
+          </div>
+        </div>
       </section>
 
       {groups.map((group) => (
