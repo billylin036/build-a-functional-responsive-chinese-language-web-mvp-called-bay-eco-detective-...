@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Award, CheckCircle2, ClipboardCheck, History, Printer, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TOTAL_LEARNING_POINTS } from "@/data/learning";
+import { TOTAL_CHAPTERS, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { useAppState } from "@/lib/app-state";
 
 export const Route = createFileRoute("/me")({
@@ -21,6 +21,8 @@ export const Route = createFileRoute("/me")({
 function LearningResultsPage() {
   const {
     hydrated,
+    completedChapters,
+    chapterAttempts,
     completedLocationQuizzes,
     quizAttempts,
     finalAssessment,
@@ -39,7 +41,11 @@ function LearningResultsPage() {
     );
   }
 
-  const totalAttempts = Object.values(quizAttempts).reduce(
+  const totalLocationAttempts = Object.values(quizAttempts).reduce(
+    (total, attempts) => total + attempts,
+    0,
+  );
+  const totalChapterAttempts = Object.values(chapterAttempts).reduce(
     (total, attempts) => total + attempts,
     0,
   );
@@ -64,12 +70,12 @@ function LearningResultsPage() {
       </div>
 
       <section className="no-print mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="完成章节" value={`${completedChapters.length} / ${TOTAL_CHAPTERS}`} />
+        <Stat label="章节答题选择" value={`${totalChapterAttempts} 次`} />
         <Stat
-          label="完成数据点"
-          value={`${completedLocationQuizzes.length} / ${TOTAL_LEARNING_POINTS}`}
+          label="地图拓展练习"
+          value={`${completedLocationQuizzes.length}/${TOTAL_LEARNING_POINTS} 点 · ${totalLocationAttempts} 次答题`}
         />
-        <Stat label="地点答题次数" value={`${totalAttempts} 次`} />
-        <Stat label="互动观察记录" value={`${activityRecords.length} 条`} />
         <Stat
           label="综合测验"
           value={
@@ -115,7 +121,7 @@ function LearningResultsPage() {
             {learnerProfile.className ? ` · ${learnerProfile.className}` : ""}
           </p>
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-7">
-            已完成“湾区生态侦探”全部 {TOTAL_LEARNING_POINTS} 个地图数据点学习与地点测验，
+            已完成“湾区生态侦探”全部 {TOTAL_CHAPTERS} 个真实资料学习章节与连续测验，
             并通过深圳湾生态综合测验，成绩为 {finalAssessment.score}/{finalAssessment.total}。
           </p>
           <div className="mx-auto mt-8 grid max-w-xl gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:grid-cols-3">
@@ -147,7 +153,7 @@ function LearningResultsPage() {
           <Award className="mx-auto size-8 text-muted-foreground" />
           <h2 className="mt-3 text-lg font-semibold text-navy">学习证书尚未解锁</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            完成全部地点测验并通过综合测验后即可生成。
+            完成全部四个章节并通过综合测验后即可生成；地图地点题为拓展练习。
           </p>
           <Button asChild className="mt-4">
             <Link to="/learn">继续学习闯关</Link>
@@ -195,7 +201,7 @@ function LearningResultsPage() {
           <div className="mt-3 rounded-md border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
             还没有学习记录。
             <Link className="ml-1 text-teal underline" to="/learn">
-              开始第一个数据点
+              开始第一章
             </Link>
           </div>
         ) : (

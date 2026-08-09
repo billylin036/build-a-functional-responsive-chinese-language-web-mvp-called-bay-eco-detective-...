@@ -18,14 +18,27 @@ export const Route = createFileRoute("/resources")({
 });
 
 function ResourcesPage() {
+  const groups = [
+    {
+      title: "绿源官方资料",
+      description: "来自深圳市绿源环保志愿者协会官网同步发布的项目页、调查报告与活动回顾。",
+      sources: learningSources.filter((source) => source.kind === "绿源官方资料"),
+    },
+    {
+      title: "政府与专业资料",
+      description: "用于补充监测方法、修复原则、生物观察与数据质量要求。",
+      sources: learningSources.filter((source) => source.kind !== "绿源官方资料"),
+    },
+  ];
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <section className="rounded-xl border border-teal/20 bg-gradient-to-br from-paleeco to-card p-6 sm:p-8">
         <Badge className="bg-teal text-white">可追溯知识库</Badge>
         <h1 className="mt-3 text-2xl font-semibold text-navy sm:text-3xl">学习资料库</h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-          每道挑战题的科学概念都链接到政府标准、专业机构教育指南或公开调查资料。
-          地图地点资料与通用科学知识分开标注；没有获得的原始监测数据不会用推测值补齐。
+          四章课程和地图挑战题都保留原始出处。绿源官方调查、项目页与培训回顾用于讲述深圳本地事实；
+          政府标准和专业教育指南用于解释调查方法。没有获得的原始监测数据不会用推测值补齐。
         </p>
       </section>
 
@@ -47,36 +60,53 @@ function ResourcesPage() {
         />
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-navy">本课程使用的可靠来源</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {learningSources.map((source, index) => (
-            <article key={source.id} className="rounded-lg border border-border bg-card p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-mono text-xs text-teal">
-                    SOURCE {String(index + 1).padStart(2, "0")}
-                  </p>
-                  <h3 className="mt-2 text-sm font-semibold leading-6 text-navy">{source.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{source.publisher}</p>
+      {groups.map((group) => (
+        <section key={group.title} className="mt-10">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="text-xl font-semibold text-navy">{group.title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{group.description}</p>
+            </div>
+            <Badge variant="outline">{group.sources.length} 项</Badge>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {group.sources.map((source, index) => (
+              <article key={source.id} className="rounded-lg border border-border bg-card p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-mono text-xs text-teal">
+                        SOURCE {String(index + 1).padStart(2, "0")}
+                      </p>
+                      {source.publishedAt && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          {source.publishedAt}
+                        </Badge>
+                      )}
+                    </div>
+                    <h3 className="mt-2 text-sm font-semibold leading-6 text-navy">
+                      {source.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{source.publisher}</p>
+                  </div>
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`打开来源：${source.title}`}
+                    className="rounded-md border border-border p-2 text-teal hover:border-teal"
+                  >
+                    <ExternalLink className="size-4" />
+                  </a>
                 </div>
-                <a
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`打开来源：${source.title}`}
-                  className="rounded-md border border-border p-2 text-teal hover:border-teal"
-                >
-                  <ExternalLink className="size-4" />
-                </a>
-              </div>
-              <p className="mt-4 border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
-                课程用途：{source.useFor}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+                <p className="mt-4 border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
+                  课程用途：{source.useFor}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
 
       <section className="mt-10 rounded-lg border border-coral/25 bg-coral/5 p-5">
         <h2 className="font-semibold text-navy">给学生的资料判断四问</h2>

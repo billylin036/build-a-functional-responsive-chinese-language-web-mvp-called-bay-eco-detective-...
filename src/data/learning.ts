@@ -6,6 +6,8 @@ export interface LearningSource {
   publisher: string;
   url: string;
   useFor: string;
+  kind?: "绿源官方资料" | "政府与专业资料";
+  publishedAt?: string;
 }
 
 export interface LearningQuiz {
@@ -53,6 +55,29 @@ export interface FinalQuestion extends LearningQuiz {
   id: string;
 }
 
+export interface ChapterQuizQuestion extends LearningQuiz {
+  id: string;
+  sourceIds: string[];
+}
+
+export interface CourseChapter {
+  id: string;
+  number: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  duration: string;
+  sourceIds: string[];
+  goals: string[];
+  facts: { title: string; text: string }[];
+  fieldTask: {
+    title: string;
+    prompt: string;
+    steps: string[];
+  };
+  quiz: ChapterQuizQuestion[];
+}
+
 export const TOTAL_LEARNING_POINTS = locations.length;
 export const FINAL_PASS_SCORE = 6;
 
@@ -63,6 +88,7 @@ export const learningSources: LearningSource[] = [
     publisher: "国家林业和草原局",
     url: "https://www.forestry.gov.cn/c/www/sd/556199.jhtml",
     useFor: "红树林生态功能、潮汐联系与生物多样性",
+    kind: "政府与专业资料",
   },
   {
     id: "mangrove-manual",
@@ -70,6 +96,7 @@ export const learningSources: LearningSource[] = [
     publisher: "国家林业和草原局",
     url: "https://www.forestry.gov.cn/c/www/gkzcjd/43663.jhtml",
     useFor: "修复原则、退化诊断、跟踪监测与适应性管理",
+    kind: "政府与专业资料",
   },
   {
     id: "mee-monitoring",
@@ -77,6 +104,7 @@ export const learningSources: LearningSource[] = [
     publisher: "中华人民共和国生态环境部",
     url: "https://www.mee.gov.cn/ywgz/fgbz/bz/bzwb/jcffbz/202205/t20220506_977066.shtml",
     useFor: "监测布点、采样、原始记录与质量控制",
+    kind: "政府与专业资料",
   },
   {
     id: "mee-indicators",
@@ -84,6 +112,7 @@ export const learningSources: LearningSource[] = [
     publisher: "中华人民共和国生态环境部",
     url: "https://www.mee.gov.cn/xxgk2018/xxgk/xxgk15/202012/t20201228_815116.html",
     useFor: "水温、pH、浊度、溶解氧、氨氮等指标的含义与限制",
+    kind: "政府与专业资料",
   },
   {
     id: "noaa-debris",
@@ -91,6 +120,7 @@ export const learningSources: LearningSource[] = [
     publisher: "NOAA Marine Debris Program",
     url: "https://marinedebris.noaa.gov/curricula/marine-debris-monitoring-toolkit-educators",
     useFor: "面向学生的标准化岸线垃圾调查、分类、记录与分析",
+    kind: "政府与专业资料",
   },
   {
     id: "wetland-birds",
@@ -98,6 +128,7 @@ export const learningSources: LearningSource[] = [
     publisher: "香港湿地公园",
     url: "https://www.wetlandpark.gov.hk/filemanager/files/public/education/Outline_SB_ENG_2020.pdf",
     useFor: "鸟类生态调查、栖息地比较与户外学习",
+    kind: "政府与专业资料",
   },
   {
     id: "inat-quality",
@@ -105,36 +136,462 @@ export const learningSources: LearningSource[] = [
     publisher: "iNaturalist",
     url: "https://help.inaturalist.org/en/support/solutions/articles/151000170805-inaturalist-educator-s-guide",
     useFor: "日期、位置、影像证据、隐私与生物观察质量",
+    kind: "政府与专业资料",
   },
   {
     id: "outfall-source",
     title: "深圳湾排水口调查公开资料",
     publisher: "深圳市绿源环保志愿者协会",
     url: "https://www.szhb.org/5383.html",
-    useFor: "地图中 11 个排口的公开编号与 GPS 坐标",
+    useFor: "深圳湾地理、2015 年排水口调查方法、历史现场描述与 11 个公开 GPS 坐标",
+    kind: "绿源官方资料",
+    publishedAt: "2015-06-06",
+  },
+  {
+    id: "sengo-wetland",
+    title: "滨海湿地生态保护",
+    publisher: "深圳市绿源环保志愿者协会",
+    url: "https://www.szhb.org/project/wetland",
+    useFor: "绿源红树林巡护、生态修复、公众参与与累计项目成果",
+    kind: "绿源官方资料",
+  },
+  {
+    id: "sengo-water",
+    title: "碧水流深",
+    publisher: "深圳市绿源环保志愿者协会",
+    url: "https://www.szhb.org/project/water",
+    useFor: "流域监督员、实地调研、科学数据与环境信息公开",
+    kind: "绿源官方资料",
+  },
+  {
+    id: "sengo-patrol-2025-01",
+    title: "红树林巡护员：播撒文明生态种子，守护湿地水天一色",
+    publisher: "深圳市绿源环保志愿者协会",
+    url: "https://www.szhb.org/22402.html",
+    useFor: "2025 年首场专业培训、巡护队发展与实践活动",
+    kind: "绿源官方资料",
+    publishedAt: "2025-08-18",
+  },
+  {
+    id: "sengo-patrol-2025-04",
+    title: "红树林巡护员 202504 期培训回顾",
+    publisher: "深圳市绿源环保志愿者协会",
+    url: "https://www.szhb.org/22514.html",
+    useFor: "西湾红树林物种辨认、外来物种防治、候鸟与海岸垃圾治理",
+    kind: "绿源官方资料",
+    publishedAt: "2025-10-29",
+  },
+  {
+    id: "sengo-patrol-2025-05",
+    title: "红树林巡护队 202505 期培训回顾",
+    publisher: "深圳市绿源环保志愿者协会",
+    url: "https://www.szhb.org/22528.html",
+    useFor: "福田红树林实地巡护与从理论走向实践的培训路径",
+    kind: "绿源官方资料",
+    publishedAt: "2025-11-15",
+  },
+  {
+    id: "sengo-2024-q3",
+    title: "绿源环协 2024 年第三季度工作简报",
+    publisher: "深圳市绿源环保志愿者协会",
+    url: "https://www.szhb.org/21883.html",
+    useFor: "守护白沙湾活动场次、志愿者与公众参与记录",
+    kind: "绿源官方资料",
+    publishedAt: "2024",
   },
 ];
 
-export const learningChapters = [
+export const learningChapters: CourseChapter[] = [
   {
-    id: "mangrove",
-    title: "第一章 · 红树林修复推理",
-    description: "从成活率走向生态系统判断：比较水动力、潮沟、人类干扰与长期监测。",
-    locations: locations.filter((location) => location.type === "mangrove"),
+    id: "bay-evidence",
+    number: 1,
+    title: "第一章 · 认识深圳湾",
+    subtitle: "先建立地理尺度，再判断证据能说明什么",
+    description: "从绿源 2015 年公开调查出发，认识半封闭感潮海湾、流域与排水口之间的关系。",
+    duration: "约 12 分钟",
+    sourceIds: ["outfall-source"],
+    goals: ["读懂深圳湾的空间尺度", "区分坐标、观察与检测结论", "识别历史资料的时间边界"],
+    facts: [
+      {
+        title: "半封闭、浅水、受潮汐影响",
+        text: "绿源公开资料记载，深圳湾长约 14 千米、面积约 80 平方千米、平均水深约 3 米；内湾退潮时会露出大面积潮间带泥滩。",
+      },
+      {
+        title: "海湾问题要放回流域理解",
+        text: "资料记载深圳湾流域面积约 607 平方千米，深圳河、元朗河、大沙河、凤塘河和新洲河等直接入湾。陆地活动可沿河流和排水系统影响海湾。",
+      },
+      {
+        title: "2015 年调查是一份历史快照",
+        text: "项目组沿约 15 千米滨海休闲带开展实地调查，共发现 30 个排洪口，其中至少 6 个当时经常有污水排出。该结论描述 2015 年调查期，不等于今天的现状。",
+      },
+    ],
+    fieldTask: {
+      title: "历史资料边界卡",
+      prompt: "任选地图中的一个排口，用一句话分别写出“已知”“未知”“需要怎样复查”。",
+      steps: ["记录调查年份与地点", "只摘录资料明确写出的观察", "列出判断当前状态还缺少的证据"],
+    },
+    quiz: [
+      {
+        id: "bay-scale",
+        skill: "信息提取",
+        difficulty: "基础",
+        question: "哪一组数据与绿源 2015 年公开资料对深圳湾的描述一致？",
+        options: [
+          "长约 14 千米、面积约 80 平方千米、平均水深约 3 米",
+          "长约 80 千米、面积约 14 平方千米、平均水深约 30 米",
+          "面积约 607 平方千米、平均水深约 16 米",
+          "只有涨潮时才与河流相连",
+        ],
+        answerIndex: 0,
+        hint: "不要把海湾面积、流域面积和最深处深度混在一起。",
+        explanation: "14 千米、80 平方千米和平均约 3 米分别对应海湾长度、面积和平均水深。",
+        sourceIds: ["outfall-source"],
+      },
+      {
+        id: "bay-watershed",
+        skill: "系统思维",
+        difficulty: "进阶",
+        question: "为什么研究深圳湾污染不能只观察海面？",
+        options: [
+          "因为海面颜色永远无法记录",
+          "因为入湾河流和城市排水系统会把流域内的物质带入海湾",
+          "因为所有污染都来自远洋",
+          "因为潮汐会让污染自动消失",
+        ],
+        answerIndex: 1,
+        hint: "思考流域、河流、排水系统与海湾之间的连接。",
+        explanation: "海湾接收多条河流与排水系统来水，因此需要从流域尺度追踪来源和路径。",
+        sourceIds: ["outfall-source", "sengo-water"],
+      },
+      {
+        id: "survey-count",
+        skill: "精确阅读",
+        difficulty: "进阶",
+        question: "关于绿源 2015 年沿岸排水口调查，哪项表述最准确？",
+        options: [
+          "发现 6 个排洪口，全部有精密仪器数据",
+          "发现 30 个排洪口，其中至少 6 个在调查期经常有污水排出",
+          "调查了 607 个排洪口",
+          "证明今天仍有相同数量排口排污",
+        ],
+        answerIndex: 1,
+        hint: "区分“发现总数”“经常排污数”和“今天的状态”。",
+        explanation: "资料记录的是 2015 年调查期的 30 个排洪口及至少 6 个经常排污的历史观察。",
+        sourceIds: ["outfall-source"],
+      },
+      {
+        id: "coordinate-limit",
+        skill: "证据边界",
+        difficulty: "挑战",
+        question: "只知道某排口的 GPS 坐标，能够直接得出什么结论？",
+        options: ["排口位置", "当前水质等级", "污染物来源", "未来治理效果"],
+        answerIndex: 0,
+        hint: "坐标回答“在哪里”，不回答“水怎么样”。",
+        explanation: "坐标能定位排口；当前水质需要有日期、采样条件、指标、方法与判定标准。",
+        sourceIds: ["outfall-source", "mee-monitoring"],
+      },
+    ],
   },
   {
-    id: "outfall",
-    title: "第二章 · 水环境证据侦探",
-    description: "学习采样设计、缺失数据、质量控制、因果推断和趋势判断，而不是背编号。",
-    locations: locations.filter((location) => location.type === "outfall"),
+    id: "outfall-investigation",
+    number: 2,
+    title: "第二章 · 读懂排口调查",
+    subtitle: "把历史现场描述、快速检测与科学结论分开",
+    description: "沿着 B1—B4、D1 与北岸排口的公开记录，学习如何阅读调查方法、误差与时空对照。",
+    duration: "约 15 分钟",
+    sourceIds: ["outfall-source", "mee-monitoring", "sengo-water"],
+    goals: ["还原调查步骤", "识别快速检测的限制", "用谨慎语言描述历史证据"],
+    facts: [
+      {
+        title: "四次进入保护区，三轮快速检测",
+        text: "绿源资料记载，项目组第一次进入红树林保护区用于寻找、编号、定位和影像记录；之后三次使用便携试剂检测 B1—B4，每个排口共测试三次。",
+      },
+      {
+        title: "快速试剂只支持初步判断",
+        text: "原文明确提醒便携检测试剂误差较大，精确数据需要精密仪器进一步检测。重复测试可以增加信息，但不会自动消除方法局限。",
+      },
+      {
+        title: "历史描述不能改写成当前状态",
+        text: "2015 年记录中，B2、B3、B4 的现场污染迹象较明显；D1 与 4-1 当时排水较清、无臭。网站将这些内容标为历史观察，不作当前水质评分。",
+      },
+    ],
+    fieldTask: {
+      title: "排口观察句改写",
+      prompt: "把“这个排口污染很严重”改写成一条可复核的观察记录。",
+      steps: ["加入日期与地点", "描述看到或闻到的现象", "把原因判断留给后续检测与对照"],
+    },
+    quiz: [
+      {
+        id: "outfall-sequence",
+        skill: "方法还原",
+        difficulty: "进阶",
+        question: "绿源对保护区 B1—B4 的调查顺序是什么？",
+        options: [
+          "先给出水质等级，再寻找排口",
+          "第一次寻找、编号、定位和拍摄，之后三次进行便携试剂检测",
+          "只在一次访问中拍照",
+          "先用精密仪器连续监测十年",
+        ],
+        answerIndex: 1,
+        hint: "原文把第一次进入与后续三次进入的任务分开描述。",
+        explanation: "第一次建立地点档案，后续三次进行快速检测，构成可追溯的调查步骤。",
+        sourceIds: ["outfall-source"],
+      },
+      {
+        id: "portable-limit",
+        skill: "质量控制",
+        difficulty: "挑战",
+        question: "便携试剂连续三次得到相近结果后，最稳妥的表述是什么？",
+        options: [
+          "已经等同于精密仪器结论",
+          "可作为初步线索，但仍需规范采样和精密检测确认",
+          "重复三次就没有误差",
+          "可以直接代表全年水质",
+        ],
+        answerIndex: 1,
+        hint: "重复性与准确性不是同一个概念。",
+        explanation: "相近结果说明重复性较好，但便携方法本身的误差与采样代表性仍然存在。",
+        sourceIds: ["outfall-source", "mee-monitoring"],
+      },
+      {
+        id: "historical-wording",
+        skill: "科学表达",
+        difficulty: "挑战",
+        question: "根据 2015 年记录，哪句话最符合证据边界？",
+        options: [
+          "B2、B3、B4 今天仍然持续排放同样污水",
+          "2015 年调查期，B2、B3、B4 出现较明显污染迹象；当前状态需要复查",
+          "B1 永远没有污染",
+          "所有排口的水质都相同",
+        ],
+        answerIndex: 1,
+        hint: "保留调查年份，并避免把历史观察延伸到今天。",
+        explanation: "注明时间和复查需求，既保留原始事实，也避免把旧资料误当实时监测。",
+        sourceIds: ["outfall-source"],
+      },
+      {
+        id: "comparison-design",
+        skill: "对照设计",
+        difficulty: "综合",
+        question: "若要判断雨后某排口是否影响邻近水域，哪种设计最合理？",
+        options: [
+          "只在排口旁拍一张照片",
+          "比较雨前雨后、近口与参考点，并记录潮位和统一指标",
+          "只询问路人感受",
+          "把缺失值记作 0",
+        ],
+        answerIndex: 1,
+        hint: "需要时间对照、空间对照和背景条件。",
+        explanation: "时空对照与统一方法能减少潮汐、天气和地点差异带来的混淆。",
+        sourceIds: ["mee-monitoring", "sengo-water"],
+      },
+    ],
   },
   {
-    id: "learning",
-    title: "第三章 · 生物多样性与岸线调查",
-    description: "用固定时段鸟类计数和标准样带垃圾调查，把观察变成可比较的数据。",
-    locations: locations.filter((location) => location.type === "learning"),
+    id: "mangrove-ecosystem",
+    number: 3,
+    title: "第三章 · 红树林是一个生态系统",
+    subtitle: "从“种了多少棵”走向水文、生境与生物多样性",
+    description:
+      "用绿源滨海湿地项目资料理解红树林的生态功能、巡护记录与长期修复为什么需要持续管理。",
+    duration: "约 14 分钟",
+    sourceIds: ["sengo-wetland", "sengo-patrol-2025-04", "forestry-ecosystem"],
+    goals: ["解释红树林的多重功能", "理解长期巡护价值", "避免用单一种植数量代替生态恢复"],
+    facts: [
+      {
+        title: "红树林不只是树",
+        text: "绿源项目页介绍，红树林具有防风消浪、促淤保滩、固岸护堤及净化海水和空气等功能，并支撑滩涂生物与鸟类栖息。",
+      },
+      {
+        title: "长期巡护形成连续记录",
+        text: "绿源自 2012 年起关注深圳红树林湿地，项目页记录已培养 136 名巡护员，按中、西、东部开展巡护，每年物种巡护记录超过 50 期。",
+      },
+      {
+        title: "公开累计成果需要按原口径引用",
+        text: "绿源项目页列出的累计成果包括人工复种红树林 2000 多平方米、种植红树 20000 多棵、培育银叶树苗 3000 余株。它们是项目累计值，不是深圳湾单一地点的实时数据。",
+      },
+    ],
+    fieldTask: {
+      title: "五分钟生境分层观察",
+      prompt: "从安全步道观察树冠、滩涂和水面三层，各记录一条可见证据。",
+      steps: ["固定观察位置和时长", "分别记录三类生境", "注明潮位、遮挡或距离造成的不确定性"],
+    },
+    quiz: [
+      {
+        id: "mangrove-functions",
+        skill: "概念整合",
+        difficulty: "基础",
+        question: "哪一项最完整地概括绿源资料中的红树林生态功能？",
+        options: [
+          "只提供城市绿化景观",
+          "防风消浪、促淤保滩、固岸护堤，并支持净化与生物栖息",
+          "只在涨潮时有价值",
+          "主要作用是方便游客赶海",
+        ],
+        answerIndex: 1,
+        hint: "答案应同时包含海岸防护、环境调节和生态生境。",
+        explanation: "红树林的价值来自多种相互关联的生态功能，而不是单一景观效果。",
+        sourceIds: ["sengo-wetland", "forestry-ecosystem"],
+      },
+      {
+        id: "patrol-records",
+        skill: "长期监测",
+        difficulty: "进阶",
+        question: "哪组信息最能体现绿源红树林巡护的连续性？",
+        options: [
+          "只举办过一次讲座",
+          "自 2012 年起关注湿地、培养 136 名巡护员、每年物种记录超过 50 期",
+          "只在台风后拍照",
+          "只统计种树数量",
+        ],
+        answerIndex: 1,
+        hint: "寻找同时包含时间跨度、队伍和重复记录的信息。",
+        explanation: "长期、分区、重复的巡护记录比一次活动更能支持变化判断。",
+        sourceIds: ["sengo-wetland"],
+      },
+      {
+        id: "cumulative-results",
+        skill: "口径辨认",
+        difficulty: "挑战",
+        question: "如何正确使用“20000 多棵红树”这项公开数据？",
+        options: [
+          "写成福田某一点当前存活 20000 多棵",
+          "写成绿源项目页公布的累计种植成果，并注明不是单点实时存活数",
+          "据此推算深圳湾全部红树林面积",
+          "把它当作 2025 年单年种植量",
+        ],
+        answerIndex: 1,
+        hint: "区分累计种植、地点存量、单年数量和存活数量。",
+        explanation: "按原始资料口径引用，才能避免把累计行动量误读成单点生态状态。",
+        sourceIds: ["sengo-wetland"],
+      },
+      {
+        id: "ecosystem-recovery",
+        skill: "证据评价",
+        difficulty: "综合",
+        question: "判断红树林生态恢复，哪组证据比“种了多少棵”更完整？",
+        options: [
+          "种植当天的合影",
+          "多年植株存活、生长、水文条件、底栖动物与鸟类记录",
+          "苗木采购数量",
+          "游客点赞数",
+        ],
+        answerIndex: 1,
+        hint: "生态系统包括植被、水文和其他生物。",
+        explanation: "跨年份、多指标的证据才能判断生态结构与功能是否逐步恢复。",
+        sourceIds: ["sengo-wetland", "mangrove-manual"],
+      },
+    ],
   },
-] as const;
+  {
+    id: "citizen-action",
+    number: 4,
+    title: "第四章 · 从学习到守护",
+    subtitle: "把热情变成安全、规范、可复核的公众行动",
+    description:
+      "参考绿源 2024—2025 年巡护与公众活动记录，学习物种观察、海岸垃圾记录和环境信息反馈。",
+    duration: "约 13 分钟",
+    sourceIds: [
+      "sengo-patrol-2025-01",
+      "sengo-patrol-2025-04",
+      "sengo-patrol-2025-05",
+      "sengo-2024-q3",
+      "inat-quality",
+    ],
+    goals: ["认识真实公众参与路径", "制作可复核观察记录", "遵守湿地观察安全与伦理"],
+    facts: [
+      {
+        title: "巡护队是长期能力建设",
+        text: "绿源 2025 年首场专业培训文章记录，协会自 2013 年起组建红树林巡护队；该场培训吸引 130 名环保爱好者参与。",
+      },
+      {
+        title: "培训从物种认知走向保护技能",
+        text: "2025 年西湾培训涵盖秋茄呼吸根、白骨壤盐分适应、外来物种防治、候鸟栖息地保护和海岸垃圾治理等内容。",
+      },
+      {
+        title: "公众活动也需要可追溯记录",
+        text: "绿源 2024 年第三季度简报记录 9 期“守护白沙湾”活动，由 100 多名志愿者带领超过 1000 名公众参与。数字反映该季度活动规模，不代表全年或所有项目。",
+      },
+    ],
+    fieldTask: {
+      title: "一条合格的公众观察",
+      prompt: "在安全位置记录一条生物或岸线现象，并写清它不能证明什么。",
+      steps: [
+        "记录日期、位置、时长和观察范围",
+        "写原始数量或可见特征",
+        "注明不确定性，不触碰生物或不明废物",
+      ],
+    },
+    quiz: [
+      {
+        id: "patrol-history",
+        skill: "事实辨认",
+        difficulty: "基础",
+        question: "绿源 2025 年首场红树林巡护员专业培训文章记录了什么？",
+        options: [
+          "巡护队 2025 年才首次成立",
+          "协会自 2013 年起组建巡护队，该场培训有 130 名参与者",
+          "活动只面向专业研究员",
+          "所有参与者都进入核心保护区采样",
+        ],
+        answerIndex: 1,
+        hint: "区分巡护队起始年份与文章发布年份。",
+        explanation: "文章将 2013 年以来的队伍建设与 2025 年这场 130 人培训联系起来。",
+        sourceIds: ["sengo-patrol-2025-01"],
+      },
+      {
+        id: "training-scope",
+        skill: "知识迁移",
+        difficulty: "进阶",
+        question: "哪项最符合西湾巡护培训的学习范围？",
+        options: [
+          "只学习拍风景照",
+          "物种辨认、外来物种防治、候鸟生境保护与海岸垃圾治理",
+          "进入滩涂追逐动物",
+          "不记录地点和时间",
+        ],
+        answerIndex: 1,
+        hint: "巡护结合生态认知与可操作的保护技能。",
+        explanation: "官方回顾把物种识别、生态威胁和治理行动放在同一培训路径中。",
+        sourceIds: ["sengo-patrol-2025-04"],
+      },
+      {
+        id: "activity-scale",
+        skill: "数据口径",
+        difficulty: "挑战",
+        question: "如何准确引用 2024 年第三季度“守护白沙湾”活动数据？",
+        options: [
+          "全年共有 9 场、恰好 100 名公众",
+          "该季度开展 9 期，100 多名志愿者带领超过 1000 名公众参与",
+          "深圳所有湿地活动共有 1000 场",
+          "这些数字证明生态系统已经完全恢复",
+        ],
+        answerIndex: 1,
+        hint: "保留时间范围、“多于”口径和人员角色。",
+        explanation: "准确引用必须说明季度范围，并区分志愿者与公众参与者。",
+        sourceIds: ["sengo-2024-q3"],
+      },
+      {
+        id: "quality-record",
+        skill: "公民科学",
+        difficulty: "综合",
+        question: "哪条学生记录最适合进入班级长期观察库？",
+        options: [
+          "“今天这里很差”",
+          "有日期、位置、固定范围、方法、原始数量和不确定性说明的记录",
+          "一张没有来源的网络图片",
+          "根据一次观察直接断言污染来源",
+        ],
+        answerIndex: 1,
+        hint: "可靠记录需要让别人理解、复核和重复。",
+        explanation: "完整元数据、原始结果和局限说明共同构成可追溯的公众观察。",
+        sourceIds: ["inat-quality", "sengo-patrol-2025-05"],
+      },
+    ],
+  },
+];
+
+export const TOTAL_CHAPTERS = learningChapters.length;
 
 const commonSafety =
   "只在开放步道或安全区域活动，不进入滩涂、不触碰水体或不明物，不惊扰动物；未成年人须由教师或监护人带领。";

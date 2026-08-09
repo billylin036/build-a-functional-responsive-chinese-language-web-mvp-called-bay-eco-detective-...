@@ -1,23 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Award,
+  BookOpen,
   BookOpenCheck,
   CheckCircle2,
+  ChevronRight,
   ClipboardCheck,
+  ExternalLink,
   GraduationCap,
   LockKeyhole,
-  MapPin,
+  MapPinned,
+  RotateCcw,
+  ShieldCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import type { CourseChapter } from "@/data/learning";
 import {
   FINAL_PASS_SCORE,
   finalQuestions,
-  getLearningModule,
+  getLearningSources,
   learningChapters,
+  TOTAL_CHAPTERS,
   TOTAL_LEARNING_POINTS,
 } from "@/data/learning";
 import { useAppState } from "@/lib/app-state";
@@ -28,7 +35,8 @@ export const Route = createFileRoute("/learn")({
       { title: "学习闯关 | 湾区生态侦探" },
       {
         name: "description",
-        content: "面向学校与学生的深圳湾生态学习模式：逐点阅读、即时测验、综合评估与学习证书。",
+        content:
+          "基于绿源官方公开资料的四章深圳湾生态课程：逐章阅读、连续测验、综合评估与学习证书。",
       },
     ],
   }),
@@ -37,43 +45,57 @@ export const Route = createFileRoute("/learn")({
 
 function LearnPage() {
   const {
+    completedChapters,
+    chapterAttempts,
     completedLocationQuizzes,
     finalAssessment,
     activityRecords,
     learnerProfile,
     learningComplete,
     updateLearnerProfile,
+    completeChapter,
     completeFinalAssessment,
   } = useAppState();
+  const firstChapter = learningChapters[0]!;
+  const firstIncomplete =
+    learningChapters.find((chapter) => !completedChapters.includes(chapter.id)) ?? firstChapter;
+  const [activeChapterId, setActiveChapterId] = useState(firstIncomplete.id);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [message, setMessage] = useState("");
   const [review, setReview] = useState<Record<string, boolean> | null>(null);
-  const progress = Math.round((completedLocationQuizzes.length / TOTAL_LEARNING_POINTS) * 100);
+  const activeChapter =
+    learningChapters.find((chapter) => chapter.id === activeChapterId) ?? firstChapter;
+  const chapterProgress = Math.round((completedChapters.length / TOTAL_CHAPTERS) * 100);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto max-w-6xl px-4 py-8">
       <section className="overflow-hidden rounded-xl border border-teal/20 bg-gradient-to-br from-paleeco via-card to-card p-5 sm:p-7">
-        <Badge className="bg-teal text-white">学校学习模式</Badge>
+        <Badge className="bg-teal text-white">绿源真实资料课程</Badge>
         <div className="mt-3 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:items-end">
           <div>
             <h1 className="text-2xl font-semibold text-navy sm:text-3xl">深圳湾生态学习闯关</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-              在地图中逐一完成 {TOTAL_LEARNING_POINTS} 个差异化学习模块：阅读可靠知识卡、
-              解决情境挑战题，还可以完成安全的观察活动并保存记录。全部完成后解锁综合测验。
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+              四个章节均参考深圳市绿源环保志愿者协会公开资料及专业规范。每章先阅读资料，再连续完成 4
+              道递进测验；答错可根据提示重试，答对后才能进入下一题。
+            </p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              课程会明确标注调查年份。2015
+              年排口记录是历史调查，不代表当前水质；没有公开的数据不会补造。
             </p>
           </div>
-          <div className="rounded-lg border border-white/70 bg-white/80 p-4 shadow-sm">
+          <div className="rounded-lg border border-white/70 bg-white/85 p-4 shadow-sm">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-navy">总学习进度</span>
+              <span className="font-medium text-navy">章节进度</span>
               <span className="text-teal">
-                {completedLocationQuizzes.length} / {TOTAL_LEARNING_POINTS}
+                {completedChapters.length} / {TOTAL_CHAPTERS}
               </span>
             </div>
-            <Progress value={progress} className="mt-2" />
-            <p className="mt-2 text-xs text-muted-foreground">{progress}% 完成</p>
+            <Progress value={chapterProgress} className="mt-2" />
+            <p className="mt-2 text-xs text-muted-foreground">{chapterProgress}% 完成</p>
             <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
               <ClipboardCheck className="size-3.5" />
-              已保存 {activityRecords.length} 次互动观察
+              另有 {completedLocationQuizzes.length} / {TOTAL_LEARNING_POINTS} 个地图微测验、
+              {activityRecords.length} 次观察记录
             </p>
           </div>
         </div>
@@ -115,78 +137,74 @@ function LearnPage() {
         </div>
       </section>
 
-      <section className="mt-8 space-y-8">
-        {learningChapters.map((chapter) => {
-          const completeCount = chapter.locations.filter((location) =>
-            completedLocationQuizzes.includes(location.id),
-          ).length;
-          return (
-            <div key={chapter.id}>
-              <div className="flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <h2 className="text-lg font-semibold text-navy">{chapter.title}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{chapter.description}</p>
+      <section className="mt-8" aria-labelledby="course-map-title">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 id="course-map-title" className="text-xl font-semibold text-navy">
+              四章学习路线
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              章节依次解锁；已完成章节可以随时复习，不会重复计入进度。
+            </p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/resources">查看完整资料库</Link>
+          </Button>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {learningChapters.map((chapter, index) => {
+            const done = completedChapters.includes(chapter.id);
+            const unlocked =
+              index === 0 || completedChapters.includes(learningChapters[index - 1]?.id ?? "");
+            const active = chapter.id === activeChapter.id;
+            return (
+              <button
+                key={chapter.id}
+                type="button"
+                disabled={!unlocked}
+                aria-current={active ? "step" : undefined}
+                onClick={() => setActiveChapterId(chapter.id)}
+                className={`rounded-xl border p-4 text-left transition-colors ${
+                  active
+                    ? "border-teal bg-paleeco shadow-sm"
+                    : done
+                      ? "border-mangrove/50 bg-card hover:border-mangrove"
+                      : unlocked
+                        ? "border-border bg-card hover:border-teal"
+                        : "cursor-not-allowed border-border bg-muted/40 opacity-65"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs text-teal">CHAPTER {chapter.number}</span>
+                  {done ? (
+                    <CheckCircle2 className="size-4 text-mangrove" />
+                  ) : unlocked ? (
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  ) : (
+                    <LockKeyhole className="size-4 text-muted-foreground" />
+                  )}
                 </div>
-                <Badge variant="outline">
-                  {completeCount} / {chapter.locations.length}
-                </Badge>
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {chapter.locations.map((location, index) => {
-                  const done = completedLocationQuizzes.includes(location.id);
-                  const module = getLearningModule(location.id);
-                  return (
-                    <article
-                      key={location.id}
-                      className={`rounded-lg border bg-card p-4 ${done ? "border-mangrove/60" : "border-border"}`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-mono text-xs text-muted-foreground">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                        {done ? (
-                          <Badge className="gap-1 bg-mangrove">
-                            <CheckCircle2 className="size-3" />
-                            已完成
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">待学习</Badge>
-                        )}
-                      </div>
-                      <h3 className="mt-3 text-sm font-semibold text-navy">{location.name}</h3>
-                      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="size-3" />
-                        {location.category}
-                      </p>
-                      <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                        {location.summary}
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        <Badge variant="outline">{module.quiz.skill}</Badge>
-                        <Badge variant="secondary">{module.quiz.difficulty}</Badge>
-                      </div>
-                      <p className="mt-2 flex items-start gap-1 text-[11px] leading-4 text-muted-foreground">
-                        <ClipboardCheck className="mt-0.5 size-3 shrink-0" />
-                        可选活动：{module.activity.title}
-                      </p>
-                      <Button
-                        asChild
-                        size="sm"
-                        variant={done ? "outline" : "default"}
-                        className="mt-3"
-                      >
-                        <Link to="/location/$id" params={{ id: location.id }}>
-                          {done ? "复习数据点" : "学习并答题"}
-                        </Link>
-                      </Button>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+                <h3 className="mt-3 text-sm font-semibold text-navy">
+                  {chapter.title.replace(/^第.章 · /, "")}
+                </h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{chapter.subtitle}</p>
+                <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>{chapter.duration}</span>
+                  <span>{chapter.quiz.length} 题</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </section>
+
+      <ChapterLesson
+        chapter={activeChapter}
+        completed={completedChapters.includes(activeChapter.id)}
+        previousAttempts={chapterAttempts[activeChapter.id] ?? 0}
+        onComplete={(attempts) => completeChapter(activeChapter.id, activeChapter.title, attempts)}
+      />
 
       <section className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6">
         <div className="flex items-start gap-3">
@@ -198,8 +216,8 @@ function LearnPage() {
           <div>
             <h2 className="text-xl font-semibold text-navy">最终综合测验</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              完成全部数据点后解锁。共 {finalQuestions.length} 题，答对 {FINAL_PASS_SCORE}{" "}
-              题即可获得证书。题目重点考查迁移、比较和证据判断，不要求死记编号。
+              完成全部 {TOTAL_CHAPTERS} 章后解锁。共 {finalQuestions.length} 题，答对{" "}
+              {FINAL_PASS_SCORE} 题即可获得证书。地图地点微测验是补充练习，不作为证书解锁条件。
             </p>
           </div>
         </div>
@@ -207,11 +225,8 @@ function LearnPage() {
         {!learningComplete ? (
           <div className="mt-5 rounded-md border border-dashed border-border bg-muted/30 p-5 text-center">
             <p className="text-sm text-muted-foreground">
-              还需完成 {TOTAL_LEARNING_POINTS - completedLocationQuizzes.length} 个数据点测验。
+              还需完成 {TOTAL_CHAPTERS - completedChapters.length} 个章节。
             </p>
-            <Button asChild size="sm" className="mt-3">
-              <Link to="/">返回地图学习</Link>
-            </Button>
           </div>
         ) : finalAssessment ? (
           <div className="mt-5 rounded-md border border-mangrove bg-paleeco p-5 text-center">
@@ -230,11 +245,11 @@ function LearnPage() {
             onSubmit={(event) => {
               event.preventDefault();
               if (!learnerProfile.name.trim() || !learnerProfile.school.trim()) {
-                setMessage("请先填写学生姓名和学校名称。 ");
+                setMessage("请先填写学生姓名和学校名称。");
                 return;
               }
               if (Object.keys(answers).length !== finalQuestions.length) {
-                setMessage("请完成全部题目后再提交。 ");
+                setMessage("请完成全部题目后再提交。");
                 return;
               }
               const score = finalQuestions.filter(
@@ -303,6 +318,299 @@ function LearnPage() {
           </form>
         )}
       </section>
+
+      <section className="mt-8 flex flex-col gap-4 rounded-xl border border-teal/20 bg-paleeco p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <MapPinned className="mt-0.5 size-5 shrink-0 text-teal" />
+          <div>
+            <h2 className="font-semibold text-navy">地图地点练习</h2>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              在真实坐标地图中继续完成地点知识卡、微测验与安全观察记录，作为四章课程的拓展实践。
+            </p>
+          </div>
+        </div>
+        <Button asChild size="sm">
+          <Link to="/">打开互动地图</Link>
+        </Button>
+      </section>
     </main>
+  );
+}
+
+function ChapterLesson({
+  chapter,
+  completed,
+  previousAttempts,
+  onComplete,
+}: {
+  chapter: CourseChapter;
+  completed: boolean;
+  previousAttempts: number;
+  onComplete: (attempts: number) => void;
+}) {
+  const [stage, setStage] = useState<"reading" | "quiz" | "complete">(
+    completed ? "complete" : "reading",
+  );
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [picked, setPicked] = useState<number | null>(null);
+  const [correct, setCorrect] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const chapterSources = useMemo(() => getLearningSources(chapter.sourceIds), [chapter.sourceIds]);
+  const question = chapter.quiz[questionIndex];
+  const questionSources = question ? getLearningSources(question.sourceIds) : [];
+
+  useEffect(() => {
+    setStage(completed ? "complete" : "reading");
+    setQuestionIndex(0);
+    setPicked(null);
+    setCorrect(false);
+    setAttempts(0);
+  }, [chapter.id, completed]);
+
+  const restart = () => {
+    setStage("reading");
+    setQuestionIndex(0);
+    setPicked(null);
+    setCorrect(false);
+    setAttempts(0);
+  };
+
+  return (
+    <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="border-b border-border bg-navy px-5 py-5 text-white sm:px-7">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-mono text-xs text-teal-200">CHAPTER {chapter.number}</p>
+            <h2 className="mt-2 text-xl font-semibold sm:text-2xl">{chapter.title}</h2>
+            <p className="mt-1 text-sm text-white/75">{chapter.subtitle}</p>
+          </div>
+          <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/10">
+            {chapter.duration} · {chapter.quiz.length} 题
+          </Badge>
+        </div>
+      </div>
+
+      {stage === "reading" && (
+        <div className="p-5 sm:p-7">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-navy">
+                <BookOpen className="size-4 text-teal" />
+                本章资料卡
+              </div>
+              <div className="mt-3 space-y-3">
+                {chapter.facts.map((fact, index) => (
+                  <article key={fact.title} className="rounded-lg border border-border p-4">
+                    <p className="text-[11px] font-mono text-teal">
+                      EVIDENCE {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <h3 className="mt-1 text-sm font-semibold text-navy">{fact.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-foreground">{fact.text}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-teal/25 bg-paleeco p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-navy">
+                  <ShieldCheck className="size-4 text-teal" />
+                  学习目标
+                </h3>
+                <ul className="mt-3 space-y-2 text-xs leading-5 text-muted-foreground">
+                  {chapter.goals.map((goal) => (
+                    <li key={goal} className="flex items-start gap-2">
+                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-teal" />
+                      {goal}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-lg border border-coral/20 bg-coral/5 p-4">
+                <h3 className="text-sm font-semibold text-navy">
+                  课后实践 · {chapter.fieldTask.title}
+                </h3>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  {chapter.fieldTask.prompt}
+                </p>
+                <ol className="mt-3 space-y-1.5 text-xs leading-5 text-muted-foreground">
+                  {chapter.fieldTask.steps.map((step, index) => (
+                    <li key={step}>
+                      {index + 1}. {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-navy">本章资料来源</p>
+                <div className="mt-2 space-y-1.5">
+                  {chapterSources.map((source) => (
+                    <a
+                      key={source.id}
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-start gap-1.5 text-xs leading-5 text-teal underline"
+                    >
+                      <ExternalLink className="mt-0.5 size-3 shrink-0" />
+                      {source.title}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-5">
+            <Button
+              onClick={() => {
+                setStage("quiz");
+                setQuestionIndex(0);
+                setPicked(null);
+                setCorrect(false);
+              }}
+            >
+              我已阅读，开始连续答题
+              <ChevronRight className="size-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              答错可重试；答对后才会出现下一题。
+            </span>
+          </div>
+        </div>
+      )}
+
+      {stage === "quiz" && question && (
+        <div className="p-5 sm:p-7">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-navy">
+              连续测验 · 第 {questionIndex + 1} / {chapter.quiz.length} 题
+            </p>
+            <Badge variant="outline">
+              {question.skill} · {question.difficulty}
+            </Badge>
+          </div>
+          <Progress
+            value={((questionIndex + (correct ? 1 : 0)) / chapter.quiz.length) * 100}
+            className="mt-3"
+          />
+
+          <fieldset className="mt-6">
+            <legend className="max-w-3xl text-lg font-semibold leading-8 text-navy">
+              {question.question}
+            </legend>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              {question.options.map((option, optionIndex) => {
+                const selected = picked === optionIndex;
+                const selectedCorrect = selected && optionIndex === question.answerIndex;
+                const selectedWrong = selected && optionIndex !== question.answerIndex;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    disabled={correct}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      if (correct) return;
+                      setAttempts((current) => current + 1);
+                      setPicked(optionIndex);
+                      setCorrect(optionIndex === question.answerIndex);
+                    }}
+                    className={`rounded-lg border px-4 py-3 text-left text-sm leading-6 transition-colors ${
+                      selectedCorrect
+                        ? "border-mangrove bg-paleeco"
+                        : selectedWrong
+                          ? "border-coral bg-coral/5"
+                          : "border-border bg-white hover:border-teal disabled:cursor-not-allowed"
+                    }`}
+                  >
+                    <span className="mr-2 font-mono text-xs text-muted-foreground">
+                      {String.fromCharCode(65 + optionIndex)}
+                    </span>
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          {picked !== null && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`mt-5 rounded-lg border p-4 ${
+                correct ? "border-mangrove/40 bg-paleeco" : "border-coral/30 bg-coral/5"
+              }`}
+            >
+              <p className={`text-sm font-semibold ${correct ? "text-mangrove" : "text-coral"}`}>
+                {correct ? "回答正确" : "还不对，请根据提示再试一次"}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-foreground">
+                {correct ? question.explanation : `提示：${question.hint}`}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {questionSources.map((source) => (
+                  <a
+                    key={source.id}
+                    href={source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-teal underline"
+                  >
+                    依据：{source.publisher}
+                    <ExternalLink className="size-3" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+            <Button variant="ghost" size="sm" onClick={() => setStage("reading")}>
+              返回资料卡
+            </Button>
+            {correct && (
+              <Button
+                onClick={() => {
+                  if (questionIndex === chapter.quiz.length - 1) {
+                    onComplete(attempts);
+                    setStage("complete");
+                    return;
+                  }
+                  setQuestionIndex((current) => current + 1);
+                  setPicked(null);
+                  setCorrect(false);
+                }}
+              >
+                {questionIndex === chapter.quiz.length - 1 ? "完成本章" : "下一题"}
+                <ChevronRight className="size-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {stage === "complete" && (
+        <div className="p-6 text-center sm:p-10">
+          <CheckCircle2 className="mx-auto size-10 text-mangrove" />
+          <h3 className="mt-3 text-xl font-semibold text-navy">本章连续测验已完成</h3>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            你已完成 {chapter.quiz.length}{" "}
+            道题。选择上方下一章节继续学习；也可以重新阅读并复习本章。
+          </p>
+          {(previousAttempts > 0 || attempts > 0) && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              已记录答题选择次数：{Math.max(previousAttempts, attempts)}
+            </p>
+          )}
+          <Button variant="outline" className="mt-5" onClick={restart}>
+            <RotateCcw className="size-4" />
+            重新学习本章
+          </Button>
+        </div>
+      )}
+    </section>
   );
 }

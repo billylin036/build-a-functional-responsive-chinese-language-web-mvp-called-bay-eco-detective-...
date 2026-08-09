@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { TOTAL_LEARNING_POINTS } from "@/data/learning";
+import { TOTAL_CHAPTERS } from "@/data/learning";
 
 export interface LearnerProfile {
   name: string;
@@ -17,7 +17,7 @@ export interface FinalAssessmentResult {
 
 export interface LearningHistoryItem {
   id: string;
-  type: "地点测验" | "互动观察" | "综合测验";
+  type: "地点测验" | "章节测验" | "互动观察" | "综合测验";
   label: string;
   at: string;
 }
@@ -34,6 +34,8 @@ export interface ActivityRecord {
 interface AppState {
   completedLocationQuizzes: string[];
   quizAttempts: Record<string, number>;
+  completedChapters: string[];
+  chapterAttempts: Record<string, number>;
   finalAssessment: FinalAssessmentResult | null;
   learnerProfile: LearnerProfile;
   learningHistory: LearningHistoryItem[];
@@ -43,6 +45,8 @@ interface AppState {
 const EMPTY: AppState = {
   completedLocationQuizzes: [],
   quizAttempts: {},
+  completedChapters: [],
+  chapterAttempts: {},
   finalAssessment: null,
   learnerProfile: { name: "", school: "", className: "" },
   learningHistory: [],
@@ -56,6 +60,7 @@ interface Ctx extends AppState {
   learningComplete: boolean;
   badges: { id: string; desc: string; earned: boolean }[];
   recordLocationAnswer: (locationId: string, locationName: string, correct: boolean) => void;
+  completeChapter: (chapterId: string, chapterTitle: string, attempts: number) => void;
   saveActivityRecord: (
     locationId: string,
     locationName: string,
@@ -110,6 +115,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
               id: `location-${locationId}-${Date.now()}`,
               type: "地点测验" as const,
               label: `完成「${locationName}」学习测验`,
+              at,
+            },
+            ...current.learningHistory,
+          ].slice(0, 100),
+        };
+      });
+    },
+    [],
+  );
+
+  const completeChapter = useCallback(
+    (chapterId: string, chapterTitle: string, attempts: number) => {
+      setState((current) => {
+        const chapterAttempts = {
+          ...current.chapterAttempts,
+          [chapterId]: Math.max(current.chapterAttempts[chapterId] ?? 0, attempts),
+        };
+        if (current.completedChapters.includes(chapterId)) {
+          return { ...current, chapterAttempts };
+        }
+        const at = new Date().toISOString();
+        return {
+          ...current,
+          chapterAttempts,
+          completedChapters: [...current.completedChapters, chapterId],
+          learningHistory: [
+            {
+              id: `chapter-${chapterId}-${Date.now()}`,
+              type: "章节测验" as const,
+              label: `完成「${chapterTitle}」连续测验`,
               at,
             },
             ...current.learningHistory,
@@ -176,18 +211,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetLearning = useCallback(() => setState(EMPTY), []);
-  const learningComplete = state.completedLocationQuizzes.length >= TOTAL_LEARNING_POINTS;
+  const learningComplete = state.completedChapters.length >= TOTAL_CHAPTERS;
 
   const badges = useMemo(
     () => [
       {
-        id: "数据点探索者",
-        desc: "完成至少 1 个地图数据点测验",
-        earned: state.completedLocationQuizzes.length >= 1,
+        id: "生态课程启航者",
+        desc: "完成至少 1 个章节连续测验",
+        earned: state.completedChapters.length >= 1,
       },
       {
         id: "深圳湾学习者",
-        desc: `完成全部 ${TOTAL_LEARNING_POINTS} 个地图数据点测验`,
+        desc: `完成全部 ${TOTAL_CHAPTERS} 个学习章节`,
         earned: learningComplete,
       },
       {
@@ -204,7 +239,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [
       learningComplete,
       state.activityRecords.length,
-      state.completedLocationQuizzes.length,
+      state.completedChapters.length,
       state.finalAssessment,
     ],
   );
@@ -215,6 +250,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     learningComplete,
     badges,
     recordLocationAnswer,
+    completeChapter,
     saveActivityRecord,
     completeFinalAssessment,
     updateLearnerProfile,

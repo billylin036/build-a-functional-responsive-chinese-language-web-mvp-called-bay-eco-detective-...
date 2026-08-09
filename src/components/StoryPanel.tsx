@@ -369,6 +369,9 @@ export function StoryPanel({
   const annual = getAnnual(location, year);
   const surveyCode = location.indicators?.find((item) => item.label === "调查编号")?.value;
   const publicCoordinate = location.indicators?.find((item) => item.label === "公开坐标")?.value;
+  const historicalObservation = location.indicators?.find(
+    (item) => item.label === "2015 年现场记录",
+  )?.value;
   const learningIndicator = location.indicators?.[0];
 
   return (
@@ -431,6 +434,9 @@ export function StoryPanel({
             <Metric label="公开调查编号" value={surveyCode ?? "待确认"} />
             <Metric label="公开 GPS 坐标" value={publicCoordinate ?? "待确认"} />
             <div className="col-span-2">
+              <Metric label="2015 年现场观察" value={historicalObservation ?? "原文未描述"} />
+            </div>
+            <div className="col-span-2">
               <Metric label="水质原始指标" value="待数据负责人补充，不展示推测评分" />
             </div>
           </div>
@@ -490,7 +496,7 @@ export function StoryPanel({
 
         <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
           {location.type === "outfall"
-            ? "数据说明：本页仅展示报告正文公开的排口编号与坐标；缺少的水质原始指标明确标记为待补充。"
+            ? "数据说明：本页展示绿源 2015 年报告正文公开的排口编号、坐标与历史现场描述；这些内容不代表当前状态。缺少的水质原始指标明确标记为待补充。"
             : "数据说明：本页中的趋势数值与图片含示例内容，用于学习交互，不作为正式监测结论。"}
         </p>
       </div>

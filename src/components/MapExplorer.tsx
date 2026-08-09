@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Crosshair, GraduationCap, Info } from "lucide-react";
 import { locations, getAnnual, YEARS } from "@/data/locations";
 import type { LocationType } from "@/data/types";
-import { TOTAL_LEARNING_POINTS } from "@/data/learning";
+import { TOTAL_CHAPTERS } from "@/data/learning";
 import { Timeline } from "@/components/map/Timeline";
 import { LayerControls, LocationSearch } from "@/components/map/MapControls";
 import { StoryPanel } from "@/components/StoryPanel";
@@ -20,7 +20,7 @@ export function MapExplorer() {
   const [focus, setFocus] = useState(0);
   const isCompactMap = useIsCompactMap();
   const navigate = useNavigate();
-  const { completedLocationQuizzes } = useAppState();
+  const { completedChapters, completedLocationQuizzes } = useAppState();
 
   const selected = useMemo(() => locations.find((l) => l.id === selectedId) ?? null, [selectedId]);
   const routeIds = completedLocationQuizzes;
@@ -122,7 +122,7 @@ export function MapExplorer() {
             学习闯关
           </Button>
           <div className="rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
-            已完成 {completedLocationQuizzes.length} / {TOTAL_LEARNING_POINTS}
+            课程 {completedChapters.length} / {TOTAL_CHAPTERS} 章
           </div>
         </div>
 
@@ -133,10 +133,9 @@ export function MapExplorer() {
           >
             <div className="mx-auto flex w-fit max-w-full items-center gap-2 rounded-full border border-teal/25 bg-card/95 px-4 py-2 text-xs text-navy shadow-lg backdrop-blur-sm">
               <Info className="size-4 shrink-0 text-teal" />
-              <span className="truncate sm:hidden">点击地图标记开始学习</span>
+              <span className="truncate sm:hidden">点击地图标记查看资料</span>
               <span className="hidden sm:inline">
-                点击任意地图标记阅读资料并答题；完成全部 {TOTAL_LEARNING_POINTS}{" "}
-                个数据点后解锁综合测验
+                点击地图标记查看资料与地点练习；四章主课程请前往“学习闯关”
               </span>
             </div>
           </div>
