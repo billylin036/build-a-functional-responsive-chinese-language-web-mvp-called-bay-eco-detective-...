@@ -134,8 +134,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppStateProvider>
-        <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-[1200] border-b border-border bg-navy">
+        <div className="app-shell flex flex-col">
+          <header className="sticky top-0 z-[1200] shrink-0 border-b border-border bg-navy">
             <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5">
               <Link to="/" className="min-w-0 truncate text-sm font-semibold text-white">
                 湾区生态侦探
@@ -158,7 +158,7 @@ function RootComponent() {
             </div>
           </header>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <div className="flex-1">
+          <div className="min-h-0 flex-1 overflow-auto">
             <Outlet />
           </div>
         </div>

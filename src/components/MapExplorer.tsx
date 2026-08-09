@@ -41,7 +41,7 @@ export function MapExplorer() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col">
+    <div className="flex h-full flex-col">
       <div className="relative min-h-0 flex-1">
         <MapCanvas
           activeLayers={ACTIVE_MAP_LAYERS}
@@ -59,7 +59,7 @@ export function MapExplorer() {
           <div className="pointer-events-auto">
             <LocationSearch onPick={pick} />
           </div>
-          <div className="pointer-events-auto rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm">
+          <div className="pointer-events-auto hidden rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm sm:block">
             <p className="font-medium text-navy">地图共 {locations.length} 个学习入口</p>
             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
               <span className="inline-flex items-center gap-1">
@@ -87,7 +87,7 @@ export function MapExplorer() {
         </div>
 
         {/* 右上：操作 */}
-        <div className="absolute right-2 top-2 z-500 flex flex-col items-end gap-2">
+        <div className="absolute right-2 top-14 z-500 flex flex-col items-end gap-2 sm:top-2">
           <Button size="sm" variant="secondary" onClick={() => setRecenter((r) => r + 1)}>
             <Crosshair className="size-4" />
             回到深圳湾

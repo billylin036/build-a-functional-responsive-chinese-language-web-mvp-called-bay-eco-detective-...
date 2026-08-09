@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { LayerGroup, Map as LeafletMap } from "leaflet";
+import type { LayerGroup, Map as LeafletMap, TileLayer } from "leaflet";
 import {
   locations,
   MAP_LIMIT_BOUNDS,
@@ -30,6 +30,27 @@ const COLORS: Record<LocationType, string> = {
   outfall: "#0B8F91",
   learning: "#FF6B4A",
 };
+
+const TILE_PROVIDERS = [
+  {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    subdomains: "abc",
+    maxZoom: 19,
+    attribution: "© OpenStreetMap 贡献者",
+  },
+  {
+    url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+    subdomains: "abc",
+    maxZoom: 19,
+    attribution: "© OpenStreetMap 贡献者 · HOT",
+  },
+  {
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+    maxZoom: 20,
+    attribution: "© OpenStreetMap 贡献者 · CARTO",
+  },
+] as const;
 
 function markerHtml(loc: EcoLocation, opts: { selected: boolean; onRoute: boolean; dry: boolean }) {
   const color = COLORS[loc.type];
@@ -71,16 +92,31 @@ export default function MapCanvas({
   const tileSnapshotRef = useRef<HTMLDivElement | null>(null);
   const [mapVersion, setMapVersion] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [tilesReady, setTilesReady] = useState(false);
+  const [compactLabels, setCompactLabels] = useState(false);
   const selectRef = useRef(onSelect);
   const tilesReadyRef = useRef(onTilesReady);
   selectRef.current = onSelect;
   tilesReadyRef.current = onTilesReady;
 
   useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setCompactLabels(media.matches);
+    media.addEventListener("change", update);
+    update();
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
     if (!elRef.current || mapRef.current) return;
     let cancelled = false;
     let map: LeafletMap | null = null;
+    let tiles: TileLayer | null = null;
     let resizeObserver: ResizeObserver | null = null;
+    let resizeFrame = 0;
+    let fallbackTimer = 0;
+    const layoutTimers: number[] = [];
+    let cleanupViewportListeners: (() => void) | null = null;
 
     void import("leaflet")
       .then((leaflet) => {
@@ -106,14 +142,9 @@ export default function MapCanvas({
             zoomOutTitle: "缩小地图",
           })
           .addTo(map);
-        const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 18,
-          keepBuffer: 2,
-          updateWhenIdle: true,
-          updateWhenZooming: false,
-          attribution: "© OpenStreetMap 贡献者 | 历史观察与学习资料见站内来源说明",
-        });
         let tileErrorsInCycle = 0;
+        let tileProviderIndex = 0;
+        let providerHasLoadedTile = false;
         const captureTileSnapshot = () => {
           const mapElement = elRef.current;
           const snapshot = tileSnapshotRef.current;
@@ -130,16 +161,57 @@ export default function MapCanvas({
           if (tileErrorsInCycle === 0) tileSnapshotRef.current?.replaceChildren();
         };
 
-        map.on("zoomstart", captureTileSnapshot);
-        tiles.on("loading", () => {
+        const tryNextProvider = (providerIndex: number) => {
+          if (cancelled || providerIndex !== tileProviderIndex || providerHasLoadedTile) return;
+          if (providerIndex + 1 < TILE_PROVIDERS.length) {
+            startTileProvider(providerIndex + 1);
+          } else {
+            setLoadFailed(true);
+          }
+        };
+
+        const startTileProvider = (providerIndex: number) => {
+          if (cancelled || !map) return;
+          window.clearTimeout(fallbackTimer);
+          tiles?.remove();
+          tileProviderIndex = providerIndex;
+          providerHasLoadedTile = false;
           tileErrorsInCycle = 0;
-        });
-        tiles.on("tileerror", () => {
-          tileErrorsInCycle += 1;
-        });
-        tiles.on("load", clearTileSnapshot);
-        tiles.once("tileload", () => tilesReadyRef.current?.());
-        tiles.addTo(map);
+          setTilesReady(false);
+          setLoadFailed(false);
+          const provider = TILE_PROVIDERS[providerIndex]!;
+          const activeTiles = L.tileLayer(provider.url, {
+            subdomains: provider.subdomains,
+            maxZoom: provider.maxZoom,
+            keepBuffer: window.matchMedia("(max-width: 767px)").matches ? 1 : 2,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            crossOrigin: true,
+            attribution: `${provider.attribution} | 历史观察与学习资料见站内来源说明`,
+          });
+          tiles = activeTiles;
+          activeTiles.on("loading", () => {
+            tileErrorsInCycle = 0;
+          });
+          activeTiles.on("tileerror", () => {
+            tileErrorsInCycle += 1;
+            if (tileErrorsInCycle >= 4) tryNextProvider(providerIndex);
+          });
+          activeTiles.on("load", clearTileSnapshot);
+          activeTiles.once("tileload", () => {
+            if (providerIndex !== tileProviderIndex) return;
+            providerHasLoadedTile = true;
+            window.clearTimeout(fallbackTimer);
+            setTilesReady(true);
+            setLoadFailed(false);
+            tilesReadyRef.current?.();
+          });
+          activeTiles.addTo(map);
+          fallbackTimer = window.setTimeout(() => tryNextProvider(providerIndex), 7000);
+        };
+
+        map.on("zoomstart", captureTileSnapshot);
+        startTileProvider(0);
         L.polygon(SHENZHEN_BAY_BOUNDARY, {
           color: "#0B8F91",
           weight: 1.5,
@@ -152,14 +224,38 @@ export default function MapCanvas({
         leafletRef.current = leaflet;
         layerRef.current = L.layerGroup().addTo(map);
         mapRef.current = map;
-        resizeObserver = new ResizeObserver(() => map?.invalidateSize({ pan: false }));
-        resizeObserver.observe(elRef.current);
+        const invalidateMapSize = () => {
+          window.cancelAnimationFrame(resizeFrame);
+          resizeFrame = window.requestAnimationFrame(() => map?.invalidateSize({ pan: false }));
+        };
+        if ("ResizeObserver" in window) {
+          resizeObserver = new ResizeObserver(invalidateMapSize);
+          resizeObserver.observe(elRef.current);
+        }
+        window.addEventListener("resize", invalidateMapSize);
+        window.addEventListener("orientationchange", invalidateMapSize);
+        window.addEventListener("pageshow", invalidateMapSize);
+        window.visualViewport?.addEventListener("resize", invalidateMapSize);
+        [0, 250, 800].forEach((delay) => {
+          layoutTimers.push(window.setTimeout(invalidateMapSize, delay));
+        });
         setMapVersion((version) => version + 1);
+
+        cleanupViewportListeners = () => {
+          window.removeEventListener("resize", invalidateMapSize);
+          window.removeEventListener("orientationchange", invalidateMapSize);
+          window.removeEventListener("pageshow", invalidateMapSize);
+          window.visualViewport?.removeEventListener("resize", invalidateMapSize);
+        };
       })
       .catch(() => setLoadFailed(true));
 
     return () => {
       cancelled = true;
+      window.clearTimeout(fallbackTimer);
+      layoutTimers.forEach((timer) => window.clearTimeout(timer));
+      window.cancelAnimationFrame(resizeFrame);
+      cleanupViewportListeners?.();
       resizeObserver?.disconnect();
       map?.remove();
       mapRef.current = null;
@@ -199,7 +295,7 @@ export default function MapCanvas({
             : labelCode,
           {
             direction: "top",
-            permanent: true,
+            permanent: !compactLabels || selected,
             className: selected
               ? "eco-data-label eco-data-label--selected"
               : "eco-data-label eco-data-label--compact",
@@ -209,7 +305,7 @@ export default function MapCanvas({
         marker.addTo(group);
         if (selected) marker.openTooltip();
       });
-  }, [activeLayers, year, selectedId, routeIds, currentRouteId, mapVersion]);
+  }, [activeLayers, year, selectedId, routeIds, currentRouteId, mapVersion, compactLabels]);
 
   // 回到深圳湾
   useEffect(() => {
@@ -240,7 +336,7 @@ export default function MapCanvas({
         aria-label="深圳湾生态互动学习地图"
         role="application"
       />
-      {mapVersion === 0 && !loadFailed && (
+      {!tilesReady && !loadFailed && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center bg-paleeco/80 text-sm text-muted-foreground">
           正在连接实时地图…
         </div>

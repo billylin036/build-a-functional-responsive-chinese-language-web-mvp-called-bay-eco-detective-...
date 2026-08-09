@@ -151,6 +151,16 @@
   }
 }
 
+.app-shell {
+  height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .app-shell {
+    height: 100dvh;
+  }
+}
+
 @theme inline {
   --color-navy: var(--navy);
   --color-navy-foreground: var(--navy-foreground);
