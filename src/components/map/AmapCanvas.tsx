@@ -33,8 +33,8 @@ function createMarkerElement(
   const size = options.selected ? 24 : 16;
   const button = document.createElement("button");
   button.type = "button";
-  button.title = `${loc.name}，${options.year} 年现场观察`;
-  button.setAttribute("aria-label", `查看${loc.name}的历史水体观察`);
+  button.title = loc.type === "outfall" ? `${loc.name}，2015 年历史观察` : loc.name;
+  button.setAttribute("aria-label", `查看${loc.name}`);
   button.style.cssText = [
     `width:${size}px`,
     `height:${size}px`,
@@ -51,6 +51,17 @@ function createMarkerElement(
   ].join(";");
   button.addEventListener("click", onSelect);
   return button;
+}
+
+function markerCode(loc: EcoLocation) {
+  if (loc.type === "outfall") {
+    return (
+      loc.indicators?.find((indicator) => indicator.label === "调查编号")?.value ??
+      loc.id.toUpperCase()
+    );
+  }
+  const number = loc.id.split("-")[1] ?? loc.id;
+  return `${loc.type === "mangrove" ? "红" : "学"}${Number(number)}`;
 }
 
 export default function AmapCanvas({
@@ -140,11 +151,7 @@ export default function AmapCanvas({
       .filter((location) => activeLayers.includes(location.type))
       .map((location) => {
         const selected = selectedId === location.id || currentRouteId === location.id;
-        const markerCode =
-          location.type === "outfall"
-            ? (location.indicators?.find((indicator) => indicator.label === "调查编号")?.value ??
-              location.id.toUpperCase())
-            : location.id.toUpperCase();
+        const labelCode = markerCode(location);
         const content = createMarkerElement(
           location,
           {
@@ -157,7 +164,7 @@ export default function AmapCanvas({
         );
         const labelText = selected
           ? `${location.name}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
-          : markerCode;
+          : labelCode;
         const marker = new AMap.Marker({
           position: [location.longitude, location.latitude],
           content,

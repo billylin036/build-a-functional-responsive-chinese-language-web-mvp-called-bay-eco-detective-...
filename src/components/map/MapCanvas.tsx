@@ -42,6 +42,17 @@ function markerHtml(loc: EcoLocation, opts: { selected: boolean; onRoute: boolea
   return `<span style="display:block;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;${ring}"></span>`;
 }
 
+function markerCode(loc: EcoLocation) {
+  if (loc.type === "outfall") {
+    return (
+      loc.indicators?.find((indicator) => indicator.label === "调查编号")?.value ??
+      loc.id.toUpperCase()
+    );
+  }
+  const number = loc.id.split("-")[1] ?? loc.id;
+  return `${loc.type === "mangrove" ? "红" : "学"}${Number(number)}`;
+}
+
 export default function MapCanvas({
   activeLayers,
   year,
@@ -100,7 +111,7 @@ export default function MapCanvas({
           keepBuffer: 2,
           updateWhenIdle: true,
           updateWhenZooming: false,
-          attribution: "© OpenStreetMap 贡献者 | 点位与历史观察来自绿源公开资料",
+          attribution: "© OpenStreetMap 贡献者 | 历史观察与学习资料见站内来源说明",
         });
         let tileErrorsInCycle = 0;
         const captureTileSnapshot = () => {
@@ -170,11 +181,7 @@ export default function MapCanvas({
         const dry = false;
         const selected = selectedId === loc.id || currentRouteId === loc.id;
         const markerSize = selected ? 22 : 14;
-        const markerCode =
-          loc.type === "outfall"
-            ? (loc.indicators?.find((indicator) => indicator.label === "调查编号")?.value ??
-              loc.id.toUpperCase())
-            : loc.id.toUpperCase();
+        const labelCode = markerCode(loc);
         const marker = L.marker([loc.latitude, loc.longitude], {
           icon: L.divIcon({
             className: "eco-marker",
@@ -189,7 +196,7 @@ export default function MapCanvas({
         marker.bindTooltip(
           selected
             ? `${loc.name}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
-            : markerCode,
+            : labelCode,
           {
             direction: "top",
             permanent: true,
@@ -230,7 +237,7 @@ export default function MapCanvas({
       <div
         ref={elRef}
         className="relative z-10 h-full w-full"
-        aria-label="深圳湾排口历史水体观察地图"
+        aria-label="深圳湾生态互动学习地图"
         role="application"
       />
       {mapVersion === 0 && !loadFailed && (

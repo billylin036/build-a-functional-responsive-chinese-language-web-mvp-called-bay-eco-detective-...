@@ -11,7 +11,7 @@ import { useIsCompactMap } from "@/hooks/use-mobile";
 import { useAppState } from "@/lib/app-state";
 import MapCanvas from "@/components/map/LiveMapCanvas";
 
-const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall"];
+const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall", "mangrove", "learning"];
 const SURVEY_YEAR = 2015;
 
 export function MapExplorer() {
@@ -31,7 +31,14 @@ export function MapExplorer() {
     setFocus((f) => f + 1);
   }, []);
 
-  const visibleCount = locations.length;
+  const layerCounts = useMemo(
+    () => ({
+      outfall: locations.filter((location) => location.type === "outfall").length,
+      mangrove: locations.filter((location) => location.type === "mangrove").length,
+      learning: locations.filter((location) => location.type === "learning").length,
+    }),
+    [],
+  );
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
@@ -48,19 +55,33 @@ export function MapExplorer() {
         />
 
         {/* 左上：搜索 + 数据范围说明 */}
-        <div className="pointer-events-none absolute left-2 top-2 z-500 w-[min(19rem,calc(100%-1rem))] space-y-2">
+        <div className="pointer-events-none absolute left-2 top-2 z-500 w-[min(22rem,calc(100%-1rem))] space-y-2">
           <div className="pointer-events-auto">
             <LocationSearch onPick={pick} />
           </div>
           <div className="pointer-events-auto rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm">
-            当前显示 {visibleCount} 个有 2015 年现场水体观察的排口 · 点击标记查看原始描述
+            <p className="font-medium text-navy">地图共 {locations.length} 个学习入口</p>
+            <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2 rounded-full bg-teal" />
+                {layerCounts.outfall} 个历史排口
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2 rounded-full bg-mangrove" />
+                {layerCounts.mangrove} 个红树林示例点
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2 rounded-full bg-coral" />
+                {layerCounts.learning} 个综合学习点
+              </span>
+            </div>
             <a
               href="https://www.szhb.org/5383.html"
               target="_blank"
               rel="noreferrer"
               className="mt-1 block font-medium text-teal underline underline-offset-2"
             >
-              查看点位与观察来源
+              查看 2015 排口观察来源
             </a>
           </div>
         </div>

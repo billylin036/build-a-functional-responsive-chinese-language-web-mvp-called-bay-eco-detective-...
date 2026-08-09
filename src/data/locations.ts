@@ -1,246 +1,127 @@
-import type { AnnualData, EcoLocation, RiskLevel } from "./types";
+import type { EcoLocation } from "./types";
 
 export const YEARS = Array.from({ length: 11 }, (_, i) => 2015 + i);
 
-/** 确定性伪随机（避免每次渲染数据抖动） */
-function seeded(seed: number) {
-  let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
-
-function buildAnnual(
-  seed: number,
-  opts: {
-    baseQuality: number;
-    endQuality: number;
-    baseCoverage: number;
-    endCoverage: number;
-    baseSurvival: number;
-    endSurvival: number;
-    dryFrom?: number | undefined;
-    events?: Record<number, string | undefined> | undefined;
-  },
-): AnnualData[] {
-  const rnd = seeded(seed);
-  return YEARS.map((year, i) => {
-    const t = i / (YEARS.length - 1);
-    const jitter = (rnd() - 0.5) * 4;
-    const flow: AnnualData["waterFlow"] =
-      opts.dryFrom && year >= opts.dryFrom ? (year >= opts.dryFrom + 2 ? "干涸" : "微流") : "有水";
-    return {
-      year,
-      waterQuality: Math.round(
-        clamp(opts.baseQuality + (opts.endQuality - opts.baseQuality) * t + jitter, 10, 100),
-      ),
-      waterFlow: flow,
-      mangroveCoverage: Math.round(
-        clamp(opts.baseCoverage + (opts.endCoverage - opts.baseCoverage) * t + jitter / 2, 0, 100),
-      ),
-      survivalRate: Math.round(
-        clamp(opts.baseSurvival + (opts.endSurvival - opts.baseSurvival) * t + jitter / 2, 0, 100),
-      ),
-      observationCount: Math.round(4 + i * (3 + rnd() * 4)),
-      event: opts.events?.[year],
-    };
-  });
-}
-
-const mangroveSeeds: {
-  id: string;
-  name: string;
-  lng: number;
-  lat: number;
-  year: number;
-  area: number;
-  planted: number;
-  survival: number;
-  condition: string;
-  risks: string[];
-  risk: RiskLevel;
-  summary: string;
-  what: string;
-  why: string;
-}[] = [
+const mangroveSeeds = [
   {
     id: "mg-01",
-    name: "福田红树林保护区北岸修复地",
+    name: "红树林长期恢复学习点",
     lng: 114.0206,
     lat: 22.5228,
-    year: 2015,
-    area: 6.8,
-    planted: 12400,
-    survival: 88,
-    condition: "林分郁闭，滩涂底栖生物明显恢复",
-    risks: ["外来物种入侵", "台风倒伏"],
-    risk: "低",
-    summary: "最早一批系统化修复地块，也是目前长势最好的样板区。",
-    what: "2015 年种下的秋茄与桐花树已形成连片林带，滩面出现大量招潮蟹洞穴。",
-    why: "这里潮位适中、淡水与海水交汇稳定，加上连续 10 年的抚育管护，幼苗度过了最脆弱的前三年。",
+    summary: "从植株成活、水文条件与生物多样性三个层次理解长期生态恢复。",
+    what: "修复评估不能只看树是否存活，还要持续记录潮汐交换、生境结构和动物利用。",
+    why: "红树林是植物、水文、沉积物与动物共同组成的生态系统，单一指标无法代表整体恢复。",
   },
   {
     id: "mg-02",
-    name: "沙河西滨海修复点",
+    name: "红树林水动力学习点",
     lng: 113.9781,
     lat: 22.5115,
-    year: 2017,
-    area: 3.2,
-    planted: 6800,
-    survival: 62,
-    condition: "边缘带缺株明显，中心区长势尚可",
-    risks: ["浪蚀冲刷", "海漂垃圾缠绕"],
-    risk: "中",
-    summary: "同样的苗木、同样的团队，成活率却比北岸低了一大截。",
-    what: "外缘 30 米内的幼苗多次被浪打断，补种两次后才稳定下来。",
-    why: "这里缺少天然消浪滩，涨潮时苗木浸泡时间过长，根系来不及固定。",
+    summary: "观察波浪、潮位与滩涂高程如何影响幼苗的生存机会。",
+    what: "同一种苗木在临水侧和内侧可能面对不同的冲刷、淹水时长与沉积条件。",
+    why: "修复选址若忽略水动力，即使增加种植数量也可能无法弥补生境不适宜。",
   },
   {
     id: "mg-03",
-    name: "深圳湾公园东段补植区",
+    name: "红树林人为干扰学习点",
     lng: 114.0044,
     lat: 22.5062,
-    year: 2018,
-    area: 2.1,
-    planted: 4300,
-    survival: 74,
-    condition: "长势中等，游人干扰较多",
-    risks: ["人为踩踏", "宠物进入滩涂"],
-    risk: "中",
-    summary: "紧邻步道的修复地块，人为干扰是它最大的变量。",
-    what: "靠步道一侧的幼苗常被踩踏，靠水侧长势明显更好。",
-    why: "公园人流量大，缺少物理隔离与清晰的引导标识。",
+    summary: "把踩踏、宠物进入与近距离干扰从主观印象转化为可计数记录。",
+    what: "科学观察需要先规定范围和时长，再记录干扰事件，不能只写“今天人很多”。",
+    why: "标准化记录能够让不同日期、不同班级的结果进行公平比较。",
   },
   {
     id: "mg-04",
-    name: "新洲河口试验苗圃",
+    name: "红树林乡土种源学习点",
     lng: 114.0128,
     lat: 22.5178,
-    year: 2019,
-    area: 1.4,
-    planted: 2600,
-    survival: 91,
-    condition: "苗木健壮，作为其他地块的种源",
-    risks: ["淡水径流突增"],
-    risk: "低",
-    summary: "本地育苗、本地移栽，验证了“乡土苗”策略。",
-    what: "使用深圳湾本地母树采种育苗，移栽后适应期显著缩短。",
-    why: "乡土苗的耐盐性与本地潮汐节律匹配，移植胁迫更小。",
+    summary: "学习怎样用公平对照检验“乡土种源更适应本地环境”的假设。",
+    what: "比较种源效果时，应尽量保持潮位、生境、苗龄和管护条件一致。",
+    why: "如果不同种源处在不同环境，成活差异可能来自地块条件，而不是种源本身。",
   },
   {
     id: "mg-05",
-    name: "大沙河入海口西滩",
+    name: "红树林入侵植物学习点",
     lng: 113.9702,
     lat: 22.5063,
-    year: 2020,
-    area: 4.5,
-    planted: 9100,
-    survival: 57,
-    condition: "局部退化，需二次补植",
-    risks: ["互花米草竞争", "沉积物变化"],
-    risk: "高",
-    summary: "互花米草与红树幼苗抢地盘，是这里成活率偏低的主因。",
-    what: "种植后第二年，互花米草迅速覆盖滩面，压制了幼苗生长。",
-    why: "入侵植物繁殖速度快，若不在种植前彻底清除，红树幼苗几乎没有竞争力。",
+    summary: "记录疑似入侵植物的分布边界，并区分现场证据与物种判断。",
+    what: "学生可以从安全步道记录植被交界、裸地与幼苗线索，但不应自行进入滩涂清除植物。",
+    why: "治理需要准确鉴定、范围调查和持续复查，一次清除不能代表长期控制。",
   },
   {
     id: "mg-06",
-    name: "红树林湿地南堤修复段",
+    name: "红树林潮沟水文学习点",
     lng: 114.0281,
     lat: 22.5203,
-    year: 2021,
-    area: 2.8,
-    planted: 5400,
-    survival: 79,
-    condition: "整体稳定，边缘有缺株",
-    risks: ["台风", "潮沟改道"],
-    risk: "中",
-    summary: "堤岸型修复，靠潮沟位置决定了长势差异。",
-    what: "靠近潮沟的植株长势明显优于内侧板结区域。",
-    why: "潮沟带来更稳定的水交换与养分输入，内侧滩面板结导致根系缺氧。",
+    summary: "通过多次潮周期观察理解潮沟、水交换和根区条件之间的联系。",
+    what: "一次照片只能记录某个瞬间，多潮周期的水位与流向才更能说明潮沟是否持续交换。",
+    why: "合适的水文条件通常比单纯增加种植数量更能决定修复能否长期维持。",
   },
   {
     id: "mg-07",
-    name: "华侨城湿地北侧修复点",
+    name: "红树林湿地管理学习点",
     lng: 113.9885,
     lat: 22.5147,
-    year: 2022,
-    area: 1.9,
-    planted: 3700,
-    survival: 83,
-    condition: "长势良好，鸟类利用率上升",
-    risks: ["水位调控依赖人工"],
-    risk: "低",
-    summary: "封闭式管理湿地，人为干扰少，但依赖人工调水。",
-    what: "种植三年后，滩涂鸟类停歇记录明显增加。",
-    why: "封闭管理减少了踩踏与垃圾，人工水位调控让幼苗避开长时间淹水。",
+    summary: "识别闸门、水位调控与人工岸线等可能改变观察结果的管理变量。",
+    what: "鸟类数量、裸滩面积与植被变化可能同时受到潮位、天气和人工调水影响。",
+    why: "同时发生不等于已经证明因果，背景变量和重复观察必须一起记录。",
   },
   {
     id: "mg-08",
-    name: "湾厦河口滩涂修复地",
+    name: "红树林海漂垃圾学习点",
     lng: 113.9615,
     lat: 22.5024,
-    year: 2023,
-    area: 2.4,
-    planted: 4800,
-    survival: 68,
-    condition: "幼林期，需持续抚育",
-    risks: ["城市面源污染", "海漂垃圾"],
-    risk: "中",
-    summary: "最新一批修复地，正处在最脆弱的前三年。",
-    what: "雨季后常见塑料垃圾缠绕幼苗基部。",
-    why: "上游雨水管网携带的面源垃圾在此淤积，缠绕会导致幼苗枯死。",
+    summary: "根据垃圾类型、位置、降雨与潮位提出可检验的来源假设。",
+    what: "垃圾聚集可能受到地表径流、潮汐、风和现场活动共同影响。",
+    why: "多日期、分类和空间记录比单次总数更有助于判断垃圾的搬运路径。",
   },
-];
+] as const;
 
-const mangroveLocations: EcoLocation[] = mangroveSeeds.map((m, i) => ({
+export const MANGROVE_PROGRAM_SUMMARY = {
+  areas: 8,
+  totalAreaSquareMeters: 95_730,
+  survivingPlants: 656_000,
+  survivalRateRange: "8%–30%",
+  asOf: "2026 年 3 月",
+  sourceLabel: "绿源数据合作资料",
+  pointLevelNote:
+    "上述数字是坝光 8 个修复区域的整体资料，尚未取得可公开匹配到每个地图学习点的分区坐标与逐点指标。",
+} as const;
+
+const mangroveLocations: EcoLocation[] = mangroveSeeds.map((m) => ({
   id: m.id,
   name: m.name,
   type: "mangrove",
   longitude: m.lng,
   latitude: m.lat,
   summary: m.summary,
-  category: "红树林修复地",
+  category: "红树林生态学习示例点",
   image: "mangrove",
-  restorationYear: m.year,
-  restorationArea: m.area,
-  plantedCount: m.planted,
-  survivalRate: m.survival,
-  condition: m.condition,
-  risks: m.risks,
-  riskLevel: m.risk,
-  indicators: [
-    { label: "修复面积", value: `${m.area} 公顷` },
-    { label: "种植株数", value: `${m.planted.toLocaleString("zh-CN")} 株` },
-    { label: "当前成活率", value: `${m.survival}%` },
-  ],
-  annualData: buildAnnual(101 + i * 7, {
-    baseQuality: 48 + i,
-    endQuality: 78 + (m.survival - 60) / 4,
-    baseCoverage: Math.max(4, m.survival - 45),
-    endCoverage: Math.min(92, m.survival + 6),
-    baseSurvival: Math.max(20, m.survival - 25),
-    endSurvival: m.survival,
-    events: {
-      [m.year]: `${m.name}启动修复种植（示例项目数据）`,
-      2018: i % 3 === 0 ? "台风“山竹”过境，部分幼苗倒伏" : undefined,
-      2021: i % 2 === 0 ? "开展第一次系统化补植与抚育" : undefined,
-      2025: "完成第 10 年长期监测样方复查",
-    },
-  }),
+  riskLevel: "低",
+  indicators: [{ label: "点位性质", value: "空间教学锚点；不是水质监测站" }],
+  annualData: YEARS.map((year) => ({ year })),
   story: {
     what: m.what,
     why: m.why,
-    matter:
-      "红树林是深圳湾的“天然堤坝”和育幼场：它固碳、消浪、净化水质，也为候鸟提供食物。成活率的差异，直接决定了这片滩涂十年后是林还是泥。",
+    matter: "红树林能防风消浪、促淤保滩并提供生物栖息地，但修复成效必须用可重复的数据持续评估。",
     action:
       "参与定点拍摄记录幼苗长势、不进入滩涂踩踏、发现缠绕垃圾时拍照上报，都能让修复团队更早发现问题。",
   },
 }));
+
+export const OUTFALL_DECADE_COMPARISON = {
+  baselineYear: 2015,
+  revisitYear: 2025,
+  surveyedOutfalls: 30,
+  baselineComplianceRate: 53.3,
+  revisitComplianceRate: 96.7,
+  complianceChangePoints: 43.4,
+  dryOutfallRate: 73.3,
+  sourceLabel: "绿源数据合作资料（截至 2026 年 3 月）",
+  publicRevisitSourceUrl: "https://www.szhb.org/about/jishi",
+  pointLevelNote:
+    "公开纪事确认 2025 年开展了深圳湾排水口十年调查回访；逐排口的 2025 原始观察与检测表尚未提供，因此不能把整体结果写成某一个排口的现状。",
+} as const;
 
 /**
  * 绿源 2015 年深圳湾排水口调查正文中公开了 11 个 GPS 坐标。
@@ -342,7 +223,6 @@ const outfallLocations: EcoLocation[] = outfallSeeds.map((site, i) => {
       { label: "调查编号", value: site.code },
       { label: "公开坐标", value: `${site.lat.toFixed(5)}, ${site.lng.toFixed(5)}` },
       { label: "2015 年现场记录", value: site.observed },
-      { label: "定量水质指标", value: "原公开资料未提供" },
     ],
     annualData: YEARS.map((year) => ({ year })),
     story: {
@@ -397,14 +277,14 @@ const learningLocations: EcoLocation[] = [
 ];
 
 /**
- * 地图只展示同时具备公开坐标和明确水体现场观察的点位。
- * 红树林与综合学习示例点没有可核验水质信息，因此不进入地图数据集。
+ * 排口是历史调查点；红树林与综合点是教学示例点，不冒充水质监测站。
+ * 三类点使用不同颜色，并在地点卡中分别说明证据边界。
  */
 export const locations: EcoLocation[] = [
   ...mangroveLocations,
   ...outfallLocations,
   ...learningLocations,
-].filter((location) => location.type === "outfall");
+];
 
 export const getLocation = (id: string) => locations.find((l) => l.id === id);
 

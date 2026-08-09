@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
-  AlertTriangle,
   BookOpen,
   CheckCircle2,
   ExternalLink,
@@ -12,14 +11,13 @@ import {
   X,
 } from "lucide-react";
 import type { EcoLocation } from "@/data/types";
-import { getAnnual } from "@/data/locations";
+import { MANGROVE_PROGRAM_SUMMARY, OUTFALL_DECADE_COMPARISON } from "@/data/locations";
 import {
   getLearningModule,
   getLearningSources,
   getLocationQuiz,
   TOTAL_LEARNING_POINTS,
 } from "@/data/learning";
-import { TrendChart } from "@/components/TrendChart";
 import { Badge } from "@/components/ui/badge";
 import { useAppState } from "@/lib/app-state";
 import mangroveImg from "@/assets/mangrove.jpg";
@@ -308,65 +306,75 @@ function ActivityBlock({ location }: { location: EcoLocation }) {
   );
 }
 
-function RestorationComparison({ location }: { location: EcoLocation }) {
-  const [view, setView] = useState<"before" | "after">("after");
-
-  useEffect(() => setView("after"), [location.id]);
-
-  const before = view === "before";
+function MangroveProgramCard() {
+  const data = MANGROVE_PROGRAM_SUMMARY;
   return (
-    <section className="overflow-hidden rounded-md border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
-        <div>
-          <p className="text-sm font-semibold text-navy">修复前后对比</p>
-          <p className="text-[11px] text-muted-foreground">
-            示意图片用于解释修复过程，不代表同机位监测照片
-          </p>
+    <section className="rounded-lg border border-mangrove/25 bg-mangrove/5 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-navy">真实项目背景 · 8 区汇总</p>
+        <Badge variant="outline">截至 {data.asOf}</Badge>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <Metric label="坝光修复区域" value={`${data.areas} 个`} />
+        <Metric label="总面积" value={`${data.totalAreaSquareMeters.toLocaleString("zh-CN")} ㎡`} />
+        <Metric label="成活植株" value={`${(data.survivingPlants / 10_000).toFixed(1)} 万株`} />
+      </div>
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+        合作资料记录各区域成活率为 {data.survivalRateRange}。{data.pointLevelNote}
+      </p>
+      <p className="mt-1 text-[11px] text-muted-foreground">来源：{data.sourceLabel}</p>
+    </section>
+  );
+}
+
+function OutfallDecadeComparison() {
+  const data = OUTFALL_DECADE_COMPARISON;
+  return (
+    <section className="rounded-lg border border-teal/25 bg-paleeco p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-navy">2015 ↔ 2025 十年整体对比</p>
+        <Badge variant="outline">30 个排口总体</Badge>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-md border border-border bg-card p-3">
+          <p className="text-xs font-medium text-muted-foreground">2015 · 首次调查</p>
+          <p className="mt-1 text-xl font-semibold text-navy">{data.baselineComplianceRate}%</p>
+          <p className="text-[11px] text-muted-foreground">综合达标率</p>
         </div>
-        <div
-          className="flex shrink-0 rounded-sm border border-border p-0.5"
-          role="group"
-          aria-label="选择对比阶段"
-        >
-          {(["before", "after"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              aria-pressed={view === mode}
-              onClick={() => setView(mode)}
-              className={`rounded-[3px] px-2 py-1 text-xs ${view === mode ? "bg-teal text-white" : "text-muted-foreground"}`}
-            >
-              {mode === "before" ? "修复前" : "修复后"}
-            </button>
-          ))}
+        <div className="rounded-md border border-teal/30 bg-card p-3">
+          <p className="text-xs font-medium text-muted-foreground">2025 · 十年回访</p>
+          <p className="mt-1 text-xl font-semibold text-teal">{data.revisitComplianceRate}%</p>
+          <p className="text-[11px] text-muted-foreground">综合达标率</p>
         </div>
       </div>
-      <div className="relative">
-        <img
-          src={before ? coastImg : mangroveImg}
-          alt={`${location.name}${before ? "修复前" : "修复后"}生态环境示意图`}
-          className="h-40 w-full object-cover"
-        />
-        <span className="absolute bottom-2 left-2 rounded-sm bg-navy/90 px-2 py-1 text-xs text-white">
-          {before
-            ? `修复启动前 · ${location.restorationYear ?? "项目"}年以前`
-            : "修复后 · 长期维护阶段"}
-        </span>
+      <div className="mt-2 rounded-md border-l-4 border-coral bg-card p-3 text-xs leading-5">
+        达标率提高 <strong>{data.complianceChangePoints} 个百分点</strong>，同时有
+        <strong> {data.dryOutfallRate}% 的排口断流</strong>
+        。这意味着指标改善与水动力弱化需要一起解读， 不能只用一个百分比概括生态状况。
       </div>
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">{data.pointLevelNote}</p>
+      <a
+        href={data.publicRevisitSourceUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal underline underline-offset-2"
+      >
+        查看绿源公开纪事中的 2025 回访记录
+        <ExternalLink className="size-3" />
+      </a>
+      <p className="mt-1 text-[11px] text-muted-foreground">数据：{data.sourceLabel}</p>
     </section>
   );
 }
 
 export function StoryPanel({
   location,
-  year,
   onClose,
 }: {
   location: EcoLocation;
   year: number;
   onClose: () => void;
 }) {
-  const annual = getAnnual(location, year);
   const surveyCode = location.indicators?.find((item) => item.label === "调查编号")?.value;
   const publicCoordinate = location.indicators?.find((item) => item.label === "公开坐标")?.value;
   const historicalObservation = location.indicators?.find(
@@ -396,18 +404,7 @@ export function StoryPanel({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{location.category}</Badge>
-            {location.type !== "outfall" && (
-              <Badge
-                variant={location.riskLevel === "高" ? "destructive" : "outline"}
-                className="gap-1"
-              >
-                <AlertTriangle className="size-3" />
-                风险 {location.riskLevel}
-              </Badge>
-            )}
-            {location.type === "mangrove" && (
-              <span className="text-xs text-muted-foreground">{year} 年示例数据</span>
-            )}
+            {location.type === "mangrove" && <Badge variant="outline">教学示例 · 非监测站</Badge>}
           </div>
           <h2 className="mt-2 text-lg font-semibold text-navy">{location.name}</h2>
           <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
@@ -417,17 +414,7 @@ export function StoryPanel({
           <p className="mt-2 text-sm leading-6">{location.summary}</p>
         </div>
 
-        {location.type === "mangrove" && (
-          <div className="grid grid-cols-2 gap-2">
-            <Metric label="修复起始" value={`${location.restorationYear} 年`} />
-            <Metric label="修复面积" value={`${location.restorationArea} 公顷`} />
-            <Metric
-              label="种植株数"
-              value={`${location.plantedCount?.toLocaleString("zh-CN")} 株`}
-            />
-            <Metric label="当前成活率" value={`${location.survivalRate}%`} />
-          </div>
-        )}
+        {location.type === "mangrove" && <MangroveProgramCard />}
 
         {location.type === "outfall" && (
           <div className="grid grid-cols-2 gap-2">
@@ -436,52 +423,15 @@ export function StoryPanel({
             <div className="col-span-2">
               <Metric label="2015 年现场观察" value={historicalObservation ?? "原文未描述"} />
             </div>
-            <div className="col-span-2">
-              <Metric label="定量水质指标" value="原公开资料未提供；仅展示 2015 年现场观察" />
-            </div>
           </div>
         )}
+
+        {location.type === "outfall" && <OutfallDecadeComparison />}
 
         {location.type === "learning" && learningIndicator && (
           <div className="grid grid-cols-2 gap-2">
             <Metric label={learningIndicator.label} value={learningIndicator.value} />
             <Metric label="学习主题" value={location.category} />
-          </div>
-        )}
-
-        {location.condition && (
-          <p className="text-sm">
-            <span className="font-medium text-navy">现状：</span>
-            {location.condition}
-          </p>
-        )}
-        {location.risks && (
-          <p className="text-sm">
-            <span className="font-medium text-navy">风险因素：</span>
-            {location.risks.join("、")}
-          </p>
-        )}
-
-        {location.type === "mangrove" && <RestorationComparison location={location} />}
-
-        {location.type === "mangrove" && (
-          <div>
-            <p className="mb-1 text-sm font-semibold text-navy">
-              示例成活率趋势（{year} 年为标记线）
-            </p>
-            <TrendChart
-              data={location.annualData}
-              year={year}
-              dataKey="survivalRate"
-              label="示例成活率 %"
-            />
-          </div>
-        )}
-
-        {location.type === "mangrove" && annual.event && (
-          <div className="rounded-md border-l-4 border-coral bg-card p-3 text-sm">
-            <span className="font-medium">{year} 年示例事件：</span>
-            {annual.event}
           </div>
         )}
 
@@ -496,8 +446,10 @@ export function StoryPanel({
 
         <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
           {location.type === "outfall"
-            ? "数据说明：本页展示绿源 2015 年报告正文公开的排口编号、坐标与历史水体现场描述；这些内容不代表当前状态，也不能替代定量检测。"
-            : "数据说明：本页中的趋势数值与图片含示例内容，用于学习交互，不作为正式监测结论。"}
+            ? "数据说明：逐点卡片展示 2015 年公开坐标与历史现场描述；2025 年仅展示合作资料中的 30 个排口整体结果，未把总体数据冒充为本点现状。"
+            : location.type === "mangrove"
+              ? "数据说明：本点是基于红树林修复议题设计的空间学习锚点，不是官方样地坐标或水质监测站；8 区项目数字仅作为整体背景。"
+              : "数据说明：本点用于现场学习与规范观察，不展示没有来源的水质数值。"}
         </p>
       </div>
     </div>
