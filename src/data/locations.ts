@@ -472,3 +472,20 @@ export const SHENZHEN_BAY_BOUNDARY: [number, number][] = [
 
 export const SHENZHEN_BAY_CENTER: [number, number] = [22.467176, 113.941171];
 export const SHENZHEN_BAY_DEFAULT_ZOOM = 12;
+export const MAP_LIMIT_RADIUS_KM = 200;
+export const MAP_MIN_ZOOM = 9;
+
+/**
+ * 地图活动范围：以深圳湾为中心，向东、西、南、北各约 200 千米。
+ * Leaflet 与高德均使用矩形边界限制拖拽；经度跨度按深圳湾纬度换算。
+ */
+const latitudeRadius = MAP_LIMIT_RADIUS_KM / 111.32;
+const longitudeRadius =
+  MAP_LIMIT_RADIUS_KM / (111.32 * Math.cos((SHENZHEN_BAY_CENTER[0] * Math.PI) / 180));
+
+export const MAP_LIMIT_BOUNDS = {
+  south: SHENZHEN_BAY_CENTER[0] - latitudeRadius,
+  west: SHENZHEN_BAY_CENTER[1] - longitudeRadius,
+  north: SHENZHEN_BAY_CENTER[0] + latitudeRadius,
+  east: SHENZHEN_BAY_CENTER[1] + longitudeRadius,
+} as const;

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
   locations,
+  MAP_LIMIT_BOUNDS,
+  MAP_MIN_ZOOM,
   SHENZHEN_BAY_BOUNDARY,
   SHENZHEN_BAY_CENTER,
   SHENZHEN_BAY_DEFAULT_ZOOM,
@@ -85,10 +87,17 @@ export default function AmapCanvas({
         map = new AMap.Map(elRef.current, {
           center: [SHENZHEN_BAY_CENTER[1], SHENZHEN_BAY_CENTER[0]],
           zoom: SHENZHEN_BAY_DEFAULT_ZOOM,
+          zooms: [MAP_MIN_ZOOM, 18],
           mapStyle: "amap://styles/whitesmoke",
           viewMode: "2D",
           resizeEnable: true,
         });
+        map.setLimitBounds(
+          new AMap.Bounds(
+            [MAP_LIMIT_BOUNDS.west, MAP_LIMIT_BOUNDS.south],
+            [MAP_LIMIT_BOUNDS.east, MAP_LIMIT_BOUNDS.north],
+          ),
+        );
         const bay = new AMap.Polygon({
           path: SHENZHEN_BAY_BOUNDARY.map(
             ([latitude, longitude]) => [longitude, latitude] as [number, number],

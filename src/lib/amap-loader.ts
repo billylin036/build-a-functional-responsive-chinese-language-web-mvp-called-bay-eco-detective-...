@@ -3,18 +3,21 @@ export interface AMapEventTarget {
 }
 
 export type AMapOverlay = AMapEventTarget;
+export type AMapBounds = object;
 
 export interface AMapMap {
   add(overlays: AMapOverlay | AMapOverlay[]): void;
   remove(overlays: AMapOverlay | AMapOverlay[]): void;
   addControl(control: object): void;
   setZoomAndCenter(zoom: number, center: [number, number], immediately?: boolean): void;
+  setLimitBounds(bounds: AMapBounds): void;
   destroy(): void;
 }
 
 interface AMapMapOptions {
   center: [number, number];
   zoom: number;
+  zooms?: [number, number];
   mapStyle?: string;
   viewMode?: "2D" | "3D";
   resizeEnable?: boolean;
@@ -64,6 +67,7 @@ export interface AMapNamespace {
   Polygon: new (options: AMapPolygonOptions) => AMapOverlay;
   Polyline: new (options: AMapPolylineOptions) => AMapOverlay;
   Pixel: new (x: number, y: number) => AMapPixel;
+  Bounds: new (southWest: [number, number], northEast: [number, number]) => AMapBounds;
   ToolBar: new (options?: object) => object;
   Scale: new (options?: object) => object;
 }

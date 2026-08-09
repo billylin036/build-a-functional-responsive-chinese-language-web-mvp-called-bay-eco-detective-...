@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import {
   locations,
+  MAP_LIMIT_BOUNDS,
+  MAP_MIN_ZOOM,
   SHENZHEN_BAY_BOUNDARY,
   SHENZHEN_BAY_CENTER,
   SHENZHEN_BAY_DEFAULT_ZOOM,
@@ -76,6 +78,13 @@ export default function MapCanvas({
         map = L.map(elRef.current, {
           center: SHENZHEN_BAY_CENTER,
           zoom: SHENZHEN_BAY_DEFAULT_ZOOM,
+          minZoom: MAP_MIN_ZOOM,
+          maxBounds: [
+            [MAP_LIMIT_BOUNDS.south, MAP_LIMIT_BOUNDS.west],
+            [MAP_LIMIT_BOUNDS.north, MAP_LIMIT_BOUNDS.east],
+          ],
+          maxBoundsViscosity: 1,
+          bounceAtZoomLimits: false,
           zoomControl: false,
           attributionControl: true,
         });

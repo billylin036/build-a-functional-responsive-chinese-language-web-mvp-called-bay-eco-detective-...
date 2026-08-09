@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import AmapCanvas from "@/components/map/AmapCanvas";
 import LeafletMapCanvas from "@/components/map/MapCanvas";
 import type { MapCanvasProps } from "@/components/map/MapCanvas";
+import { MAP_LIMIT_RADIUS_KM } from "@/data/locations";
 
 const env = import.meta.env as Record<string, string | undefined>;
 
@@ -34,6 +35,7 @@ export default function LiveMapCanvas(props: MapCanvasProps) {
           : leafletReady
             ? "OpenStreetMap 在线地图"
             : "正在连接 OpenStreetMap 在线地图"}
+        {` · 活动范围约 ${MAP_LIMIT_RADIUS_KM} 公里`}
       </div>
     </div>
   );
