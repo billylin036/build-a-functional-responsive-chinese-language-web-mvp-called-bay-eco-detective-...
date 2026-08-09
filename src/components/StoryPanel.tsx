@@ -4,6 +4,7 @@ import {
   Activity,
   BookOpen,
   CheckCircle2,
+  Compass,
   ExternalLink,
   Lightbulb,
   MapPin,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import type { EcoLocation } from "@/data/types";
 import { MANGROVE_PROGRAM_SUMMARY, OUTFALL_DECADE_COMPARISON } from "@/data/locations";
+import { getSamplingPointProfile } from "@/data/exploration";
 import {
   getLearningModule,
   getLearningSources,
@@ -371,6 +373,7 @@ function OutfallDecadeComparison() {
 
 function WaterSampleCard({ location }: { location: EcoLocation }) {
   const sample = location.waterSample;
+  const quest = getSamplingPointProfile(location.id);
   if (!sample) return null;
 
   return (
@@ -385,6 +388,29 @@ function WaterSampleCard({ location }: { location: EcoLocation }) {
         <Metric label="COD" value={sample.cod} />
         <Metric label="氨氮（NH₃-N）" value={sample.ammoniaNitrogen} />
       </div>
+      {quest && (
+        <div className="mt-3 rounded-lg border border-[#4F46E5]/25 bg-card p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-[#4F46E5]">
+              <Compass className="size-3.5" />
+              {quest.missionCode}
+            </p>
+            <Badge className="bg-[#4F46E5] text-white hover:bg-[#4F46E5]">
+              {quest.region.title}
+            </Badge>
+          </div>
+          <p className="mt-2 text-sm font-semibold text-navy">地点角色 · {quest.role}</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{quest.roleLesson}</p>
+          <p className="mt-2 rounded-md bg-[#4F46E5]/5 px-3 py-2 text-xs leading-5 text-navy">
+            <strong>指标线索：</strong>
+            {quest.indicatorLesson}
+          </p>
+          <p className="mt-2 text-xs leading-5 text-foreground">
+            <strong>探索任务：</strong>
+            {quest.mission}
+          </p>
+        </div>
+      )}
       <p className="mt-3 text-xs leading-5 text-muted-foreground">
         {sample.method}
         ；数值与范围按报告表格原样录入。报告截图未在表头标注单位，因此本站不自行补写单位。

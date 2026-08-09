@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { samplingQuestRegions } from "@/data/exploration";
 import { TOTAL_CHAPTERS } from "@/data/learning";
 import { locations } from "@/data/locations";
 
@@ -249,9 +250,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         desc: "完成至少 3 次互动观察并保存规范记录",
         earned: state.activityRecords.length >= 3,
       },
+      ...samplingQuestRegions.map((region) => ({
+        id: region.badge,
+        desc: `完成「${region.title}」任意 ${region.badgeThreshold} 个真实采样点微测验`,
+        earned:
+          region.sampleIds.filter((id) => completedLocationQuizzes.includes(id)).length >=
+          region.badgeThreshold,
+      })),
     ],
     [
       learningComplete,
+      completedLocationQuizzes,
       state.activityRecords.length,
       state.completedChapters.length,
       state.finalAssessment,

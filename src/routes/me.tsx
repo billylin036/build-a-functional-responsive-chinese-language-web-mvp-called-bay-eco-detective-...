@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Award, CheckCircle2, ClipboardCheck, History, Printer, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SAMPLING_QUEST_IDS } from "@/data/exploration";
 import { TOTAL_CHAPTERS, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { useAppState } from "@/lib/app-state";
 
@@ -49,6 +50,9 @@ function LearningResultsPage() {
     (total, attempts) => total + attempts,
     0,
   );
+  const completedWorldQuests = SAMPLING_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
@@ -73,8 +77,8 @@ function LearningResultsPage() {
         <Stat label="完成章节" value={`${completedChapters.length} / ${TOTAL_CHAPTERS}`} />
         <Stat label="章节答题选择" value={`${totalChapterAttempts} 次`} />
         <Stat
-          label="地图拓展练习"
-          value={`${completedLocationQuizzes.length}/${TOTAL_LEARNING_POINTS} 点 · ${totalLocationAttempts} 次答题`}
+          label="大世界探索"
+          value={`${completedWorldQuests}/${SAMPLING_QUEST_IDS.length} 支线 · 全部 ${completedLocationQuizzes.length}/${TOTAL_LEARNING_POINTS} 点`}
         />
         <Stat
           label="综合测验"

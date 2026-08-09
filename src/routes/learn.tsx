@@ -7,10 +7,12 @@ import {
   CheckCircle2,
   ChevronRight,
   ClipboardCheck,
+  Compass,
   ExternalLink,
   GraduationCap,
   LockKeyhole,
   MapPinned,
+  MapPin,
   RotateCcw,
   ShieldCheck,
 } from "lucide-react";
@@ -18,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { SAMPLING_QUEST_IDS, samplingQuestRegions } from "@/data/exploration";
 import type { CourseChapter } from "@/data/learning";
 import {
   FINAL_PASS_SCORE,
@@ -27,6 +30,7 @@ import {
   TOTAL_CHAPTERS,
   TOTAL_LEARNING_POINTS,
 } from "@/data/learning";
+import { locations } from "@/data/locations";
 import { useAppState } from "@/lib/app-state";
 
 export const Route = createFileRoute("/learn")({
@@ -66,6 +70,12 @@ function LearnPage() {
   const activeChapter =
     learningChapters.find((chapter) => chapter.id === activeChapterId) ?? firstChapter;
   const chapterProgress = Math.round((completedChapters.length / TOTAL_CHAPTERS) * 100);
+  const completedSamplingQuizzes = SAMPLING_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  );
+  const explorationProgress = Math.round(
+    (completedSamplingQuizzes.length / SAMPLING_QUEST_IDS.length) * 100,
+  );
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -75,8 +85,8 @@ function LearnPage() {
           <div>
             <h1 className="text-2xl font-semibold text-navy sm:text-3xl">深圳湾生态学习闯关</h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-              四个章节均参考深圳市绿源环保志愿者协会公开资料及专业规范。每章先阅读资料，再连续完成 4
-              道递进测验；答错可根据提示重试，答对后才能进入下一题。
+              四个章节均参考深圳市绿源环保志愿者协会公开资料及专业规范。每章先阅读资料，再连续完成 5
+              道递进测验，其中包含一道流域探索题；答错可根据提示重试，答对后才能进入下一题。
             </p>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
               课程会明确标注调查年份。2015
@@ -98,6 +108,76 @@ function LearnPage() {
               {activityRecords.length} 次观察记录
             </p>
           </div>
+        </div>
+      </section>
+
+      <section className="mt-8 overflow-hidden rounded-xl border border-teal/25 bg-navy text-white">
+        <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-end">
+          <div>
+            <Badge className="bg-coral text-white hover:bg-coral">OPEN WORLD QUEST</Badge>
+            <h2 className="mt-3 flex items-center gap-2 text-xl font-semibold sm:text-2xl">
+              <Compass className="size-6 text-teal-200" />
+              珠江流域 · 大世界探索
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-white/75">
+              38
+              个真实采样点被编成四条流域支线。搜索地点、跳转到真实坐标，阅读地点角色与指标线索，再完成不重复的推理任务和微测验。
+            </p>
+          </div>
+          <div className="rounded-lg border border-white/15 bg-white/10 p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span>探索完成度</span>
+              <span className="font-mono text-teal-200">
+                {completedSamplingQuizzes.length} / {SAMPLING_QUEST_IDS.length}
+              </span>
+            </div>
+            <Progress value={explorationProgress} className="mt-2 bg-white/15" />
+            <p className="mt-2 text-xs text-white/65">
+              {explorationProgress}% · 每区完成 3 个点位可得徽章
+            </p>
+          </div>
+        </div>
+
+        <div className="grid border-t border-white/10 md:grid-cols-2 xl:grid-cols-4">
+          {samplingQuestRegions.map((region) => {
+            const completed = region.sampleIds.filter((id) =>
+              completedLocationQuizzes.includes(id),
+            );
+            const nextId =
+              region.sampleIds.find((id) => !completedLocationQuizzes.includes(id)) ??
+              region.sampleIds[0]!;
+            const nextLocation = locations.find((location) => location.id === nextId);
+            const earned = completed.length >= region.badgeThreshold;
+            return (
+              <article
+                key={region.id}
+                className="border-white/10 p-5 md:border-r md:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:last:border-r-0"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-mono text-[11px] text-teal-200">{region.code}</p>
+                    <h3 className="mt-1 text-sm font-semibold">{region.title}</h3>
+                  </div>
+                  {earned && (
+                    <Award className="size-5 shrink-0 text-amber-300" aria-label="徽章已解锁" />
+                  )}
+                </div>
+                <p className="mt-2 text-xs leading-5 text-white/65">{region.description}</p>
+                <p className="mt-3 text-xs text-white/80">
+                  {completed.length}/{region.sampleIds.length} 已完成 · 徽章「{region.badge}」
+                </p>
+                <a
+                  href={`/?location=${encodeURIComponent(nextId)}`}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-2 text-xs font-medium text-navy hover:bg-teal-50"
+                >
+                  <MapPin className="size-3.5" />
+                  {completed.length === region.sampleIds.length
+                    ? "再次探索"
+                    : `前往 ${nextLocation?.name ?? "下一站"}`}
+                </a>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -158,6 +238,10 @@ function LearnPage() {
             const unlocked =
               index === 0 || completedChapters.includes(learningChapters[index - 1]?.id ?? "");
             const active = chapter.id === activeChapter.id;
+            const regionProgress = chapter.exploration
+              ? chapter.exploration.sampleIds.filter((id) => completedLocationQuizzes.includes(id))
+                  .length
+              : 0;
             return (
               <button
                 key={chapter.id}
@@ -193,6 +277,11 @@ function LearnPage() {
                   <span>{chapter.duration}</span>
                   <span>{chapter.quiz.length} 题</span>
                 </div>
+                {chapter.exploration && (
+                  <p className="mt-2 border-t border-current/10 pt-2 text-[11px] text-teal">
+                    支线探索 {regionProgress}/{chapter.exploration.sampleIds.length}
+                  </p>
+                )}
               </button>
             );
           })}
@@ -203,6 +292,7 @@ function LearnPage() {
         chapter={activeChapter}
         completed={completedChapters.includes(activeChapter.id)}
         previousAttempts={chapterAttempts[activeChapter.id] ?? 0}
+        completedLocationQuizzes={completedLocationQuizzes}
         onComplete={(attempts) => completeChapter(activeChapter.id, activeChapter.title, attempts)}
       />
 
@@ -323,9 +413,9 @@ function LearnPage() {
         <div className="flex items-start gap-3">
           <MapPinned className="mt-0.5 size-5 shrink-0 text-teal" />
           <div>
-            <h2 className="font-semibold text-navy">地图地点练习</h2>
+            <h2 className="font-semibold text-navy">继续大世界探索</h2>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              在真实坐标地图中继续完成地点知识卡、微测验与安全观察记录，作为四章课程的拓展实践。
+              在真实坐标地图中搜索地点、解锁流域支线徽章，并完成地点知识卡、微测验与安全观察记录。
             </p>
           </div>
         </div>
@@ -341,11 +431,13 @@ function ChapterLesson({
   chapter,
   completed,
   previousAttempts,
+  completedLocationQuizzes,
   onComplete,
 }: {
   chapter: CourseChapter;
   completed: boolean;
   previousAttempts: number;
+  completedLocationQuizzes: string[];
   onComplete: (attempts: number) => void;
 }) {
   const [stage, setStage] = useState<"reading" | "quiz" | "complete">(
@@ -358,6 +450,14 @@ function ChapterLesson({
   const chapterSources = useMemo(() => getLearningSources(chapter.sourceIds), [chapter.sourceIds]);
   const question = chapter.quiz[questionIndex];
   const questionSources = question ? getLearningSources(question.sourceIds) : [];
+  const questCompleted = chapter.exploration
+    ? chapter.exploration.sampleIds.filter((id) => completedLocationQuizzes.includes(id))
+    : [];
+  const nextQuestId = chapter.exploration
+    ? (chapter.exploration.sampleIds.find((id) => !completedLocationQuizzes.includes(id)) ??
+      chapter.exploration.sampleIds[0])
+    : undefined;
+  const nextQuestLocation = locations.find((location) => location.id === nextQuestId);
 
   useEffect(() => {
     setStage(completed ? "complete" : "reading");
@@ -426,6 +526,36 @@ function ChapterLesson({
                   ))}
                 </ul>
               </div>
+
+              {chapter.exploration && nextQuestId && (
+                <div className="rounded-lg border border-navy/15 bg-navy p-4 text-white">
+                  <p className="font-mono text-[11px] text-teal-200">OPEN WORLD SIDE QUEST</p>
+                  <h3 className="mt-1 flex items-center gap-2 text-sm font-semibold">
+                    <Compass className="size-4" />
+                    {chapter.exploration.title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-5 text-white/70">
+                    {chapter.exploration.description}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between text-xs">
+                    <span>
+                      {questCompleted.length}/{chapter.exploration.sampleIds.length} 个点位
+                    </span>
+                    <span>3 个解锁徽章</span>
+                  </div>
+                  <Progress
+                    value={(questCompleted.length / chapter.exploration.sampleIds.length) * 100}
+                    className="mt-2 bg-white/15"
+                  />
+                  <a
+                    href={`/?location=${encodeURIComponent(nextQuestId)}`}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-2 text-xs font-medium text-navy hover:bg-teal-50"
+                  >
+                    <MapPin className="size-3.5" />
+                    前往 {nextQuestLocation?.name ?? "流域支线"}
+                  </a>
+                </div>
+              )}
 
               <div className="rounded-lg border border-coral/20 bg-coral/5 p-4">
                 <h3 className="text-sm font-semibold text-navy">

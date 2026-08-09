@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Crosshair, GraduationCap, Info } from "lucide-react";
+import { Compass, Crosshair, GraduationCap, Info } from "lucide-react";
 import { locations } from "@/data/locations";
 import type { LocationType } from "@/data/types";
 import { TOTAL_CHAPTERS } from "@/data/learning";
+import { SAMPLING_QUEST_IDS } from "@/data/exploration";
 import { LocationSearch } from "@/components/map/MapControls";
 import { StoryPanel } from "@/components/StoryPanel";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export function MapExplorer() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [recenter, setRecenter] = useState(0);
   const [focus, setFocus] = useState(0);
+  const [locatedName, setLocatedName] = useState<string | null>(null);
   const isCompactMap = useIsCompactMap();
   const navigate = useNavigate();
   const { completedChapters, completedLocationQuizzes } = useAppState();
@@ -27,9 +29,25 @@ export function MapExplorer() {
   const currentRouteId = null;
 
   const pick = useCallback((id: string) => {
+    const location = locations.find((item) => item.id === id);
     setSelectedId(id);
+    setLocatedName(location?.name ?? null);
     setFocus((f) => f + 1);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", `/?location=${encodeURIComponent(id)}`);
+    }
   }, []);
+
+  useEffect(() => {
+    const initialLocationId = new URLSearchParams(window.location.search).get("location");
+    if (initialLocationId && locations.some((location) => location.id === initialLocationId)) {
+      pick(initialLocationId);
+    }
+  }, [pick]);
+
+  const samplingQuestProgress = completedLocationQuizzes.filter((id) =>
+    SAMPLING_QUEST_IDS.includes(id),
+  ).length;
 
   const layerCounts = useMemo(
     () => ({
@@ -60,6 +78,14 @@ export function MapExplorer() {
           <div className="pointer-events-auto">
             <LocationSearch onPick={pick} />
           </div>
+          {locatedName && (
+            <p
+              className="pointer-events-none w-fit max-w-full truncate rounded-full bg-navy/90 px-3 py-1 text-[11px] text-white shadow"
+              role="status"
+            >
+              已定位：{locatedName}
+            </p>
+          )}
           <div className="pointer-events-auto hidden rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm sm:block">
             <p className="font-medium text-navy">地图共 {locations.length} 个学习入口</p>
             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
@@ -104,6 +130,10 @@ export function MapExplorer() {
           <div className="rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
             课程 {completedChapters.length} / {TOTAL_CHAPTERS} 章
           </div>
+          <div className="flex items-center gap-1.5 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
+            <Compass className="size-3.5 text-[#4F46E5]" />
+            大世界探索 {samplingQuestProgress} / {SAMPLING_QUEST_IDS.length}
+          </div>
         </div>
 
         {!selected && (
@@ -133,7 +163,11 @@ export function MapExplorer() {
             <StoryPanel
               location={selected}
               year={SURVEY_YEAR}
-              onClose={() => setSelectedId(null)}
+              onClose={() => {
+                setSelectedId(null);
+                setLocatedName(null);
+                window.history.replaceState(null, "", "/");
+              }}
             />
           </aside>
         )}

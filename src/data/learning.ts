@@ -1,4 +1,6 @@
 import { locations } from "./locations";
+import { getSamplingPointProfile, samplingQuestRegions } from "./exploration";
+import type { SamplingQuestRegion } from "./exploration";
 
 export interface LearningSource {
   id: string;
@@ -75,6 +77,7 @@ export interface CourseChapter {
     prompt: string;
     steps: string[];
   };
+  exploration?: SamplingQuestRegion;
   quiz: ChapterQuizQuestion[];
 }
 
@@ -210,7 +213,7 @@ export const learningSources: LearningSource[] = [
   },
 ];
 
-export const learningChapters: CourseChapter[] = [
+const baseLearningChapters: CourseChapter[] = [
   {
     id: "bay-evidence",
     number: 1,
@@ -610,6 +613,92 @@ export const learningChapters: CourseChapter[] = [
     ],
   },
 ];
+
+const explorationChapterQuestions: Record<number, ChapterQuizQuestion> = {
+  1: {
+    id: "north-river-world-quest",
+    skill: "跨点比较",
+    difficulty: "挑战",
+    question:
+      "北江支线中，WS-04 井水坑水记录 pH 5、COD 50–100，WS-05 孔江水库记录 pH 7、COD 5.0–10。哪种解释最符合证据边界？",
+    options: [
+      "WS-04 已被证明由某一种污染源造成",
+      "两点的报告表值不同；要解释原因，还需核对单位、方法、采样时间、水文条件并重复检测",
+      "孔江水库所有年份、所有位置的水质都优于井水坑水",
+      "只比较 pH 就足以确定两个点的完整水质等级",
+    ],
+    answerIndex: 1,
+    hint: "跨点比较要先区分“表值不同”和“原因已经查明”。",
+    explanation:
+      "原表支持读取两点的 2023 年快速检测记录，但没有提供足以确认污染来源、长期状态或完整等级的证据。",
+    sourceIds: ["sengo-2023-observation", "mee-monitoring"],
+  },
+  2: {
+    id: "east-river-world-quest",
+    skill: "空间布点",
+    difficulty: "挑战",
+    question:
+      "要研究 WS-12 东江—新丰江交汇处的记录可能受到哪一股来水影响，最有信息量的布点方式是什么？",
+    options: [
+      "只在交汇后拍一张照片",
+      "只在地图上比较两个地名",
+      "在两条河交汇前分别布点，并在交汇后设置下游点，同时记录时间、流量或水位条件",
+      "选择数值最高的一项直接判断来源",
+    ],
+    answerIndex: 2,
+    hint: "交汇口调查需要能区分两股来水，并观察混合后的变化。",
+    explanation:
+      "交汇前两侧点位与交汇后点位组成空间对照；同步记录水文条件才能减少时间和流量差异造成的混淆。",
+    sourceIds: ["sengo-2023-observation", "mee-monitoring"],
+  },
+  3: {
+    id: "west-river-world-quest",
+    skill: "谨慎推断",
+    difficulty: "综合",
+    question:
+      "WS-21 茅洲河共和国村断面记录 pH 7.24，WS-28 福田河下游记录 pH 6。仅凭这两个 pH 数值可以得出什么？",
+    options: [
+      "茅洲河整体生态一定更健康",
+      "福田河一定受到工业污染",
+      "只能说明报告表中两点当次 pH 记录不同；完整比较还需其他指标、单位、方法和重复采样",
+      "pH 越高，所有污染物浓度就一定越低",
+    ],
+    answerIndex: 2,
+    hint: "pH 是酸碱条件指标，不是整个水生态系统的总分。",
+    explanation: "两个数值可用于描述当次记录差异，但不能自动代表整条河流、污染来源或综合生态健康。",
+    sourceIds: ["sengo-2023-observation", "mee-indicators"],
+  },
+  4: {
+    id: "estuary-world-quest",
+    skill: "调查设计",
+    difficulty: "综合",
+    question:
+      "比较 WS-29 新朗村（漠阳江支流）与 WS-38 东江南支流等河海口点位时，哪组附加记录最关键？",
+    options: [
+      "只记录哪一个点在地图上更靠近海",
+      "潮位、采样时刻、近期降雨、方法与单位，并尽量在可比条件下重复采样",
+      "只保留 COD 范围，不记录其他指标",
+      "把快速检测范围直接换算成官方水质等级",
+    ],
+    answerIndex: 1,
+    hint: "河海口会受到潮汐、径流与盐淡水混合影响。",
+    explanation:
+      "记录潮位、天气、时间和方法可以帮助判断差异是否来自环境条件或真实变化；重复采样比单次比较更可靠。",
+    sourceIds: ["sengo-2023-observation", "mee-monitoring"],
+  },
+};
+
+export const learningChapters: CourseChapter[] = baseLearningChapters.map((chapter) => {
+  const exploration = samplingQuestRegions.find(
+    (region) => region.chapterNumber === chapter.number,
+  );
+  const explorationQuestion = explorationChapterQuestions[chapter.number];
+  return {
+    ...chapter,
+    exploration,
+    quiz: explorationQuestion ? [...chapter.quiz, explorationQuestion] : chapter.quiz,
+  };
+});
 
 export const TOTAL_CHAPTERS = learningChapters.length;
 
@@ -1525,18 +1614,12 @@ const modules: Record<string, LearningModule> = {
 function createWaterSampleModule(locationId: string): LearningModule | null {
   const location = locations.find((item) => item.id === locationId);
   const sample = location?.waterSample;
+  const profile = getSamplingPointProfile(locationId);
   if (!location || !sample) return null;
 
-  return {
-    objective: `准确读取${location.name}的快速检测记录，并区分“现场筛查线索”和“官方水质结论”。`,
-    knowledge: {
-      title: "快速检测范围不是完整水质等级",
-      fact: "pH、总磷、COD 和氨氮反映水体的不同特征。现场快速检测适合发现异常线索，但正式评价还需要明确单位、采样条件、质量控制、检测方法和适用标准。",
-      think: "如果两次结果不同，除了水体真的变化，还有哪些采样时间、水位或方法因素可能造成差异？",
-      sourceIds: ["sengo-2023-observation", "mee-monitoring", "mee-indicators"],
-    },
-    quiz: {
-      skill: "数据读取与证据边界",
+  const quizVariants: LearningQuiz[] = [
+    {
+      skill: "数据解码",
       difficulty: "进阶",
       question: `关于报告中${location.name}的记录，哪项表述最准确？`,
       options: [
@@ -1550,6 +1633,66 @@ function createWaterSampleModule(locationId: string): LearningModule | null {
       explanation:
         "第一项既保留了报告原值，也保留了年份和快速检测的方法边界；其余选项都把有限证据过度解释了。",
     },
+    {
+      skill: "空间推理",
+      difficulty: "挑战",
+      question: `${location.name}属于“${profile?.role ?? "流域观察节点"}”。完成一次快速检测后，哪项后续设计最有信息量？`,
+      options: [
+        "只把本次结果发到群里，不记录时间和天气",
+        "在可比条件下重复检测，并按地点角色设置上游、下游或交汇前后的参考点",
+        "看到一个范围较大就直接确定污染企业",
+        "只保留地图截图，删除原始表值",
+      ],
+      answerIndex: 1,
+      hint: "地点名称能帮助设计空间对照，但不能替代重复采样。",
+      explanation:
+        "重复检测与空间参考点可以帮助区分偶然波动、混合效应和真正的空间差异，同时保留完整原始记录。",
+    },
+    {
+      skill: "证据边界",
+      difficulty: "进阶",
+      question: `阅读${location.name}的指标线索后，哪一句最科学？`,
+      options: [
+        profile?.indicatorLesson ?? `本点记录 pH ${sample.pH}，但单项指标不能代表完整水质等级。`,
+        "只要一个指标出现范围值，就能确定唯一污染来源",
+        "现场快速检测与规范实验室检测完全等价",
+        "不同单位、不同方法的数据可以直接放在一起比较",
+      ],
+      answerIndex: 0,
+      hint: "正确答案会同时保留原始表值和方法局限。",
+      explanation:
+        "科学表达既要准确读取指标，也要说明它能回答什么、不能回答什么，避免把快速筛查写成官方结论。",
+    },
+    {
+      skill: "调查设计",
+      difficulty: "综合",
+      question: `如果要把${location.name}纳入长期学生观察库，最应该补齐哪组信息？`,
+      options: [
+        "拍摄者使用的手机品牌",
+        "采样日期时刻、天气与水位、单位、检测方法、重复次数和原始记录",
+        "只写“今天水质不好”",
+        "把所有范围取中间值后删除原表",
+      ],
+      answerIndex: 1,
+      hint: "想一想：别人需要哪些信息才能理解、复核并重复这次记录？",
+      explanation:
+        "时间、环境条件、单位、方法和重复记录构成可追溯数据的基础；主观评价或删改原表都会降低证据质量。",
+    },
+  ];
+
+  return {
+    objective: `完成${profile?.missionCode ?? "地点支线"}：准确读取${location.name}的快速检测记录，并把地点角色、指标线索与证据边界联系起来。`,
+    knowledge: {
+      title: profile ? `${profile.region.title} · ${profile.role}` : "快速检测范围不是完整水质等级",
+      fact: profile
+        ? `${profile.roleLesson}${profile.indicatorLesson}`
+        : "pH、总磷、COD 和氨氮反映水体的不同特征。现场快速检测适合发现异常线索，但正式评价还需要明确单位、采样条件、质量控制、检测方法和适用标准。",
+      think:
+        profile?.mission ??
+        "如果两次结果不同，除了水体真的变化，还有哪些采样时间、水位或方法因素可能造成差异？",
+      sourceIds: ["sengo-2023-observation", "mee-monitoring", "mee-indicators"],
+    },
+    quiz: quizVariants[(sample.sampleNumber - 1) % quizVariants.length]!,
     activity: {
       title: "快速检测数据审读卡",
       mode: "室内 / 现场",
