@@ -1,80 +1,7 @@
-import { Layers, Search, X } from "lucide-react";
-import type { LocationType } from "@/data/types";
+import { Search, X } from "lucide-react";
 import { locations } from "@/data/locations";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-
-const LAYER_META: { id: LocationType; label: string; color: string; desc: string }[] = [
-  { id: "mangrove", label: "红树林修复地", color: "bg-mangrove", desc: "8 处修复地块" },
-  { id: "outfall", label: "入湾排口", color: "bg-teal", desc: "11 个公开坐标样点" },
-  { id: "learning", label: "综合学习点", color: "bg-coral", desc: "鸟类与岸线环境" },
-];
-
-export function LayerControls({
-  active,
-  onToggle,
-}: {
-  active: LocationType[];
-  onToggle: (id: LocationType) => void;
-}) {
-  return (
-    <div className="rounded-md border border-border bg-card/95 p-3 shadow-sm backdrop-blur">
-      <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-navy">
-        <Layers className="size-4" /> 数据图层
-      </div>
-      <div className="space-y-1.5">
-        {LAYER_META.map((l) => {
-          const on = active.includes(l.id);
-          return (
-            <button
-              key={l.id}
-              onClick={() => onToggle(l.id)}
-              aria-pressed={on}
-              className={`flex w-full items-center gap-2 rounded-sm border px-2 py-1.5 text-left text-xs transition-colors ${
-                on ? "border-teal bg-paleeco" : "border-border bg-card opacity-60 hover:opacity-100"
-              }`}
-            >
-              <span className={`size-3 shrink-0 rounded-full ${l.color}`} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium text-foreground">{l.label}</span>
-                <span className="block truncate text-muted-foreground">{l.desc}</span>
-              </span>
-              <span className="shrink-0 text-[10px] text-muted-foreground">
-                {on ? "显示中" : "已隐藏"}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-3 border-t border-border pt-2 text-[11px] leading-5 text-muted-foreground">
-        <div className="mb-1 font-medium text-navy">图例</div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-mangrove" />
-          红树林修复地
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-teal" />
-          公开排口坐标
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-coral" />
-          综合学习点
-        </div>
-        <p className="mt-2 border-t border-border pt-2 leading-4">
-          2015 年调查共记录 30 个排水口；地图仅展示报告正文公开 GPS 坐标的 11 个样点。
-          <a
-            href="https://www.szhb.org/5383.html"
-            target="_blank"
-            rel="noreferrer"
-            className="ml-1 font-medium text-teal underline underline-offset-2"
-          >
-            查看坐标来源
-          </a>
-        </p>
-      </div>
-    </div>
-  );
-}
 
 export function LocationSearch({ onPick }: { onPick: (id: string) => void }) {
   const [q, setQ] = useState("");
@@ -95,7 +22,7 @@ export function LocationSearch({ onPick }: { onPick: (id: string) => void }) {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="搜索地点，如「红树林」「B4」"
+          placeholder="搜索排口，如「B4」「大沙河」"
           className="h-9 border-0 px-0 shadow-none focus-visible:ring-0"
           aria-label="搜索地点"
         />

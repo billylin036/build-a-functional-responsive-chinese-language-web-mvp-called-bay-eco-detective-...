@@ -342,7 +342,7 @@ const outfallLocations: EcoLocation[] = outfallSeeds.map((site, i) => {
       { label: "调查编号", value: site.code },
       { label: "公开坐标", value: `${site.lat.toFixed(5)}, ${site.lng.toFixed(5)}` },
       { label: "2015 年现场记录", value: site.observed },
-      { label: "水质原始数据", value: "待数据负责人补充" },
+      { label: "定量水质指标", value: "原公开资料未提供" },
     ],
     annualData: YEARS.map((year) => ({ year })),
     story: {
@@ -396,11 +396,15 @@ const learningLocations: EcoLocation[] = [
   },
 ];
 
+/**
+ * 地图只展示同时具备公开坐标和明确水体现场观察的点位。
+ * 红树林与综合学习示例点没有可核验水质信息，因此不进入地图数据集。
+ */
 export const locations: EcoLocation[] = [
   ...mangroveLocations,
   ...outfallLocations,
   ...learningLocations,
-];
+].filter((location) => location.type === "outfall");
 
 export const getLocation = (id: string) => locations.find((l) => l.id === id);
 

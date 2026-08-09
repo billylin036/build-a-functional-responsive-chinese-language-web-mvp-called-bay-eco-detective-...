@@ -33,8 +33,8 @@ function createMarkerElement(
   const size = options.selected ? 24 : 16;
   const button = document.createElement("button");
   button.type = "button";
-  button.title = `${loc.name}，${options.year} 年数据`;
-  button.setAttribute("aria-label", `查看${loc.name}的生态故事`);
+  button.title = `${loc.name}，${options.year} 年现场观察`;
+  button.setAttribute("aria-label", `查看${loc.name}的历史水体观察`);
   button.style.cssText = [
     `width:${size}px`,
     `height:${size}px`,

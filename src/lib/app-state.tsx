@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { TOTAL_CHAPTERS } from "@/data/learning";
+import { locations } from "@/data/locations";
+
+const VALID_LOCATION_IDS = new Set(locations.map((location) => location.id));
 
 export interface LearnerProfile {
   name: string;
@@ -212,6 +215,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const resetLearning = useCallback(() => setState(EMPTY), []);
   const learningComplete = state.completedChapters.length >= TOTAL_CHAPTERS;
+  const completedLocationQuizzes = useMemo(
+    () => state.completedLocationQuizzes.filter((id) => VALID_LOCATION_IDS.has(id)),
+    [state.completedLocationQuizzes],
+  );
+  const quizAttempts = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(state.quizAttempts).filter(([id]) => VALID_LOCATION_IDS.has(id)),
+      ),
+    [state.quizAttempts],
+  );
 
   const badges = useMemo(
     () => [
@@ -246,6 +260,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const value: Ctx = {
     ...state,
+    completedLocationQuizzes,
+    quizAttempts,
     hydrated,
     learningComplete,
     badges,

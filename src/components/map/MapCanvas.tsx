@@ -100,8 +100,7 @@ export default function MapCanvas({
           keepBuffer: 2,
           updateWhenIdle: true,
           updateWhenZooming: false,
-          attribution:
-            "© OpenStreetMap 贡献者 | 在线地图数据来自 OpenStreetMap，部分站点数据为示例数据",
+          attribution: "© OpenStreetMap 贡献者 | 点位与历史观察来自绿源公开资料",
         });
         let tileErrorsInCycle = 0;
         const captureTileSnapshot = () => {
@@ -231,7 +230,7 @@ export default function MapCanvas({
       <div
         ref={elRef}
         className="relative z-10 h-full w-full"
-        aria-label="深圳湾生态地图"
+        aria-label="深圳湾排口历史水体观察地图"
         role="application"
       />
       {mapVersion === 0 && !loadFailed && (

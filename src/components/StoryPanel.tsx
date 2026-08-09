@@ -437,7 +437,7 @@ export function StoryPanel({
               <Metric label="2015 年现场观察" value={historicalObservation ?? "原文未描述"} />
             </div>
             <div className="col-span-2">
-              <Metric label="水质原始指标" value="待数据负责人补充，不展示推测评分" />
+              <Metric label="定量水质指标" value="原公开资料未提供；仅展示 2015 年现场观察" />
             </div>
           </div>
         )}
@@ -496,7 +496,7 @@ export function StoryPanel({
 
         <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
           {location.type === "outfall"
-            ? "数据说明：本页展示绿源 2015 年报告正文公开的排口编号、坐标与历史现场描述；这些内容不代表当前状态。缺少的水质原始指标明确标记为待补充。"
+            ? "数据说明：本页展示绿源 2015 年报告正文公开的排口编号、坐标与历史水体现场描述；这些内容不代表当前状态，也不能替代定量检测。"
             : "数据说明：本页中的趋势数值与图片含示例内容，用于学习交互，不作为正式监测结论。"}
         </p>
       </div>

@@ -1,20 +1,20 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Crosshair, GraduationCap, Info } from "lucide-react";
-import { locations, getAnnual, YEARS } from "@/data/locations";
+import { locations } from "@/data/locations";
 import type { LocationType } from "@/data/types";
 import { TOTAL_CHAPTERS } from "@/data/learning";
-import { Timeline } from "@/components/map/Timeline";
-import { LayerControls, LocationSearch } from "@/components/map/MapControls";
+import { LocationSearch } from "@/components/map/MapControls";
 import { StoryPanel } from "@/components/StoryPanel";
 import { Button } from "@/components/ui/button";
 import { useIsCompactMap } from "@/hooks/use-mobile";
 import { useAppState } from "@/lib/app-state";
 import MapCanvas from "@/components/map/LiveMapCanvas";
 
+const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall"];
+const SURVEY_YEAR = 2015;
+
 export function MapExplorer() {
-  const [layers, setLayers] = useState<LocationType[]>(["mangrove", "outfall", "learning"]);
-  const [year, setYear] = useState(2025);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [recenter, setRecenter] = useState(0);
   const [focus, setFocus] = useState(0);
@@ -26,38 +26,19 @@ export function MapExplorer() {
   const routeIds = completedLocationQuizzes;
   const currentRouteId = null;
 
-  const yearEvent = useMemo(() => {
-    const source =
-      selected?.type === "mangrove"
-        ? selected
-        : locations.find((location) => location.type === "mangrove")!;
-    const own = getAnnual(source, year).event;
-    if (own) return own;
-    return locations
-      .filter((location) => location.type === "mangrove")
-      .map((location) => getAnnual(location, year).event)
-      .find(Boolean);
-  }, [selected, year]);
-
   const pick = useCallback((id: string) => {
-    const location = locations.find((item) => item.id === id);
-    if (location) {
-      setLayers((current) =>
-        current.includes(location.type) ? current : [...current, location.type],
-      );
-    }
     setSelectedId(id);
     setFocus((f) => f + 1);
   }, []);
 
-  const visibleCount = locations.filter((l) => layers.includes(l.type)).length;
+  const visibleCount = locations.length;
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       <div className="relative min-h-0 flex-1">
         <MapCanvas
-          activeLayers={layers}
-          year={year}
+          activeLayers={ACTIVE_MAP_LAYERS}
+          year={SURVEY_YEAR}
           selectedId={selectedId}
           routeIds={routeIds}
           currentRouteId={currentRouteId}
@@ -66,49 +47,22 @@ export function MapExplorer() {
           focusSignal={focus}
         />
 
-        {/* 左上：搜索 + 图层 + 图例 */}
+        {/* 左上：搜索 + 数据范围说明 */}
         <div className="pointer-events-none absolute left-2 top-2 z-500 w-[min(19rem,calc(100%-1rem))] space-y-2">
           <div className="pointer-events-auto">
             <LocationSearch onPick={pick} />
           </div>
-          <div className="pointer-events-auto hidden sm:block">
-            <LayerControls
-              active={layers}
-              onToggle={(id) =>
-                setLayers((ls) => (ls.includes(id) ? ls.filter((l) => l !== id) : [...ls, id]))
-              }
-            />
-          </div>
           <div className="pointer-events-auto rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm">
-            当前显示 {visibleCount} 个地点 · 点击标记查看故事
-            {visibleCount === 0 && "（已隐藏全部图层，请至少开启一个）"}
-          </div>
-        </div>
-
-        {/* 手机端图层横条 */}
-        <div className="absolute left-2 right-2 top-14 z-500 flex gap-1 overflow-x-auto sm:hidden">
-          {(
-            [
-              ["mangrove", "红树林"],
-              ["outfall", "排口水质"],
-              ["learning", "综合学习点"],
-            ] as [LocationType, string][]
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() =>
-                setLayers((ls) => (ls.includes(id) ? ls.filter((l) => l !== id) : [...ls, id]))
-              }
-              aria-pressed={layers.includes(id)}
-              className={`shrink-0 rounded-full border px-3 py-1 text-xs shadow-sm ${
-                layers.includes(id)
-                  ? "border-teal bg-teal text-primary-foreground"
-                  : "border-border bg-card text-foreground"
-              }`}
+            当前显示 {visibleCount} 个有 2015 年现场水体观察的排口 · 点击标记查看原始描述
+            <a
+              href="https://www.szhb.org/5383.html"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 block font-medium text-teal underline underline-offset-2"
             >
-              {label}
-            </button>
-          ))}
+              查看点位与观察来源
+            </a>
+          </div>
         </div>
 
         {/* 右上：操作 */}
@@ -150,12 +104,14 @@ export function MapExplorer() {
             }`}
             aria-label={`${selected.name}地点数据`}
           >
-            <StoryPanel location={selected} year={year} onClose={() => setSelectedId(null)} />
+            <StoryPanel
+              location={selected}
+              year={SURVEY_YEAR}
+              onClose={() => setSelectedId(null)}
+            />
           </aside>
         )}
       </div>
-
-      <Timeline year={year} onChange={setYear} event={yearEvent} />
     </div>
   );
 }
