@@ -8,13 +8,15 @@ const env = import.meta.env as Record<string, string | undefined>;
 
 export default function LiveMapCanvas(props: MapCanvasProps) {
   const [amapFailed, setAmapFailed] = useState(false);
-  const [leafletReady, setLeafletReady] = useState(false);
+  const [leafletProvider, setLeafletProvider] = useState<string | null>(null);
   const apiKey = env["VITE_AMAP_KEY"]?.trim();
   const securityCode = env["VITE_AMAP_SECURITY_CODE"]?.trim();
   const serviceHost = env["VITE_AMAP_SERVICE_HOST"]?.trim();
   const useAMap = Boolean(apiKey) && !amapFailed;
   const handleLoadError = useCallback(() => setAmapFailed(true), []);
-  const handleTilesReady = useCallback(() => setLeafletReady(true), []);
+  const handleTilesReady = useCallback((providerName: string) => {
+    setLeafletProvider(providerName);
+  }, []);
 
   return (
     <div className="relative h-full w-full">
@@ -30,11 +32,7 @@ export default function LiveMapCanvas(props: MapCanvasProps) {
         <LeafletMapCanvas {...props} onTilesReady={handleTilesReady} />
       )}
       <div className="pointer-events-none absolute bottom-2 left-2 z-400 rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
-        {useAMap
-          ? "高德在线地图"
-          : leafletReady
-            ? "OpenStreetMap 在线地图"
-            : "正在连接 OpenStreetMap 在线地图"}
+        {useAMap ? "高德地图 JS API" : (leafletProvider ?? "正在连接国内地图")}
         {` · 活动范围约 ${MAP_LIMIT_RADIUS_KM} 公里`}
       </div>
     </div>

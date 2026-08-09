@@ -9,6 +9,7 @@ import {
 } from "@/data/locations";
 import type { EcoLocation, LocationType } from "@/data/types";
 import { loadAMap, type AMapMap, type AMapNamespace, type AMapOverlay } from "@/lib/amap-loader";
+import { wgs84ToGcj02 } from "@/lib/china-coordinates";
 import type { MapCanvasProps } from "@/components/map/MapCanvas";
 
 interface AmapCanvasProps extends MapCanvasProps {
@@ -24,6 +25,11 @@ const COLORS: Record<LocationType, string> = {
   learning: "#FF6B4A",
   sampling: "#4F46E5",
 };
+
+function amapLngLat(latitude: number, longitude: number): [number, number] {
+  const [gcjLatitude, gcjLongitude] = wgs84ToGcj02(latitude, longitude);
+  return [gcjLongitude, gcjLatitude];
+}
 
 function createMarkerElement(
   loc: EcoLocation,
@@ -98,7 +104,7 @@ export default function AmapCanvas({
       .then((AMap) => {
         if (cancelled || !elRef.current) return;
         map = new AMap.Map(elRef.current, {
-          center: [SHENZHEN_BAY_CENTER[1], SHENZHEN_BAY_CENTER[0]],
+          center: amapLngLat(SHENZHEN_BAY_CENTER[0], SHENZHEN_BAY_CENTER[1]),
           zoom: SHENZHEN_BAY_DEFAULT_ZOOM,
           zooms: [MAP_MIN_ZOOM, 18],
           mapStyle: "amap://styles/whitesmoke",
@@ -107,13 +113,13 @@ export default function AmapCanvas({
         });
         map.setLimitBounds(
           new AMap.Bounds(
-            [MAP_LIMIT_BOUNDS.west, MAP_LIMIT_BOUNDS.south],
-            [MAP_LIMIT_BOUNDS.east, MAP_LIMIT_BOUNDS.north],
+            amapLngLat(MAP_LIMIT_BOUNDS.south, MAP_LIMIT_BOUNDS.west),
+            amapLngLat(MAP_LIMIT_BOUNDS.north, MAP_LIMIT_BOUNDS.east),
           ),
         );
         const bay = new AMap.Polygon({
-          path: SHENZHEN_BAY_BOUNDARY.map(
-            ([latitude, longitude]) => [longitude, latitude] as [number, number],
+          path: SHENZHEN_BAY_BOUNDARY.map(([latitude, longitude]) =>
+            amapLngLat(latitude, longitude),
           ),
           strokeColor: "#0B8F91",
           strokeWeight: 2,
@@ -168,7 +174,7 @@ export default function AmapCanvas({
           ? `${location.name}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
           : labelCode;
         const marker = new AMap.Marker({
-          position: [location.longitude, location.latitude],
+          position: amapLngLat(location.latitude, location.longitude),
           content,
           offset: new AMap.Pixel(-((selected ? 24 : 16) / 2), -((selected ? 24 : 16) / 2)),
           title: location.name,
@@ -188,7 +194,7 @@ export default function AmapCanvas({
     const routePath = routeIds
       .map((id) => locations.find((location) => location.id === id))
       .filter((location): location is EcoLocation => Boolean(location))
-      .map((location) => [location.longitude, location.latitude] as [number, number]);
+      .map((location) => amapLngLat(location.latitude, location.longitude));
     routeRef.current =
       routePath.length > 1
         ? new AMap.Polyline({
@@ -206,10 +212,10 @@ export default function AmapCanvas({
 
   useEffect(() => {
     if (recenterSignal > 0) {
-      mapRef.current?.setZoomAndCenter(SHENZHEN_BAY_DEFAULT_ZOOM, [
-        SHENZHEN_BAY_CENTER[1],
-        SHENZHEN_BAY_CENTER[0],
-      ]);
+      mapRef.current?.setZoomAndCenter(
+        SHENZHEN_BAY_DEFAULT_ZOOM,
+        amapLngLat(SHENZHEN_BAY_CENTER[0], SHENZHEN_BAY_CENTER[1]),
+      );
     }
   }, [recenterSignal]);
 
@@ -217,7 +223,7 @@ export default function AmapCanvas({
     if (!selectedId || focusSignal === 0) return;
     const location = locations.find((item) => item.id === selectedId);
     if (location) {
-      mapRef.current?.setZoomAndCenter(15, [location.longitude, location.latitude]);
+      mapRef.current?.setZoomAndCenter(15, amapLngLat(location.latitude, location.longitude));
     }
   }, [focusSignal, selectedId]);
 

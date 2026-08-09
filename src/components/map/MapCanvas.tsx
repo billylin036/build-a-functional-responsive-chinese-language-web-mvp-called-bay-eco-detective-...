@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { LayerGroup, Map as LeafletMap, TileLayer } from "leaflet";
+import type { LayerGroup, Map as LeafletMap, Polygon, TileLayer } from "leaflet";
 import {
   locations,
   MAP_LIMIT_BOUNDS,
@@ -9,6 +9,7 @@ import {
   SHENZHEN_BAY_DEFAULT_ZOOM,
 } from "@/data/locations";
 import type { EcoLocation, LocationType } from "@/data/types";
+import { wgs84ToGcj02 } from "@/lib/china-coordinates";
 
 export interface MapCanvasProps {
   activeLayers: LocationType[];
@@ -22,8 +23,10 @@ export interface MapCanvasProps {
 }
 
 interface LeafletMapCanvasProps extends MapCanvasProps {
-  onTilesReady?: (() => void) | undefined;
+  onTilesReady?: ((providerName: string) => void) | undefined;
 }
+
+type TileCoordinateSystem = "gcj02" | "wgs84";
 
 const COLORS: Record<LocationType, string> = {
   mangrove: "#67A85B",
@@ -34,24 +37,60 @@ const COLORS: Record<LocationType, string> = {
 
 const TILE_PROVIDERS = [
   {
+    name: "高德地图国内线路",
+    url: "https://wprd0{s}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&size=1&scl=1&style=7",
+    subdomains: "1234",
+    maxZoom: 18,
+    attribution: "© 高德地图",
+    coordinateSystem: "gcj02",
+  },
+  {
+    name: "OpenStreetMap 国际线路",
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     subdomains: "abc",
     maxZoom: 19,
     attribution: "© OpenStreetMap 贡献者",
+    coordinateSystem: "wgs84",
   },
   {
+    name: "OpenStreetMap HOT 国际线路",
     url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
     subdomains: "abc",
     maxZoom: 19,
     attribution: "© OpenStreetMap 贡献者 · HOT",
+    coordinateSystem: "wgs84",
   },
   {
+    name: "CARTO 国际线路",
     url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
     subdomains: "abcd",
     maxZoom: 20,
     attribution: "© OpenStreetMap 贡献者 · CARTO",
+    coordinateSystem: "wgs84",
   },
-] as const;
+] as const satisfies ReadonlyArray<{
+  name: string;
+  url: string;
+  subdomains: string;
+  maxZoom: number;
+  attribution: string;
+  coordinateSystem: TileCoordinateSystem;
+}>;
+
+function mapLatLng(
+  latitude: number,
+  longitude: number,
+  coordinateSystem: TileCoordinateSystem,
+): [number, number] {
+  return coordinateSystem === "gcj02" ? wgs84ToGcj02(latitude, longitude) : [latitude, longitude];
+}
+
+function mapBounds(coordinateSystem: TileCoordinateSystem): [[number, number], [number, number]] {
+  return [
+    mapLatLng(MAP_LIMIT_BOUNDS.south, MAP_LIMIT_BOUNDS.west, coordinateSystem),
+    mapLatLng(MAP_LIMIT_BOUNDS.north, MAP_LIMIT_BOUNDS.east, coordinateSystem),
+  ];
+}
 
 function markerHtml(loc: EcoLocation, opts: { selected: boolean; onRoute: boolean; dry: boolean }) {
   const color = COLORS[loc.type];
@@ -95,6 +134,7 @@ export default function MapCanvas({
   const [mapVersion, setMapVersion] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
   const [tilesReady, setTilesReady] = useState(false);
+  const [coordinateSystem, setCoordinateSystem] = useState<TileCoordinateSystem>("gcj02");
   const [compactLabels, setCompactLabels] = useState(false);
   const selectRef = useRef(onSelect);
   const tilesReadyRef = useRef(onTilesReady);
@@ -114,6 +154,8 @@ export default function MapCanvas({
     let cancelled = false;
     let map: LeafletMap | null = null;
     let tiles: TileLayer | null = null;
+    let bay: Polygon | null = null;
+    let activeCoordinateSystem: TileCoordinateSystem = "gcj02";
     let resizeObserver: ResizeObserver | null = null;
     let resizeFrame = 0;
     let fallbackTimer = 0;
@@ -125,13 +167,10 @@ export default function MapCanvas({
         if (cancelled || !elRef.current) return;
         const L = leaflet;
         map = L.map(elRef.current, {
-          center: SHENZHEN_BAY_CENTER,
+          center: mapLatLng(SHENZHEN_BAY_CENTER[0], SHENZHEN_BAY_CENTER[1], activeCoordinateSystem),
           zoom: SHENZHEN_BAY_DEFAULT_ZOOM,
           minZoom: MAP_MIN_ZOOM,
-          maxBounds: [
-            [MAP_LIMIT_BOUNDS.south, MAP_LIMIT_BOUNDS.west],
-            [MAP_LIMIT_BOUNDS.north, MAP_LIMIT_BOUNDS.east],
-          ],
+          maxBounds: mapBounds(activeCoordinateSystem),
           maxBoundsViscosity: 1,
           bounceAtZoomLimits: false,
           zoomControl: false,
@@ -182,6 +221,21 @@ export default function MapCanvas({
           setTilesReady(false);
           setLoadFailed(false);
           const provider = TILE_PROVIDERS[providerIndex]!;
+          if (provider.coordinateSystem !== activeCoordinateSystem) {
+            activeCoordinateSystem = provider.coordinateSystem;
+            setCoordinateSystem(activeCoordinateSystem);
+            map.setMaxBounds(mapBounds(activeCoordinateSystem));
+            map.setView(
+              mapLatLng(SHENZHEN_BAY_CENTER[0], SHENZHEN_BAY_CENTER[1], activeCoordinateSystem),
+              map.getZoom(),
+              { animate: false },
+            );
+            bay?.setLatLngs(
+              SHENZHEN_BAY_BOUNDARY.map(([latitude, longitude]) =>
+                mapLatLng(latitude, longitude, activeCoordinateSystem),
+              ),
+            );
+          }
           const activeTiles = L.tileLayer(provider.url, {
             subdomains: provider.subdomains,
             maxZoom: provider.maxZoom,
@@ -206,7 +260,7 @@ export default function MapCanvas({
             window.clearTimeout(fallbackTimer);
             setTilesReady(true);
             setLoadFailed(false);
-            tilesReadyRef.current?.();
+            tilesReadyRef.current?.(provider.name);
           });
           activeTiles.addTo(map);
           fallbackTimer = window.setTimeout(() => tryNextProvider(providerIndex), 7000);
@@ -214,13 +268,18 @@ export default function MapCanvas({
 
         map.on("zoomstart", captureTileSnapshot);
         startTileProvider(0);
-        L.polygon(SHENZHEN_BAY_BOUNDARY, {
-          color: "#0B8F91",
-          weight: 1.5,
-          fillColor: "#0B8F91",
-          fillOpacity: 0.06,
-        })
-          .bindTooltip("深圳湾水域｜OpenStreetMap 海湾边界")
+        bay = L.polygon(
+          SHENZHEN_BAY_BOUNDARY.map(([latitude, longitude]) =>
+            mapLatLng(latitude, longitude, activeCoordinateSystem),
+          ),
+          {
+            color: "#0B8F91",
+            weight: 1.5,
+            fillColor: "#0B8F91",
+            fillOpacity: 0.06,
+          },
+        )
+          .bindTooltip("深圳湾水域｜公开海湾边界")
           .addTo(map);
 
         leafletRef.current = leaflet;
@@ -280,7 +339,7 @@ export default function MapCanvas({
         const selected = selectedId === loc.id || currentRouteId === loc.id;
         const markerSize = selected ? 22 : 14;
         const labelCode = markerCode(loc);
-        const marker = L.marker([loc.latitude, loc.longitude], {
+        const marker = L.marker(mapLatLng(loc.latitude, loc.longitude, coordinateSystem), {
           icon: L.divIcon({
             className: "eco-marker",
             html: markerHtml(loc, { selected, onRoute: routeIds.includes(loc.id), dry }),
@@ -307,23 +366,38 @@ export default function MapCanvas({
         marker.addTo(group);
         if (selected) marker.openTooltip();
       });
-  }, [activeLayers, year, selectedId, routeIds, currentRouteId, mapVersion, compactLabels]);
+  }, [
+    activeLayers,
+    year,
+    selectedId,
+    routeIds,
+    currentRouteId,
+    mapVersion,
+    compactLabels,
+    coordinateSystem,
+  ]);
 
   // 回到深圳湾
   useEffect(() => {
     if (recenterSignal > 0) {
-      mapRef.current?.flyTo(SHENZHEN_BAY_CENTER, SHENZHEN_BAY_DEFAULT_ZOOM, {
-        duration: 0.8,
-      });
+      mapRef.current?.flyTo(
+        mapLatLng(SHENZHEN_BAY_CENTER[0], SHENZHEN_BAY_CENTER[1], coordinateSystem),
+        SHENZHEN_BAY_DEFAULT_ZOOM,
+        { duration: 0.8 },
+      );
     }
-  }, [recenterSignal]);
+  }, [recenterSignal, coordinateSystem]);
 
   // 聚焦选中地点
   useEffect(() => {
     if (!selectedId || focusSignal === 0) return;
     const loc = locations.find((l) => l.id === selectedId);
-    if (loc) mapRef.current?.flyTo([loc.latitude, loc.longitude], 15, { duration: 0.8 });
-  }, [selectedId, focusSignal]);
+    if (loc) {
+      mapRef.current?.flyTo(mapLatLng(loc.latitude, loc.longitude, coordinateSystem), 15, {
+        duration: 0.8,
+      });
+    }
+  }, [selectedId, focusSignal, coordinateSystem]);
 
   return (
     <div className="relative h-full w-full bg-paleeco">
