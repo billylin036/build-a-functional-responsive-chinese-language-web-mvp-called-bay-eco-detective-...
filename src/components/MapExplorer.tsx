@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { CircleHelp, Compass, Crosshair, GraduationCap, Info } from "lucide-react";
+import { CircleHelp, Compass, Crosshair, GraduationCap, Info, X } from "lucide-react";
 import { locations } from "@/data/locations";
 import type { LocationType } from "@/data/types";
 import { TOTAL_CHAPTERS } from "@/data/learning";
@@ -12,14 +12,31 @@ import { useIsCompactMap } from "@/hooks/use-mobile";
 import { useAppState } from "@/lib/app-state";
 import MapCanvas from "@/components/map/LiveMapCanvas";
 
-const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall", "mangrove", "learning", "sampling"];
+const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall", "sampling"];
 const SURVEY_YEAR = 2015;
+
+const TUTORIAL_STEPS = [
+  {
+    title: "先选一个真实数据点",
+    text: "地图只保留公开调查排口和 2023 年报告采样点。教程会带你到第一站。",
+  },
+  {
+    title: "先读原始记录，再看解释",
+    text: "先找到年份和原始数值，再阅读“学生要知道”。不要把一次快速检测当成完整水质结论。",
+  },
+  {
+    title: "答题并保存探索进度",
+    text: "阅读后点击“我已阅读，开始答题”。答错可以重试；答对后，这一站会计入大世界探索。",
+  },
+] as const;
 
 export function MapExplorer() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [recenter, setRecenter] = useState(0);
   const [focus, setFocus] = useState(0);
   const [locatedName, setLocatedName] = useState<string | null>(null);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const isCompactMap = useIsCompactMap();
   const navigate = useNavigate();
   const { completedChapters, completedLocationQuizzes } = useAppState();
@@ -39,21 +56,27 @@ export function MapExplorer() {
   }, []);
 
   useEffect(() => {
-    const initialLocationId = new URLSearchParams(window.location.search).get("location");
+    const searchParams = new URLSearchParams(window.location.search);
+    const initialLocationId = searchParams.get("location");
     if (initialLocationId && locations.some((location) => location.id === initialLocationId)) {
       pick(initialLocationId);
+    }
+    if (searchParams.get("tutorial") === "1") {
+      setTutorialOpen(true);
+      setTutorialStep(0);
     }
   }, [pick]);
 
   const samplingQuestProgress = completedLocationQuizzes.filter((id) =>
     SAMPLING_QUEST_IDS.includes(id),
   ).length;
+  const tutorialLocationId =
+    SAMPLING_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id)) ??
+    SAMPLING_QUEST_IDS[0]!;
 
   const layerCounts = useMemo(
     () => ({
       outfall: locations.filter((location) => location.type === "outfall").length,
-      mangrove: locations.filter((location) => location.type === "mangrove").length,
-      learning: locations.filter((location) => location.type === "learning").length,
       sampling: locations.filter((location) => location.type === "sampling").length,
     }),
     [],
@@ -87,19 +110,11 @@ export function MapExplorer() {
             </p>
           )}
           <div className="pointer-events-auto hidden rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm sm:block">
-            <p className="font-medium text-navy">地图共 {locations.length} 个学习入口</p>
+            <p className="font-medium text-navy">地图共 {locations.length} 个真实资料点</p>
             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
               <span className="inline-flex items-center gap-1">
                 <span className="size-2 rounded-full bg-teal" />
                 {layerCounts.outfall} 个历史排口
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="size-2 rounded-full bg-mangrove" />
-                {layerCounts.mangrove} 个红树林示例点
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="size-2 rounded-full bg-coral" />
-                {layerCounts.learning} 个综合学习点
               </span>
               <span className="inline-flex items-center gap-1">
                 <span className="size-2 rounded-full bg-[#4F46E5]" />
@@ -119,6 +134,17 @@ export function MapExplorer() {
 
         {/* 右上：操作 */}
         <div className="absolute right-2 top-14 z-500 flex flex-col items-end gap-2 sm:top-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setTutorialStep(0);
+              setTutorialOpen(true);
+            }}
+          >
+            <CircleHelp className="size-4" />
+            新手教程
+          </Button>
           <Button size="sm" variant="secondary" onClick={() => setRecenter((r) => r + 1)}>
             <Crosshair className="size-4" />
             回到深圳湾
@@ -130,16 +156,86 @@ export function MapExplorer() {
           <div className="rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
             课程 {completedChapters.length} / {TOTAL_CHAPTERS} 章
           </div>
-          <a
-            href="/learn#world-quest-guide"
-            className="flex items-center gap-1.5 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-xs text-navy shadow-sm hover:border-[#4F46E5]/60"
-            aria-label="查看大世界探索新手玩法"
-          >
+          <div className="flex items-center gap-1.5 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
             <Compass className="size-3.5 text-[#4F46E5]" />
             大世界探索 {samplingQuestProgress} / {SAMPLING_QUEST_IDS.length}
-            <CircleHelp className="size-3.5 text-muted-foreground" />
-          </a>
+          </div>
         </div>
+
+        {tutorialOpen && (
+          <div className="absolute inset-0 z-[850] flex items-center justify-center bg-navy/45 p-3 backdrop-blur-[2px]">
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="map-tutorial-title"
+              className="w-full max-w-md rounded-xl border border-teal/25 bg-card p-5 shadow-2xl"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-mono text-[11px] text-teal">
+                    新手教程 · {tutorialStep + 1}/{TUTORIAL_STEPS.length}
+                  </p>
+                  <h2 id="map-tutorial-title" className="mt-1 text-xl font-semibold text-navy">
+                    {TUTORIAL_STEPS[tutorialStep]!.title}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  aria-label="关闭新手教程"
+                  onClick={() => setTutorialOpen(false)}
+                  className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <p className="mt-4 text-sm leading-7 text-foreground">
+                {TUTORIAL_STEPS[tutorialStep]!.text}
+              </p>
+
+              <div className="mt-4 grid grid-cols-3 gap-2" aria-hidden="true">
+                {TUTORIAL_STEPS.map((step, index) => (
+                  <div
+                    key={step.title}
+                    className={`h-1.5 rounded-full ${index <= tutorialStep ? "bg-teal" : "bg-muted"}`}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={tutorialStep === 0}
+                  onClick={() => setTutorialStep((step) => Math.max(0, step - 1))}
+                >
+                  上一步
+                </Button>
+                {tutorialStep < TUTORIAL_STEPS.length - 1 ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setTutorialStep((step) => step + 1)}
+                  >
+                    下一步
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setTutorialOpen(false);
+                      pick(tutorialLocationId);
+                    }}
+                  >
+                    开始第一站
+                  </Button>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
 
         {!selected && (
           <div

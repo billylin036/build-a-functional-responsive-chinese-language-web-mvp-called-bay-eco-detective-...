@@ -3,113 +3,6 @@ import { WATER_SAMPLES_2023 } from "./water-samples-2023";
 
 export const YEARS = Array.from({ length: 11 }, (_, i) => 2015 + i);
 
-const mangroveSeeds = [
-  {
-    id: "mg-01",
-    name: "红树林长期恢复学习点",
-    lng: 114.0206,
-    lat: 22.5228,
-    summary: "从植株成活、水文条件与生物多样性三个层次理解长期生态恢复。",
-    what: "修复评估不能只看树是否存活，还要持续记录潮汐交换、生境结构和动物利用。",
-    why: "红树林是植物、水文、沉积物与动物共同组成的生态系统，单一指标无法代表整体恢复。",
-  },
-  {
-    id: "mg-02",
-    name: "红树林水动力学习点",
-    lng: 113.9781,
-    lat: 22.5115,
-    summary: "观察波浪、潮位与滩涂高程如何影响幼苗的生存机会。",
-    what: "同一种苗木在临水侧和内侧可能面对不同的冲刷、淹水时长与沉积条件。",
-    why: "修复选址若忽略水动力，即使增加种植数量也可能无法弥补生境不适宜。",
-  },
-  {
-    id: "mg-03",
-    name: "红树林人为干扰学习点",
-    lng: 114.0044,
-    lat: 22.5062,
-    summary: "把踩踏、宠物进入与近距离干扰从主观印象转化为可计数记录。",
-    what: "科学观察需要先规定范围和时长，再记录干扰事件，不能只写“今天人很多”。",
-    why: "标准化记录能够让不同日期、不同班级的结果进行公平比较。",
-  },
-  {
-    id: "mg-04",
-    name: "红树林乡土种源学习点",
-    lng: 114.0128,
-    lat: 22.5178,
-    summary: "学习怎样用公平对照检验“乡土种源更适应本地环境”的假设。",
-    what: "比较种源效果时，应尽量保持潮位、生境、苗龄和管护条件一致。",
-    why: "如果不同种源处在不同环境，成活差异可能来自地块条件，而不是种源本身。",
-  },
-  {
-    id: "mg-05",
-    name: "红树林入侵植物学习点",
-    lng: 113.9702,
-    lat: 22.5063,
-    summary: "记录疑似入侵植物的分布边界，并区分现场证据与物种判断。",
-    what: "学生可以从安全步道记录植被交界、裸地与幼苗线索，但不应自行进入滩涂清除植物。",
-    why: "治理需要准确鉴定、范围调查和持续复查，一次清除不能代表长期控制。",
-  },
-  {
-    id: "mg-06",
-    name: "红树林潮沟水文学习点",
-    lng: 114.0281,
-    lat: 22.5203,
-    summary: "通过多次潮周期观察理解潮沟、水交换和根区条件之间的联系。",
-    what: "一次照片只能记录某个瞬间，多潮周期的水位与流向才更能说明潮沟是否持续交换。",
-    why: "合适的水文条件通常比单纯增加种植数量更能决定修复能否长期维持。",
-  },
-  {
-    id: "mg-07",
-    name: "红树林湿地管理学习点",
-    lng: 113.9885,
-    lat: 22.5147,
-    summary: "识别闸门、水位调控与人工岸线等可能改变观察结果的管理变量。",
-    what: "鸟类数量、裸滩面积与植被变化可能同时受到潮位、天气和人工调水影响。",
-    why: "同时发生不等于已经证明因果，背景变量和重复观察必须一起记录。",
-  },
-  {
-    id: "mg-08",
-    name: "红树林海漂垃圾学习点",
-    lng: 113.9615,
-    lat: 22.5024,
-    summary: "根据垃圾类型、位置、降雨与潮位提出可检验的来源假设。",
-    what: "垃圾聚集可能受到地表径流、潮汐、风和现场活动共同影响。",
-    why: "多日期、分类和空间记录比单次总数更有助于判断垃圾的搬运路径。",
-  },
-] as const;
-
-export const MANGROVE_PROGRAM_SUMMARY = {
-  areas: 8,
-  totalAreaSquareMeters: 95_730,
-  survivingPlants: 656_000,
-  survivalRateRange: "8%–30%",
-  asOf: "2026 年 3 月",
-  sourceLabel: "绿源数据合作资料",
-  pointLevelNote:
-    "上述数字是坝光 8 个修复区域的整体资料，尚未取得可公开匹配到每个地图学习点的分区坐标与逐点指标。",
-} as const;
-
-const mangroveLocations: EcoLocation[] = mangroveSeeds.map((m) => ({
-  id: m.id,
-  name: m.name,
-  type: "mangrove",
-  longitude: m.lng,
-  latitude: m.lat,
-  summary: m.summary,
-  category: "红树林生态学习示例点",
-  image: "mangrove",
-  riskLevel: "低",
-  indicators: [{ label: "点位性质", value: "空间教学锚点；不是水质监测站" }],
-  annualData: YEARS.map((year) => ({ year })),
-  story: {
-    what: m.what,
-    why: m.why,
-    matter: "红树林能防风消浪、促淤保滩并提供生物栖息地，但修复成效必须用可重复的数据持续评估。",
-    action:
-      "参与定点拍摄记录幼苗长势、不进入滩涂踩踏、发现缠绕垃圾时拍照上报，都能让修复团队更早发现问题。",
-  },
-}));
-
 export const OUTFALL_DECADE_COMPARISON = {
   baselineYear: 2015,
   revisitYear: 2025,
@@ -236,47 +129,6 @@ const outfallLocations: EcoLocation[] = outfallSeeds.map((site, i) => {
   };
 });
 
-const learningLocations: EcoLocation[] = [
-  {
-    id: "tp-01",
-    name: "深圳湾观鸟点（西）",
-    type: "learning",
-    longitude: 113.9926,
-    latitude: 22.5031,
-    category: "生物多样性学习点",
-    image: "bird",
-    summary: "冬季候鸟停歇高峰观察点，适合家庭与学校活动。",
-    riskLevel: "低",
-    indicators: [{ label: "最佳时段", value: "退潮前后 1 小时" }],
-    annualData: YEARS.map((year) => ({ year })),
-    story: {
-      what: "退潮后滩涂裸露，鹭类、鸻鹬类集中觅食。",
-      why: "滩涂底栖生物恢复，为候鸟提供了稳定食物来源。",
-      matter: "鸟类是湿地健康最直观的指示物种之一。",
-      action: "保持 30 米以上距离、不使用闪光灯、不投喂，记录你看到的种类与数量。",
-    },
-  },
-  {
-    id: "tp-02",
-    name: "红树林步道岸线观察点",
-    type: "learning",
-    longitude: 114.0155,
-    latitude: 22.5099,
-    category: "岸线环境学习点",
-    image: "coast",
-    summary: "通过岸线垃圾的类型与分布，理解潮汐、城市活动和滨海生态之间的联系。",
-    riskLevel: "中",
-    indicators: [{ label: "建议时长", value: "40 分钟" }],
-    annualData: YEARS.map((year) => ({ year })),
-    story: {
-      what: "每次大潮后，塑料瓶、泡沫与渔网碎片会缠绕在红树幼苗基部。",
-      why: "上游雨水管网与海面漂浮物在潮汐作用下集中沉积于此。",
-      matter: "缠绕会导致幼苗窒息死亡，也会被鸟类误食。",
-      action: "拍照记录垃圾类型与数量，参与有组织的净滩，不要独自进入软泥滩。",
-    },
-  },
-];
-
 const waterSampleLocations: EcoLocation[] = WATER_SAMPLES_2023.map((sample) => ({
   id: `ws-${String(sample.sampleNumber).padStart(2, "0")}`,
   name: sample.name,
@@ -316,16 +168,8 @@ const waterSampleLocations: EcoLocation[] = WATER_SAMPLES_2023.map((sample) => (
   },
 }));
 
-/**
- * 排口是历史调查点；红树林与综合点是教学示例点，不冒充水质监测站。
- * 三类点使用不同颜色，并在地点卡中分别说明证据边界。
- */
-export const locations: EcoLocation[] = [
-  ...mangroveLocations,
-  ...outfallLocations,
-  ...learningLocations,
-  ...waterSampleLocations,
-];
+/** 地图只展示有公开调查或报告表值支撑的地点。 */
+export const locations: EcoLocation[] = [...outfallLocations, ...waterSampleLocations];
 
 export const getLocation = (id: string) => locations.find((l) => l.id === id);
 

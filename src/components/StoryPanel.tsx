@@ -6,33 +6,21 @@ import {
   CheckCircle2,
   Compass,
   ExternalLink,
-  Lightbulb,
   MapPin,
   ShieldAlert,
   X,
 } from "lucide-react";
 import type { EcoLocation } from "@/data/types";
-import { MANGROVE_PROGRAM_SUMMARY, OUTFALL_DECADE_COMPARISON } from "@/data/locations";
+import { OUTFALL_DECADE_COMPARISON } from "@/data/locations";
 import { getSamplingPointProfile } from "@/data/exploration";
-import {
-  getLearningModule,
-  getLearningSources,
-  getLocationQuiz,
-  TOTAL_LEARNING_POINTS,
-} from "@/data/learning";
+import { getLearningModule, getLocationQuiz, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { Badge } from "@/components/ui/badge";
 import { useAppState } from "@/lib/app-state";
-import mangroveImg from "@/assets/mangrove.jpg";
 import outfallImg from "@/assets/outfall.jpg";
-import birdImg from "@/assets/bird.jpg";
-import coastImg from "@/assets/coast.jpg";
 import waterSampleImg from "@/assets/2023-citizen-observation-rapid-test-table.png";
 
 const IMAGES: Record<string, string> = {
-  mangrove: mangroveImg,
   outfall: outfallImg,
-  bird: birdImg,
-  coast: coastImg,
   "water-sample": waterSampleImg,
 };
 
@@ -57,7 +45,7 @@ function QuizBlock({ location }: { location: EcoLocation }) {
           <div>
             <p className="text-sm font-semibold text-navy">完成本数据点学习</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              请先阅读地点资料和“深度知识卡”，再完成挑战题。本题学习目标：{module.objective}
+              请先读上方数据和“三句话读懂这一站”，再完成挑战题。学习目标：{module.objective}
             </p>
             <button
               type="button"
@@ -133,44 +121,6 @@ function QuizBlock({ location }: { location: EcoLocation }) {
           </Link>
         </div>
       )}
-    </section>
-  );
-}
-
-function KnowledgeBlock({ location }: { location: EcoLocation }) {
-  const module = getLearningModule(location.id);
-  const sources = getLearningSources(module.knowledge.sourceIds);
-
-  return (
-    <section className="rounded-lg border border-coral/25 bg-coral/5 p-4">
-      <div className="flex items-start gap-3">
-        <Lightbulb className="mt-0.5 size-5 shrink-0 text-coral" />
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-coral">深度知识卡</p>
-          <h3 className="mt-1 text-sm font-semibold text-navy">{module.knowledge.title}</h3>
-          <p className="mt-2 text-sm leading-6">{module.knowledge.fact}</p>
-          <div className="mt-3 rounded-md bg-white/80 px-3 py-2">
-            <p className="text-[11px] font-medium text-navy">想一想</p>
-            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              {module.knowledge.think}
-            </p>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {sources.map((source) => (
-              <a
-                key={source.id}
-                href={source.url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] text-teal underline"
-              >
-                {source.publisher}
-                <ExternalLink className="size-3" />
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
     </section>
   );
 }
@@ -310,70 +260,38 @@ function ActivityBlock({ location }: { location: EcoLocation }) {
   );
 }
 
-function MangroveProgramCard() {
-  const data = MANGROVE_PROGRAM_SUMMARY;
-  return (
-    <section className="rounded-lg border border-mangrove/25 bg-mangrove/5 p-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-navy">真实项目背景 · 8 区汇总</p>
-        <Badge variant="outline">截至 {data.asOf}</Badge>
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <Metric label="坝光修复区域" value={`${data.areas} 个`} />
-        <Metric label="总面积" value={`${data.totalAreaSquareMeters.toLocaleString("zh-CN")} ㎡`} />
-        <Metric label="成活植株" value={`${(data.survivingPlants / 10_000).toFixed(1)} 万株`} />
-      </div>
-      <p className="mt-3 text-xs leading-5 text-muted-foreground">
-        合作资料记录各区域成活率为 {data.survivalRateRange}。{data.pointLevelNote}
-      </p>
-      <p className="mt-1 text-[11px] text-muted-foreground">来源：{data.sourceLabel}</p>
-    </section>
-  );
-}
-
 function OutfallDecadeComparison() {
   const data = OUTFALL_DECADE_COMPARISON;
   return (
     <section className="rounded-lg border border-teal/25 bg-paleeco p-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-navy">2015 ↔ 2025 十年整体对比</p>
-        <Badge variant="outline">30 个排口总体</Badge>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs font-medium text-muted-foreground">2015 · 首次调查</p>
-          <p className="mt-1 text-xl font-semibold text-navy">{data.baselineComplianceRate}%</p>
-          <p className="text-[11px] text-muted-foreground">综合达标率</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs text-muted-foreground">30 个排口整体达标率</p>
+          <p className="mt-1 text-sm font-semibold text-navy">
+            2015：{data.baselineComplianceRate}% <span className="mx-1 text-teal">→</span> 2025：
+            {data.revisitComplianceRate}%
+          </p>
         </div>
-        <div className="rounded-md border border-teal/30 bg-card p-3">
-          <p className="text-xs font-medium text-muted-foreground">2025 · 十年回访</p>
-          <p className="mt-1 text-xl font-semibold text-teal">{data.revisitComplianceRate}%</p>
-          <p className="text-[11px] text-muted-foreground">综合达标率</p>
-        </div>
+        <Badge variant="outline">整体对比</Badge>
       </div>
-      <div className="mt-2 rounded-md border-l-4 border-coral bg-card p-3 text-xs leading-5">
-        达标率提高 <strong>{data.complianceChangePoints} 个百分点</strong>，同时有
-        <strong> {data.dryOutfallRate}% 的排口断流</strong>
-        。这意味着指标改善与水动力弱化需要一起解读， 不能只用一个百分比概括生态状况。
-      </div>
-      <p className="mt-3 text-xs leading-5 text-muted-foreground">{data.pointLevelNote}</p>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">
+        这是 30 个排口的总体结果，不代表当前这个排口的状况；2025 年逐点数据尚未公开。
+      </p>
       <a
         href={data.publicRevisitSourceUrl}
         target="_blank"
         rel="noreferrer"
-        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal underline underline-offset-2"
+        className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-teal underline underline-offset-2"
       >
-        查看绿源公开纪事中的 2025 回访记录
+        查看 2025 回访来源
         <ExternalLink className="size-3" />
       </a>
-      <p className="mt-1 text-[11px] text-muted-foreground">数据：{data.sourceLabel}</p>
     </section>
   );
 }
 
 function WaterSampleCard({ location }: { location: EcoLocation }) {
   const sample = location.waterSample;
-  const quest = getSamplingPointProfile(location.id);
   if (!sample) return null;
 
   return (
@@ -388,37 +306,54 @@ function WaterSampleCard({ location }: { location: EcoLocation }) {
         <Metric label="COD" value={sample.cod} />
         <Metric label="氨氮（NH₃-N）" value={sample.ammoniaNitrogen} />
       </div>
-      {quest && (
-        <div className="mt-3 rounded-lg border border-[#4F46E5]/25 bg-card p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-[#4F46E5]">
-              <Compass className="size-3.5" />
-              {quest.missionCode}
-            </p>
-            <Badge className="bg-[#4F46E5] text-white hover:bg-[#4F46E5]">
-              {quest.region.title}
-            </Badge>
-          </div>
-          <p className="mt-2 text-sm font-semibold text-navy">地点角色 · {quest.role}</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">{quest.roleLesson}</p>
-          <p className="mt-2 rounded-md bg-[#4F46E5]/5 px-3 py-2 text-xs leading-5 text-navy">
-            <strong>指标线索：</strong>
-            {quest.indicatorLesson}
-          </p>
-          <p className="mt-2 text-xs leading-5 text-foreground">
-            <strong>探索任务：</strong>
-            {quest.mission}
-          </p>
-        </div>
-      )}
       <p className="mt-3 text-xs leading-5 text-muted-foreground">
-        {sample.method}
-        ；数值与范围按报告表格原样录入。报告截图未在表头标注单位，因此本站不自行补写单位。
+        数值按报告原表录入；原表截图未注明单位，因此本站不自行补写。
       </p>
       <p className="mt-2 rounded-md border-l-4 border-[#4F46E5] bg-card px-3 py-2 text-xs leading-5 text-muted-foreground">
         {sample.coordinateNote}
       </p>
-      <p className="mt-2 text-[11px] text-muted-foreground">来源：{sample.sourceLabel}</p>
+      <p className="mt-2 text-[11px] text-muted-foreground">数据来源：{sample.sourceLabel}</p>
+    </section>
+  );
+}
+
+function StudentReadCard({
+  location,
+  historicalObservation,
+}: {
+  location: EcoLocation;
+  historicalObservation?: string;
+}) {
+  const quest = getSamplingPointProfile(location.id);
+  const rows =
+    location.type === "sampling" && quest
+      ? [
+          ["地点角色", `${quest.role}。${quest.roleLesson}`],
+          ["学生要知道", quest.indicatorLesson],
+          ["本点任务", quest.mission],
+        ]
+      : [
+          ["2015 年看到什么", historicalObservation ?? "公开资料未描述现场现象。"],
+          ["学生要知道", "这是一次历史现场观察，只说明当时的情况，不能代表现在。"],
+          ["怎样继续调查", "回到同一坐标，记录日期、天气和潮位，再用规范方法复查。"],
+        ];
+
+  return (
+    <section className="rounded-lg border border-coral/20 bg-coral/5 p-3">
+      <div className="flex items-center gap-1.5">
+        {quest && <Compass className="size-4 text-[#4F46E5]" />}
+        <p className="text-sm font-semibold text-navy">
+          {quest ? `${quest.missionCode} · 读懂这一站` : "三句话读懂这一站"}
+        </p>
+      </div>
+      <div className="mt-2 divide-y divide-border/70">
+        {rows.map(([label, text]) => (
+          <div key={label} className="py-2 first:pt-0 last:pb-0">
+            <p className="text-[11px] font-medium text-teal">{label}</p>
+            <p className="mt-0.5 text-xs leading-5 text-foreground">{text}</p>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -436,13 +371,11 @@ export function StoryPanel({
   const historicalObservation = location.indicators?.find(
     (item) => item.label === "2015 年现场记录",
   )?.value;
-  const learningIndicator = location.indicators?.[0];
-
   return (
     <div className="flex h-full flex-col">
       <div className="relative shrink-0">
         <img
-          src={IMAGES[location.image] ?? mangroveImg}
+          src={IMAGES[location.image] ?? outfallImg}
           alt={`${location.name}现场示意图`}
           className="h-36 w-full object-cover"
           loading="lazy"
@@ -460,7 +393,6 @@ export function StoryPanel({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{location.category}</Badge>
-            {location.type === "mangrove" && <Badge variant="outline">教学示例 · 非监测站</Badge>}
             {location.type === "sampling" && <Badge variant="outline">2023 · 报告实测表</Badge>}
           </div>
           <h2 className="mt-2 text-lg font-semibold text-navy">{location.name}</h2>
@@ -468,18 +400,12 @@ export function StoryPanel({
             <MapPin className="size-3" />
             {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
           </p>
-          <p className="mt-2 text-sm leading-6">{location.summary}</p>
         </div>
-
-        {location.type === "mangrove" && <MangroveProgramCard />}
 
         {location.type === "outfall" && (
           <div className="grid grid-cols-2 gap-2">
             <Metric label="公开调查编号" value={surveyCode ?? "待确认"} />
             <Metric label="公开 GPS 坐标" value={publicCoordinate ?? "待确认"} />
-            <div className="col-span-2">
-              <Metric label="2015 年现场观察" value={historicalObservation ?? "原文未描述"} />
-            </div>
           </div>
         )}
 
@@ -487,30 +413,15 @@ export function StoryPanel({
 
         {location.type === "sampling" && <WaterSampleCard location={location} />}
 
-        {location.type === "learning" && learningIndicator && (
-          <div className="grid grid-cols-2 gap-2">
-            <Metric label={learningIndicator.label} value={learningIndicator.value} />
-            <Metric label="学习主题" value={location.category} />
-          </div>
-        )}
+        <StudentReadCard location={location} historicalObservation={historicalObservation} />
 
-        <StoryBlock title="发生了什么？" text={location.story.what} />
-        <StoryBlock title="为什么会这样？" text={location.story.why} />
-        <StoryBlock title="这为什么重要？" text={location.story.matter} />
-        <StoryBlock title="进一步思考" text={location.story.action} />
-
-        <KnowledgeBlock location={location} />
         <QuizBlock location={location} />
         <ActivityBlock location={location} />
 
         <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
           {location.type === "outfall"
-            ? "数据说明：逐点卡片展示 2015 年公开坐标与历史现场描述；2025 年仅展示合作资料中的 30 个排口整体结果，未把总体数据冒充为本点现状。"
-            : location.type === "mangrove"
-              ? "数据说明：本点是基于红树林修复议题设计的空间学习锚点，不是官方样地坐标或水质监测站；8 区项目数字仅作为整体背景。"
-              : location.type === "sampling"
-                ? "数据说明：pH、TP、COD 与 NH₃-N 来自 2023 年报告快速检测表；地图位置是按真实地名匹配的参考位置，报告未公开原始采样 GPS。"
-                : "数据说明：本点用于现场学习与规范观察，不展示没有来源的水质数值。"}
+            ? "来源说明：坐标和现场描述来自绿源 2015 年公开调查；历史记录不代表当前状态。"
+            : "来源说明：四项数据来自绿源 2023 年报告；报告未公开采样 GPS，地图位置是按真实地名匹配的参考位置。"}
         </p>
       </div>
     </div>
@@ -522,15 +433,6 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="h-full rounded-md border border-border bg-card px-2.5 py-2">
       <p className="text-[11px] text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-sm font-semibold leading-5 text-navy">{value}</p>
-    </div>
-  );
-}
-
-function StoryBlock({ title, text }: { title: string; text: string }) {
-  return (
-    <div>
-      <p className="text-sm font-semibold text-navy">{title}</p>
-      <p className="mt-0.5 text-sm leading-6 text-foreground">{text}</p>
     </div>
   );
 }
