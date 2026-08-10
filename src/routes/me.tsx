@@ -6,6 +6,7 @@ import { ClassroomSyncPanel } from "@/components/ClassroomSyncPanel";
 import { SAMPLING_QUEST_IDS } from "@/data/exploration";
 import { bonusMilestones, librarySideQuests } from "@/data/game-quests";
 import { TOTAL_CHAPTERS, TOTAL_LEARNING_POINTS } from "@/data/learning";
+import { OUTFALL_QUEST_IDS } from "@/data/locations";
 import { useAppState } from "@/lib/app-state";
 import { useLanguage } from "@/lib/language";
 
@@ -121,6 +122,9 @@ function LearningResultsPage() {
   const completedWorldQuests = SAMPLING_QUEST_IDS.filter((id) =>
     completedLocationQuizzes.includes(id),
   ).length;
+  const completedOutfallQuests = OUTFALL_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
@@ -151,6 +155,10 @@ function LearningResultsPage() {
         <Stat
           label="大世界探索"
           value={`${completedWorldQuests}/${SAMPLING_QUEST_IDS.length} 主线 · Bonus ${completedBonusQuestions.length}/${bonusMilestones.length} · 支线 ${completedSideQuests.length}/${librarySideQuests.length}`}
+        />
+        <Stat
+          label="历史排口支线"
+          value={`${completedOutfallQuests} / ${OUTFALL_QUEST_IDS.length}`}
         />
         <Stat
           label="综合测验"
@@ -323,6 +331,9 @@ function EnglishLearningResultsPage() {
   const completedWorld = SAMPLING_QUEST_IDS.filter((id) =>
     completedLocationQuizzes.includes(id),
   ).length;
+  const completedOutfalls = OUTFALL_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex items-center justify-between gap-3">
@@ -347,6 +358,10 @@ function EnglishLearningResultsPage() {
       <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Course chapters" value={`${completedChapters.length} / ${TOTAL_CHAPTERS}`} />
         <Stat label="Main evidence quest" value={`${completedWorld} / 38`} />
+        <Stat
+          label="Historical outfall quest"
+          value={`${completedOutfalls} / ${OUTFALL_QUEST_IDS.length}`}
+        />
         <Stat
           label="Bonus rewards"
           value={`${completedBonusQuestions.length} / ${bonusMilestones.length}`}
