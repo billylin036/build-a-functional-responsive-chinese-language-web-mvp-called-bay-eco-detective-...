@@ -85,8 +85,8 @@ const CHINESE_TILE_PROVIDERS = [
 /** English-labelled providers are intentionally separate from the mainland Chinese basemap. */
 const ENGLISH_TILE_PROVIDERS = [
   {
-    name: "CARTO English map",
-    url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+    name: "CARTO Voyager · colorful English map",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
     subdomains: "abcd",
     maxZoom: 20,
     attribution: "© OpenStreetMap contributors · CARTO",
@@ -111,9 +111,16 @@ const ENGLISH_TILE_PROVIDERS = [
 ] as const satisfies ReadonlyArray<TileProvider>;
 
 const ENGLISH_REFERENCE_LABELS = [
-  { name: "Shenzhen", latitude: 22.5431, longitude: 114.0579 },
-  { name: "Hong Kong", latitude: 22.3193, longitude: 114.1694 },
-  { name: "Shenzhen Bay", latitude: 22.493, longitude: 113.94 },
+  { name: "SHENZHEN", latitude: 22.5431, longitude: 114.0579, kind: "city" },
+  { name: "HONG KONG", latitude: 22.3193, longitude: 114.1694, kind: "city" },
+  { name: "Shenzhen Bay", latitude: 22.493, longitude: 113.972, kind: "water" },
+  { name: "Pearl River Estuary", latitude: 22.43, longitude: 113.73, kind: "water" },
+  { name: "Bao'an", latitude: 22.564, longitude: 113.895, kind: "district" },
+  { name: "Nanshan", latitude: 22.535, longitude: 113.93, kind: "district" },
+  { name: "Futian", latitude: 22.54, longitude: 114.055, kind: "district" },
+  { name: "Shekou", latitude: 22.485, longitude: 113.91, kind: "district" },
+  { name: "New Territories", latitude: 22.395, longitude: 114.105, kind: "district" },
+  { name: "Lantau Island", latitude: 22.267, longitude: 113.95, kind: "district" },
 ] as const;
 
 function mapLatLng(
@@ -345,12 +352,14 @@ export default function MapCanvas({
 
         if (language === "en") {
           ENGLISH_REFERENCE_LABELS.forEach((label) => {
+            const isCity = label.kind === "city";
+            const isWater = label.kind === "water";
             L.marker([label.latitude, label.longitude], {
               interactive: false,
               keyboard: false,
               icon: L.divIcon({
                 className: "",
-                html: `<span style="display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;border-radius:9999px;background:rgba(255,255,255,.88);padding:3px 8px;color:#082f3a;font-size:11px;font-weight:700;box-shadow:0 1px 5px rgba(8,47,58,.18)">${label.name}</span>`,
+                html: `<span style="display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;border-radius:9999px;background:${isWater ? "rgba(226,248,252,.9)" : "rgba(255,255,255,.9)"};padding:${isCity ? "4px 9px" : "3px 7px"};color:${isWater ? "#0b6f79" : "#082f3a"};font-size:${isCity ? "12px" : "11px"};font-style:${isWater ? "italic" : "normal"};font-weight:${isCity ? "800" : "650"};letter-spacing:${isCity ? ".04em" : "0"};box-shadow:0 1px 5px rgba(8,47,58,.18)">${label.name}</span>`,
                 iconSize: [0, 0],
                 iconAnchor: [0, 0],
               }),
@@ -427,9 +436,13 @@ export default function MapCanvas({
           title: locationName(loc, language),
         });
         marker.bindTooltip(
-          selected
-            ? `${locationName(loc, language)}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
-            : labelCode,
+          language === "en"
+            ? selected
+              ? `${locationName(loc, language)} | ${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
+              : labelCode
+            : selected
+              ? `${locationName(loc, language)}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
+              : labelCode,
           {
             direction: "top",
             permanent: loc.type !== "sampling" && (!compactLabels || selected),

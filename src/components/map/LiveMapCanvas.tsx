@@ -46,7 +46,7 @@ export default function LiveMapCanvas(props: MapCanvasProps) {
           ? useAMap
             ? "高德地图 JS API"
             : (leafletProvider ?? "正在连接国内地图")
-          : (leafletProvider ?? "Connecting to the English map")}
+          : (leafletProvider ?? "Connecting to the colorful English map")}
         {props.language === "zh"
           ? ` · 活动范围约 ${MAP_LIMIT_RADIUS_KM} 公里`
           : ` · Study area about ${MAP_LIMIT_RADIUS_KM} km`}
