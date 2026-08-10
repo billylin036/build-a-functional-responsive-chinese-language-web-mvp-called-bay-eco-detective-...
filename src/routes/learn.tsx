@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import QuestRewardsHub from "@/components/QuestRewardsHub";
 import { SAMPLING_QUEST_IDS, samplingQuestRegions } from "@/data/exploration";
 import type { CourseChapter } from "@/data/learning";
 import {
@@ -210,6 +211,8 @@ function LearnPage() {
         </div>
       </section>
 
+      <QuestRewardsHub language="zh" />
+
       <section className="mt-8 rounded-lg border border-border bg-card p-4">
         <div className="flex items-start gap-3">
           <GraduationCap className="mt-0.5 size-5 shrink-0 text-teal" />
@@ -308,7 +311,7 @@ function LearnPage() {
                 </div>
                 {chapter.exploration && (
                   <p className="mt-2 border-t border-current/10 pt-2 text-[11px] text-teal">
-                    支线探索 {regionProgress}/{chapter.exploration.sampleIds.length}
+                    主线探索 {regionProgress}/{chapter.exploration.sampleIds.length}
                   </p>
                 )}
               </button>
@@ -444,7 +447,7 @@ function LearnPage() {
           <div>
             <h2 className="font-semibold text-navy">继续大世界探索</h2>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              在真实坐标地图中搜索地点、解锁流域支线徽章，并完成地点知识卡、微测验与安全观察记录。
+              在真实坐标地图中继续 38 站证据主线、寻找 Bonus 奖励，并完成资料库支线与安全观察记录。
             </p>
           </div>
         </div>
@@ -841,6 +844,8 @@ function EnglishLearnPage() {
         </div>
       </section>
 
+      <QuestRewardsHub language="en" />
+
       <section className="mt-7 grid gap-3 md:grid-cols-4">
         {ENGLISH_CHAPTERS.map((item, index) => {
           const unlocked =
@@ -1138,7 +1143,7 @@ function ChapterLesson({
 
               {chapter.exploration && nextQuestId && (
                 <div className="rounded-lg border border-navy/15 bg-navy p-4 text-white">
-                  <p className="font-mono text-[11px] text-teal-200">OPEN WORLD SIDE QUEST</p>
+                  <p className="font-mono text-[11px] text-teal-200">OPEN WORLD MAIN QUEST</p>
                   <h3 className="mt-1 flex items-center gap-2 text-sm font-semibold">
                     <Compass className="size-4" />
                     {chapter.exploration.title}
@@ -1150,7 +1155,7 @@ function ChapterLesson({
                     <span>
                       {questCompleted.length}/{chapter.exploration.sampleIds.length} 个点位
                     </span>
-                    <span>3 个解锁徽章</span>
+                    <span>里程碑奖励</span>
                   </div>
                   <Progress
                     value={(questCompleted.length / chapter.exploration.sampleIds.length) * 100}
@@ -1161,7 +1166,7 @@ function ChapterLesson({
                     className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-2 text-xs font-medium text-navy hover:bg-teal-50"
                   >
                     <MapPin className="size-3.5" />
-                    前往 {nextQuestLocation?.name ?? "流域支线"}
+                    前往 {nextQuestLocation?.name ?? "主线下一站"}
                   </a>
                 </div>
               )}

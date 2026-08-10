@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { samplingQuestRegions } from "@/data/exploration";
+import { bonusMilestones, librarySideQuests } from "@/data/game-quests";
 import { TOTAL_CHAPTERS } from "@/data/learning";
 import { locations } from "@/data/locations";
 
@@ -21,7 +22,7 @@ export interface FinalAssessmentResult {
 
 export interface LearningHistoryItem {
   id: string;
-  type: "地点测验" | "章节测验" | "互动观察" | "综合测验";
+  type: "地点测验" | "章节测验" | "互动观察" | "综合测验" | "奖励解锁" | "支线任务";
   label: string;
   at: string;
 }
@@ -44,6 +45,10 @@ interface AppState {
   learnerProfile: LearnerProfile;
   learningHistory: LearningHistoryItem[];
   activityRecords: ActivityRecord[];
+  completedBonusQuestions: string[];
+  bonusAttempts: Record<string, number>;
+  completedSideQuests: string[];
+  sideQuestAttempts: Record<string, number>;
 }
 
 const EMPTY: AppState = {
@@ -55,6 +60,10 @@ const EMPTY: AppState = {
   learnerProfile: { name: "", school: "", className: "" },
   learningHistory: [],
   activityRecords: [],
+  completedBonusQuestions: [],
+  bonusAttempts: {},
+  completedSideQuests: [],
+  sideQuestAttempts: {},
 };
 
 const KEY = "bay-eco-school-learning-v3";
@@ -72,6 +81,8 @@ interface Ctx extends AppState {
     responses: Record<string, string>,
   ) => void;
   completeFinalAssessment: (score: number, total: number) => void;
+  recordBonusAnswer: (bonusId: string, rewardTitle: string, correct: boolean) => void;
+  recordSideQuestAnswer: (questId: string, rewardTitle: string, correct: boolean) => void;
   updateLearnerProfile: (profile: LearnerProfile) => void;
   resetLearning: () => void;
 }
@@ -177,6 +188,62 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const recordBonusAnswer = useCallback(
+    (bonusId: string, rewardTitle: string, correct: boolean) => {
+      setState((current) => {
+        const attempts = (current.bonusAttempts[bonusId] ?? 0) + 1;
+        const bonusAttempts = { ...current.bonusAttempts, [bonusId]: attempts };
+        if (!correct || current.completedBonusQuestions.includes(bonusId)) {
+          return { ...current, bonusAttempts };
+        }
+        const at = new Date().toISOString();
+        return {
+          ...current,
+          bonusAttempts,
+          completedBonusQuestions: [...current.completedBonusQuestions, bonusId],
+          learningHistory: [
+            {
+              id: `bonus-${bonusId}-${Date.now()}`,
+              type: "奖励解锁" as const,
+              label: `答对 Bonus Question，获得「${rewardTitle}」`,
+              at,
+            },
+            ...current.learningHistory,
+          ].slice(0, 100),
+        };
+      });
+    },
+    [],
+  );
+
+  const recordSideQuestAnswer = useCallback(
+    (questId: string, rewardTitle: string, correct: boolean) => {
+      setState((current) => {
+        const attempts = (current.sideQuestAttempts[questId] ?? 0) + 1;
+        const sideQuestAttempts = { ...current.sideQuestAttempts, [questId]: attempts };
+        if (!correct || current.completedSideQuests.includes(questId)) {
+          return { ...current, sideQuestAttempts };
+        }
+        const at = new Date().toISOString();
+        return {
+          ...current,
+          sideQuestAttempts,
+          completedSideQuests: [...current.completedSideQuests, questId],
+          learningHistory: [
+            {
+              id: `side-quest-${questId}-${Date.now()}`,
+              type: "支线任务" as const,
+              label: `完成资料库支线，获得「${rewardTitle}」`,
+              at,
+            },
+            ...current.learningHistory,
+          ].slice(0, 100),
+        };
+      });
+    },
+    [],
+  );
+
   const saveActivityRecord = useCallback(
     (
       locationId: string,
@@ -257,12 +324,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           region.sampleIds.filter((id) => completedLocationQuizzes.includes(id)).length >=
           region.badgeThreshold,
       })),
+      ...bonusMilestones.map((milestone) => ({
+        id: milestone.reward.zh,
+        desc: `主线完成 ${milestone.stationCount} 站并答对 Bonus Question`,
+        earned: state.completedBonusQuestions.includes(milestone.id),
+      })),
+      ...librarySideQuests.map((quest) => ({
+        id: quest.reward.zh,
+        desc: `完成资料库支线「${quest.title.zh.replace(/^支线. · /, "")}」`,
+        earned: state.completedSideQuests.includes(quest.id),
+      })),
     ],
     [
       learningComplete,
       completedLocationQuizzes,
       state.activityRecords.length,
       state.completedChapters.length,
+      state.completedBonusQuestions,
+      state.completedSideQuests,
       state.finalAssessment,
     ],
   );
@@ -278,6 +357,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     completeChapter,
     saveActivityRecord,
     completeFinalAssessment,
+    recordBonusAnswer,
+    recordSideQuestAnswer,
     updateLearnerProfile,
     resetLearning,
   };

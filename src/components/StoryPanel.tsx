@@ -6,15 +6,22 @@ import {
   CheckCircle2,
   Compass,
   ExternalLink,
+  LockKeyhole,
   MapPin,
   ShieldAlert,
+  Sparkles,
   X,
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
 import type { EcoLocation } from "@/data/types";
-import { OUTFALL_DECADE_COMPARISON, OUTFALL_SOURCE } from "@/data/locations";
-import { getSamplingPointProfile, getSamplingStoryBeat } from "@/data/exploration";
+import { locations, OUTFALL_DECADE_COMPARISON, OUTFALL_SOURCE } from "@/data/locations";
+import {
+  getSamplingPointProfile,
+  getSamplingStoryBeat,
+  SAMPLING_QUEST_IDS,
+} from "@/data/exploration";
+import { milestoneAt } from "@/data/game-quests";
 import { getLearningModule, getLocationQuiz, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { Badge } from "@/components/ui/badge";
 import { useAppState } from "@/lib/app-state";
@@ -31,15 +38,48 @@ const IMAGES: Record<string, string> = {
 function QuizBlock({ location }: { location: EcoLocation }) {
   const quiz = getLocationQuiz(location);
   const module = getLearningModule(location.id);
-  const { completedLocationQuizzes, recordLocationAnswer } = useAppState();
+  const { completedLocationQuizzes, completedBonusQuestions, recordLocationAnswer } = useAppState();
   const done = completedLocationQuizzes.includes(location.id);
+  const mainIndex = SAMPLING_QUEST_IDS.indexOf(location.id);
+  const previousMainId = mainIndex > 0 ? SAMPLING_QUEST_IDS[mainIndex - 1] : undefined;
+  const previousMainLocation = locations.find((item) => item.id === previousMainId);
+  const mainLocked =
+    !done && Boolean(previousMainId) && !completedLocationQuizzes.includes(previousMainId!);
   const [ready, setReady] = useState(done);
   const [picked, setPicked] = useState<number | null>(done ? quiz.answerIndex : null);
+  const mainCompleted = SAMPLING_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
+  const unlockedSurprise = location.type === "sampling" ? milestoneAt(mainCompleted) : undefined;
+  const surpriseWaiting =
+    unlockedSurprise && !completedBonusQuestions.includes(unlockedSurprise.id);
 
   useEffect(() => {
     setReady(done);
     setPicked(done ? quiz.answerIndex : null);
   }, [done, location.id, quiz.answerIndex]);
+
+  if (mainLocked && previousMainId) {
+    return (
+      <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-4">
+        <div className="flex items-start gap-3">
+          <LockKeyhole className="mt-0.5 size-5 shrink-0 text-[#4F46E5]" />
+          <div>
+            <p className="text-sm font-semibold text-navy">主线尚未到达本站</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              先完成上一站「{previousMainLocation?.name ?? "上一站"}」的挑战题，再回来解锁本站。
+            </p>
+            <a
+              href={`/?location=${encodeURIComponent(previousMainId)}`}
+              className="mt-3 inline-flex rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white"
+            >
+              返回主线上一站
+            </a>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!ready) {
     return (
@@ -113,6 +153,21 @@ function QuizBlock({ location }: { location: EcoLocation }) {
       )}
       {done && (
         <div className="mt-3 border-t border-teal/20 pt-3">
+          {surpriseWaiting && (
+            <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900">
+              <p className="flex items-center gap-1.5 text-xs font-semibold">
+                <Sparkles className="size-4" />
+                SURPRISE · 已解锁第 {unlockedSurprise.stationCount} 站 Bonus
+              </p>
+              <p className="mt-1 text-xs leading-5">答对隐藏题，揭晓一件新的调查装备。</p>
+              <a
+                href="/learn#quest-rewards"
+                className="mt-2 inline-flex text-xs font-medium underline"
+              >
+                打开神秘奖励
+              </a>
+            </div>
+          )}
           <p className="flex items-center gap-1 text-xs font-medium text-mangrove">
             <CheckCircle2 className="size-3.5" />
             本数据点已计入学习进度
@@ -478,18 +533,51 @@ const EN_STATION_QUESTIONS = [
 ] as const;
 
 function EnglishStationQuiz({ location }: { location: EcoLocation }) {
-  const { completedLocationQuizzes, recordLocationAnswer } = useAppState();
+  const { completedLocationQuizzes, completedBonusQuestions, recordLocationAnswer } = useAppState();
   const question =
     EN_STATION_QUESTIONS[
       (location.waterSample?.sampleNumber ?? Number(location.id.slice(-2))) %
         EN_STATION_QUESTIONS.length
     ]!;
   const done = completedLocationQuizzes.includes(location.id);
+  const mainIndex = SAMPLING_QUEST_IDS.indexOf(location.id);
+  const previousMainId = mainIndex > 0 ? SAMPLING_QUEST_IDS[mainIndex - 1] : undefined;
+  const previousMainLocation = locations.find((item) => item.id === previousMainId);
+  const mainLocked =
+    !done && Boolean(previousMainId) && !completedLocationQuizzes.includes(previousMainId!);
+  const mainCompleted = SAMPLING_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
+  const unlockedSurprise = location.type === "sampling" ? milestoneAt(mainCompleted) : undefined;
+  const surpriseWaiting =
+    unlockedSurprise && !completedBonusQuestions.includes(unlockedSurprise.id);
   const [picked, setPicked] = useState<number | null>(done ? question.answer : null);
 
   useEffect(() => {
     setPicked(done ? question.answer : null);
   }, [done, location.id, question.answer]);
+
+  if (mainLocked && previousMainId) {
+    return (
+      <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-4">
+        <p className="flex items-center gap-2 text-sm font-semibold text-navy">
+          <LockKeyhole className="size-4 text-[#4F46E5]" />
+          Main quest station locked
+        </p>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          Complete the previous station, “
+          {previousMainLocation ? locationName(previousMainLocation, "en") : "previous station"}”,
+          before attempting this challenge.
+        </p>
+        <a
+          href={`/?location=${encodeURIComponent(previousMainId)}`}
+          className="mt-3 inline-flex rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white"
+        >
+          Return to the previous station
+        </a>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-lg border border-teal/25 bg-paleeco p-4">
@@ -530,6 +618,17 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
             ? `Correct. ${question.explanation}`
             : "Try again: choose the conclusion or method that stays within the available evidence."}
         </p>
+      )}
+      {done && surpriseWaiting && (
+        <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900">
+          <p className="flex items-center gap-1.5 text-xs font-semibold">
+            <Sparkles className="size-4" />
+            SURPRISE · Station {unlockedSurprise.stationCount} bonus unlocked
+          </p>
+          <a href="/learn#quest-rewards" className="mt-2 inline-flex text-xs font-medium underline">
+            Open the mystery reward
+          </a>
+        </div>
       )}
     </section>
   );

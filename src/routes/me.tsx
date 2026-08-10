@@ -3,6 +3,7 @@ import { Award, CheckCircle2, ClipboardCheck, History, Printer, RotateCcw } from
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SAMPLING_QUEST_IDS } from "@/data/exploration";
+import { bonusMilestones, librarySideQuests } from "@/data/game-quests";
 import { TOTAL_CHAPTERS, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { useAppState } from "@/lib/app-state";
 import { useLanguage } from "@/lib/language";
@@ -40,6 +41,29 @@ const ENGLISH_BADGES: Record<string, { title: string; description: string }> = {
     title: "River–Estuary Explorer",
     description: "Complete three evidence stations in Act IV",
   },
+  证据放大镜: { title: "Evidence Lens", description: "Solve the 5-station bonus" },
+  来源追踪钥匙: { title: "Source-tracing Key", description: "Solve the 10-station bonus" },
+  汇流罗盘: { title: "Confluence Compass", description: "Solve the 16-station bonus" },
+  控变量护盾: { title: "Variable-control Shield", description: "Solve the 22-station bonus" },
+  指标解码器: { title: "Indicator Decoder", description: "Solve the 28-station bonus" },
+  潮汐时钟: { title: "Tide Clock", description: "Solve the 33-station bonus" },
+  珠江流域证据大师奖章: {
+    title: "Pearl River Evidence Master Medal",
+    description: "Complete all 38 stations and solve the final bonus",
+  },
+  历史边界徽章: {
+    title: "Historical-boundary Badge",
+    description: "Complete the outfall archive side quest",
+  },
+  红树林系统思维徽章: {
+    title: "Mangrove Systems-thinking Badge",
+    description: "Complete the mangrove side quest",
+  },
+  现场线索徽章: { title: "Field-clue Badge", description: "Complete the river-patrol casebook" },
+  可复核调查徽章: {
+    title: "Verifiable-investigation Badge",
+    description: "Complete the field-method lab",
+  },
 };
 
 export const Route = createFileRoute("/me")({
@@ -71,6 +95,8 @@ function LearningResultsPage() {
     learnerProfile,
     learningHistory,
     activityRecords,
+    completedBonusQuestions,
+    completedSideQuests,
     badges,
     resetLearning,
   } = useAppState();
@@ -119,7 +145,7 @@ function LearningResultsPage() {
         <Stat label="章节答题选择" value={`${totalChapterAttempts} 次`} />
         <Stat
           label="大世界探索"
-          value={`${completedWorldQuests}/${SAMPLING_QUEST_IDS.length} 支线 · 全部 ${completedLocationQuizzes.length}/${TOTAL_LEARNING_POINTS} 点`}
+          value={`${completedWorldQuests}/${SAMPLING_QUEST_IDS.length} 主线 · Bonus ${completedBonusQuestions.length}/${bonusMilestones.length} · 支线 ${completedSideQuests.length}/${librarySideQuests.length}`}
         />
         <Stat
           label="综合测验"
@@ -276,6 +302,8 @@ function EnglishLearningResultsPage() {
     completedChapters,
     completedLocationQuizzes,
     activityRecords,
+    completedBonusQuestions,
+    completedSideQuests,
     badges,
     learnerProfile,
     finalAssessment,
@@ -310,12 +338,15 @@ function EnglishLearningResultsPage() {
       </div>
       <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Course chapters" value={`${completedChapters.length} / ${TOTAL_CHAPTERS}`} />
-        <Stat label="Evidence story" value={`${completedWorld} / 38`} />
+        <Stat label="Main evidence quest" value={`${completedWorld} / 38`} />
         <Stat
-          label="Map challenges"
-          value={`${completedLocationQuizzes.length} / ${TOTAL_LEARNING_POINTS}`}
+          label="Bonus rewards"
+          value={`${completedBonusQuestions.length} / ${bonusMilestones.length}`}
         />
-        <Stat label="Observation records" value={String(activityRecords.length)} />
+        <Stat
+          label="Side quests"
+          value={`${completedSideQuests.length} / ${librarySideQuests.length}`}
+        />
       </section>
       <section className="mt-7 rounded-xl border bg-card p-6">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-navy">

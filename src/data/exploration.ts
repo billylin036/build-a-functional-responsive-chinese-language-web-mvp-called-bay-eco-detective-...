@@ -227,7 +227,7 @@ export function getSamplingPointProfile(locationId: string): SamplingPointProfil
 
   return {
     region,
-    missionCode: `SIDE QUEST ${String(sample.sampleNumber).padStart(2, "0")}`,
+    missionCode: `MAIN QUEST ${String(sample.sampleNumber).padStart(2, "0")}`,
     role: role.role,
     roleLesson: role.lesson,
     indicatorLesson: indicatorLessons[(sample.sampleNumber - 1) % indicatorLessons.length]!,
