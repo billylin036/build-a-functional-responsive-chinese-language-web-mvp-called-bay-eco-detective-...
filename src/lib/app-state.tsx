@@ -4,6 +4,11 @@ import { samplingQuestRegions } from "@/data/exploration";
 import { bonusMilestones, librarySideQuests } from "@/data/game-quests";
 import { TOTAL_CHAPTERS } from "@/data/learning";
 import { locations } from "@/data/locations";
+import {
+  joinLearningClass,
+  restoreLearningProfile,
+  saveLearningProgress,
+} from "@/lib/classroom-cloud";
 
 const VALID_LOCATION_IDS = new Set(locations.map((location) => location.id));
 
@@ -51,6 +56,16 @@ interface AppState {
   sideQuestAttempts: Record<string, number>;
 }
 
+export interface ClassroomLink {
+  profileId: string;
+  classCode: string;
+  className: string;
+  displayName: string;
+  recoveryCode: string;
+}
+
+export type CloudSyncStatus = "local" | "connecting" | "syncing" | "synced" | "error";
+
 const EMPTY: AppState = {
   completedLocationQuizzes: [],
   quizAttempts: {},
@@ -67,9 +82,18 @@ const EMPTY: AppState = {
 };
 
 const KEY = "bay-eco-school-learning-v3";
+const CLASSROOM_LINK_KEY = "bay-eco-classroom-link-v1";
+
+function normalizeProgress(progress: Partial<AppState> | Record<string, unknown>): AppState {
+  return { ...EMPTY, ...(progress as Partial<AppState>) };
+}
 
 interface Ctx extends AppState {
   hydrated: boolean;
+  classroomLink: ClassroomLink | null;
+  cloudSyncStatus: CloudSyncStatus;
+  cloudSyncError: string | null;
+  cloudLastSyncedAt: string | null;
   learningComplete: boolean;
   badges: { id: string; desc: string; earned: boolean }[];
   recordLocationAnswer: (locationId: string, locationName: string, correct: boolean) => void;
@@ -84,6 +108,10 @@ interface Ctx extends AppState {
   recordBonusAnswer: (bonusId: string, rewardTitle: string, correct: boolean) => void;
   recordSideQuestAnswer: (questId: string, rewardTitle: string, correct: boolean) => void;
   updateLearnerProfile: (profile: LearnerProfile) => void;
+  joinClassroom: (classCode: string, displayName: string) => Promise<ClassroomLink>;
+  restoreClassroom: (classCode: string, recoveryCode: string) => Promise<ClassroomLink>;
+  disconnectClassroom: () => void;
+  retryCloudSync: () => Promise<void>;
   resetLearning: () => void;
 }
 
@@ -91,12 +119,19 @@ const AppCtx = createContext<Ctx | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(EMPTY);
+  const [classroomLink, setClassroomLink] = useState<ClassroomLink | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>("local");
+  const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
+  const [cloudLastSyncedAt, setCloudLastSyncedAt] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setState({ ...EMPTY, ...(JSON.parse(raw) as Partial<AppState>) });
+      if (raw) setState(normalizeProgress(JSON.parse(raw) as Partial<AppState>));
+      const classroomRaw = localStorage.getItem(CLASSROOM_LINK_KEY);
+      if (classroomRaw) setClassroomLink(JSON.parse(classroomRaw) as ClassroomLink);
     } catch {
       /* 忽略损坏的本地学习记录 */
     }
@@ -111,6 +146,162 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       /* 存储不可用时静默降级 */
     }
   }, [state, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      if (classroomLink) {
+        localStorage.setItem(CLASSROOM_LINK_KEY, JSON.stringify(classroomLink));
+      } else {
+        localStorage.removeItem(CLASSROOM_LINK_KEY);
+      }
+    } catch {
+      /* 本地存储不可用时仍可继续本次会话 */
+    }
+  }, [classroomLink, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || !classroomLink || cloudReady) return;
+    let cancelled = false;
+    setCloudSyncStatus("connecting");
+    setCloudSyncError(null);
+    void restoreLearningProfile(classroomLink.classCode, classroomLink.recoveryCode)
+      .then((restored) => {
+        if (cancelled) return;
+        setState(normalizeProgress(restored.progress));
+        setClassroomLink((current) =>
+          current
+            ? {
+                ...current,
+                profileId: restored.profileId,
+                className: restored.className,
+                displayName: restored.displayName,
+              }
+            : current,
+        );
+        setCloudReady(true);
+        setCloudSyncStatus("synced");
+        setCloudLastSyncedAt(restored.updatedAt);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setCloudSyncStatus("error");
+        setCloudSyncError(error instanceof Error ? error.message : "CLOUD_REQUEST_FAILED");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [classroomLink, cloudReady, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || !classroomLink || !cloudReady) return;
+    const timer = window.setTimeout(() => {
+      setCloudSyncStatus("syncing");
+      setCloudSyncError(null);
+      void saveLearningProgress(classroomLink.profileId, classroomLink.recoveryCode, state)
+        .then(() => {
+          setCloudSyncStatus("synced");
+          setCloudLastSyncedAt(new Date().toISOString());
+        })
+        .catch((error: unknown) => {
+          setCloudSyncStatus("error");
+          setCloudSyncError(error instanceof Error ? error.message : "CLOUD_REQUEST_FAILED");
+        });
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [classroomLink, cloudReady, hydrated, state]);
+
+  const joinClassroom = useCallback(
+    async (classCode: string, displayName: string) => {
+      setCloudSyncStatus("connecting");
+      setCloudSyncError(null);
+      try {
+        const link = await joinLearningClass(classCode, displayName);
+        await saveLearningProgress(link.profileId, link.recoveryCode, state);
+        setClassroomLink(link);
+        setCloudReady(true);
+        setCloudSyncStatus("synced");
+        setCloudLastSyncedAt(new Date().toISOString());
+        return link;
+      } catch (error) {
+        setCloudSyncStatus("error");
+        setCloudSyncError(error instanceof Error ? error.message : "CLOUD_REQUEST_FAILED");
+        throw error;
+      }
+    },
+    [state],
+  );
+
+  const restoreClassroom = useCallback(async (classCode: string, recoveryCode: string) => {
+    setCloudSyncStatus("connecting");
+    setCloudSyncError(null);
+    try {
+      const restored = await restoreLearningProfile(classCode, recoveryCode);
+      const link: ClassroomLink = {
+        profileId: restored.profileId,
+        classCode: classCode
+          .trim()
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, ""),
+        className: restored.className,
+        displayName: restored.displayName,
+        recoveryCode: recoveryCode.trim().toUpperCase().replace(/\s+/g, ""),
+      };
+      setState(normalizeProgress(restored.progress));
+      setClassroomLink(link);
+      setCloudReady(true);
+      setCloudSyncStatus("synced");
+      setCloudLastSyncedAt(restored.updatedAt);
+      return link;
+    } catch (error) {
+      setCloudSyncStatus("error");
+      setCloudSyncError(error instanceof Error ? error.message : "CLOUD_REQUEST_FAILED");
+      throw error;
+    }
+  }, []);
+
+  const disconnectClassroom = useCallback(() => {
+    setClassroomLink(null);
+    setCloudReady(false);
+    setCloudSyncStatus("local");
+    setCloudSyncError(null);
+    setCloudLastSyncedAt(null);
+  }, []);
+
+  const retryCloudSync = useCallback(async () => {
+    if (!classroomLink) return;
+    setCloudSyncStatus("syncing");
+    setCloudSyncError(null);
+    try {
+      if (!cloudReady) {
+        const restored = await restoreLearningProfile(
+          classroomLink.classCode,
+          classroomLink.recoveryCode,
+        );
+        setState(normalizeProgress(restored.progress));
+        setClassroomLink((current) =>
+          current
+            ? {
+                ...current,
+                profileId: restored.profileId,
+                className: restored.className,
+                displayName: restored.displayName,
+              }
+            : current,
+        );
+        setCloudLastSyncedAt(restored.updatedAt);
+      } else {
+        await saveLearningProgress(classroomLink.profileId, classroomLink.recoveryCode, state);
+        setCloudLastSyncedAt(new Date().toISOString());
+      }
+      setCloudReady(true);
+      setCloudSyncStatus("synced");
+    } catch (error) {
+      setCloudSyncStatus("error");
+      setCloudSyncError(error instanceof Error ? error.message : "CLOUD_REQUEST_FAILED");
+      throw error;
+    }
+  }, [classroomLink, cloudReady, state]);
 
   const recordLocationAnswer = useCallback(
     (locationId: string, locationName: string, correct: boolean) => {
@@ -351,6 +542,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     completedLocationQuizzes,
     quizAttempts,
     hydrated,
+    classroomLink,
+    cloudSyncStatus,
+    cloudSyncError,
+    cloudLastSyncedAt,
     learningComplete,
     badges,
     recordLocationAnswer,
@@ -360,6 +555,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     recordBonusAnswer,
     recordSideQuestAnswer,
     updateLearnerProfile,
+    joinClassroom,
+    restoreClassroom,
+    disconnectClassroom,
+    retryCloudSync,
     resetLearning,
   };
 

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Award, CheckCircle2, ClipboardCheck, History, Printer, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ClassroomSyncPanel } from "@/components/ClassroomSyncPanel";
 import { SAMPLING_QUEST_IDS } from "@/data/exploration";
 import { bonusMilestones, librarySideQuests } from "@/data/game-quests";
 import { TOTAL_CHAPTERS, TOTAL_LEARNING_POINTS } from "@/data/learning";
@@ -126,7 +127,9 @@ function LearningResultsPage() {
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-navy">学习成果</h1>
-          <p className="mt-1 text-sm text-muted-foreground">学习进度保存在当前浏览器中。</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            学习进度可保存在本机，也可加入班级跨设备同步。
+          </p>
         </div>
         <Button
           variant="outline"
@@ -139,6 +142,8 @@ function LearningResultsPage() {
           重置学习进度
         </Button>
       </div>
+
+      <ClassroomSyncPanel language="zh" />
 
       <section className="no-print mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="完成章节" value={`${completedChapters.length} / ${TOTAL_CHAPTERS}`} />
@@ -323,7 +328,9 @@ function EnglishLearningResultsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-navy">My Learning Progress</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Progress is stored in this browser.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Keep progress on this device or join a class to sync across devices.
+          </p>
         </div>
         <Button
           variant="outline"
@@ -336,6 +343,7 @@ function EnglishLearningResultsPage() {
           Reset
         </Button>
       </div>
+      <ClassroomSyncPanel language="en" />
       <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Course chapters" value={`${completedChapters.length} / ${TOTAL_CHAPTERS}`} />
         <Stat label="Main evidence quest" value={`${completedWorld} / 38`} />
