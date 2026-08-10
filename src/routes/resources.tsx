@@ -18,6 +18,17 @@ const reportStats = [
   { value: "33,312 公里", label: "涉水行程" },
 ];
 
+const ENGLISH_GREEN_SOURCE_TITLES: Record<string, string> = {
+  "outfall-source": "Shenzhen Bay Outfall Survey: Published 2015 Records",
+  "sengo-wetland": "Coastal Wetland Conservation",
+  "sengo-water": "Deep Flowing Water: Watershed Stewardship Programme",
+  "sengo-2023-observation": "Deep Flowing Water | 2023 Citizen Micro-observation Report",
+  "sengo-patrol-2025-01": "Mangrove Rangers: Professional Training and Wetland Stewardship",
+  "sengo-patrol-2025-04": "Mangrove Ranger Training Review · 2025-04",
+  "sengo-patrol-2025-05": "Mangrove Ranger Team Training Review · 2025-05",
+  "sengo-2024-q3": "Green Source 2024 Third-quarter Work Briefing",
+};
+
 export const Route = createFileRoute("/resources")({
   head: () => ({
     meta: [
@@ -268,9 +279,12 @@ function EnglishResourcesPage() {
                 rel="noreferrer"
                 className="rounded-lg border p-4 hover:border-teal"
               >
-                <p className="text-sm font-semibold text-navy">{source.title}</p>
+                <p className="text-sm font-semibold text-navy">
+                  {ENGLISH_GREEN_SOURCE_TITLES[source.id] ?? "Green Source project publication"}
+                </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {source.publisher} · {source.publishedAt}
+                  Shenzhen Green Source Environmental Volunteers Association
+                  {source.publishedAt ? ` · ${source.publishedAt}` : ""}
                 </p>
                 <span className="mt-2 inline-flex items-center gap-1 text-xs text-teal underline">
                   Open original <ExternalLink className="size-3" />

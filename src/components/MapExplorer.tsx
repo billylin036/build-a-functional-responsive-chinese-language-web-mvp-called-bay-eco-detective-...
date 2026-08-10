@@ -62,6 +62,11 @@ export function MapExplorer() {
   );
 
   useEffect(() => {
+    if (!selected) return;
+    setLocatedName(locationName(selected, language));
+  }, [language, selected]);
+
+  useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const initialLocationId = searchParams.get("location");
     if (initialLocationId && locations.some((location) => location.id === initialLocationId)) {

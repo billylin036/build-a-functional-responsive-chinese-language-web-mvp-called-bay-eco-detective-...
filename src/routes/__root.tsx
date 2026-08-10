@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -132,6 +133,28 @@ const NAV = [
 
 function AppChrome() {
   const { language, toggleLanguage, tr } = useLanguage();
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  useEffect(() => {
+    const englishTitles: Record<string, string> = {
+      "/": "Bay Eco Detective | Interactive Environmental Map",
+      "/learn": "Learning Quest | Bay Eco Detective",
+      "/resources": "Sources | Bay Eco Detective",
+      "/me": "My Progress | Bay Eco Detective",
+      "/about": "About | Bay Eco Detective",
+    };
+    const chineseTitles: Record<string, string> = {
+      "/": "湾区生态侦探 | 深圳湾互动科普地图",
+      "/learn": "学习闯关 | 湾区生态侦探",
+      "/resources": "学习资料库 | 湾区生态侦探",
+      "/me": "学习成果 | 湾区生态侦探",
+      "/about": "关于项目与数据说明 | 湾区生态侦探",
+    };
+    document.title =
+      language === "en"
+        ? (englishTitles[pathname] ?? "Location Evidence | Bay Eco Detective")
+        : (chineseTitles[pathname] ?? "地点证据 | 湾区生态侦探");
+  }, [language, pathname]);
 
   return (
     <div className="app-shell flex flex-col">
@@ -162,7 +185,7 @@ function AppChrome() {
             className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/25 px-2 py-1 text-xs font-semibold text-white hover:bg-white/10"
           >
             <Languages className="size-3.5" />
-            {language === "zh" ? "EN" : "中文"}
+            {language === "zh" ? "EN" : "Chinese"}
           </button>
         </div>
       </header>

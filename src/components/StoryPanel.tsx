@@ -552,13 +552,13 @@ function EnglishStoryPanel({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="relative shrink-0">
-        <img
-          src={IMAGES[location.image] ?? outfallImg}
-          alt="Field evidence"
-          className="h-32 w-full object-cover"
-          loading="lazy"
-        />
+      <div className="relative flex h-24 shrink-0 items-center bg-gradient-to-br from-navy via-teal to-[#4F46E5] px-5 text-white">
+        <div>
+          <p className="font-mono text-[11px] tracking-[0.2em] text-white/70">EVIDENCE STATION</p>
+          <p className="mt-1 text-sm font-semibold">
+            {location.type === "sampling" ? "2023 RAPID-TEST RECORD" : "2015 OUTFALL RECORD"}
+          </p>
+        </div>
         <button
           onClick={onClose}
           aria-label="Close location"

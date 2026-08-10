@@ -7,6 +7,41 @@ import { TOTAL_CHAPTERS, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { useAppState } from "@/lib/app-state";
 import { useLanguage } from "@/lib/language";
 
+const ENGLISH_BADGES: Record<string, { title: string; description: string }> = {
+  生态课程启航者: {
+    title: "Course Starter",
+    description: "Complete at least one chapter quiz",
+  },
+  深圳湾学习者: {
+    title: "Shenzhen Bay Learner",
+    description: "Complete all four learning chapters",
+  },
+  生态数据侦探: {
+    title: "Environmental Data Detective",
+    description: "Pass the final assessment and unlock the certificate",
+  },
+  公民科学观察员: {
+    title: "Citizen Science Observer",
+    description: "Save at least three structured observation records",
+  },
+  北江源流侦察员: {
+    title: "Beijiang Source Investigator",
+    description: "Complete three evidence stations in Act I",
+  },
+  东江汇流分析员: {
+    title: "Dongjiang Confluence Analyst",
+    description: "Complete three evidence stations in Act II",
+  },
+  城市水网记录员: {
+    title: "Urban Water-network Recorder",
+    description: "Complete three evidence stations in Act III",
+  },
+  河海口探索家: {
+    title: "River–Estuary Explorer",
+    description: "Complete three evidence stations in Act IV",
+  },
+};
+
 export const Route = createFileRoute("/me")({
   head: () => ({
     meta: [
@@ -288,18 +323,24 @@ function EnglishLearningResultsPage() {
           Badges
         </h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {badges.map((badge) => (
-            <div
-              key={badge.id}
-              className={`rounded-lg border p-4 ${badge.earned ? "border-mangrove/40 bg-paleeco" : "opacity-55"}`}
-            >
-              <p className="text-sm font-semibold text-navy">{badge.id}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{badge.desc}</p>
-              <p className="mt-2 text-xs font-medium text-teal">
-                {badge.earned ? "Unlocked" : "Locked"}
-              </p>
-            </div>
-          ))}
+          {badges.map((badge) => {
+            const englishBadge = ENGLISH_BADGES[badge.id] ?? {
+              title: "Evidence Quest Badge",
+              description: "Complete the corresponding evidence-station milestone",
+            };
+            return (
+              <div
+                key={badge.id}
+                className={`rounded-lg border p-4 ${badge.earned ? "border-mangrove/40 bg-paleeco" : "opacity-55"}`}
+              >
+                <p className="text-sm font-semibold text-navy">{englishBadge.title}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{englishBadge.description}</p>
+                <p className="mt-2 text-xs font-medium text-teal">
+                  {badge.earned ? "Unlocked" : "Locked"}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
       <section className="mt-7 rounded-xl border bg-card p-6">

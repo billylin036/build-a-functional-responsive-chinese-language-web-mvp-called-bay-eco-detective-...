@@ -38,7 +38,16 @@ const COLORS: Record<LocationType, string> = {
   sampling: "#4F46E5",
 };
 
-const TILE_PROVIDERS = [
+type TileProvider = {
+  name: string;
+  url: string;
+  subdomains: string;
+  maxZoom: number;
+  attribution: string;
+  coordinateSystem: TileCoordinateSystem;
+};
+
+const CHINESE_TILE_PROVIDERS = [
   {
     name: "高德地图国内线路",
     url: "https://wprd0{s}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&size=1&scl=1&style=7",
@@ -71,14 +80,41 @@ const TILE_PROVIDERS = [
     attribution: "© OpenStreetMap 贡献者 · CARTO",
     coordinateSystem: "wgs84",
   },
-] as const satisfies ReadonlyArray<{
-  name: string;
-  url: string;
-  subdomains: string;
-  maxZoom: number;
-  attribution: string;
-  coordinateSystem: TileCoordinateSystem;
-}>;
+] as const satisfies ReadonlyArray<TileProvider>;
+
+/** English-labelled providers are intentionally separate from the mainland Chinese basemap. */
+const ENGLISH_TILE_PROVIDERS = [
+  {
+    name: "CARTO English map",
+    url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+    maxZoom: 20,
+    attribution: "© OpenStreetMap contributors · CARTO",
+    coordinateSystem: "wgs84",
+  },
+  {
+    name: "Esri Light Gray English fallback",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    subdomains: "",
+    maxZoom: 19,
+    attribution: "Tiles © Esri",
+    coordinateSystem: "wgs84",
+  },
+  {
+    name: "Esri satellite English fallback",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    subdomains: "",
+    maxZoom: 19,
+    attribution: "Imagery © Esri",
+    coordinateSystem: "wgs84",
+  },
+] as const satisfies ReadonlyArray<TileProvider>;
+
+const ENGLISH_REFERENCE_LABELS = [
+  { name: "Shenzhen", latitude: 22.5431, longitude: 114.0579 },
+  { name: "Hong Kong", latitude: 22.3193, longitude: 114.1694 },
+  { name: "Shenzhen Bay", latitude: 22.493, longitude: 113.94 },
+] as const;
 
 function mapLatLng(
   latitude: number,
@@ -106,7 +142,7 @@ function markerHtml(loc: EcoLocation, opts: { selected: boolean; onRoute: boolea
   return `<span style="display:block;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;${ring}"></span>`;
 }
 
-function markerCode(loc: EcoLocation) {
+function markerCode(loc: EcoLocation, language: Language) {
   if (loc.type === "outfall") {
     return (
       loc.indicators?.find((indicator) => indicator.label === "调查编号")?.value ??
@@ -114,7 +150,18 @@ function markerCode(loc: EcoLocation) {
     );
   }
   const number = loc.id.split("-")[1] ?? loc.id;
-  const prefix = loc.type === "mangrove" ? "红" : loc.type === "sampling" ? "测" : "学";
+  const prefix =
+    language === "en"
+      ? loc.type === "mangrove"
+        ? "M"
+        : loc.type === "sampling"
+          ? "S"
+          : "L"
+      : loc.type === "mangrove"
+        ? "红"
+        : loc.type === "sampling"
+          ? "测"
+          : "学";
   return `${prefix}${Number(number)}`;
 }
 
@@ -138,7 +185,9 @@ export default function MapCanvas({
   const [mapVersion, setMapVersion] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
   const [tilesReady, setTilesReady] = useState(false);
-  const [coordinateSystem, setCoordinateSystem] = useState<TileCoordinateSystem>("gcj02");
+  const [coordinateSystem, setCoordinateSystem] = useState<TileCoordinateSystem>(() =>
+    language === "en" ? "wgs84" : "gcj02",
+  );
   const [compactLabels, setCompactLabels] = useState(false);
   const selectRef = useRef(onSelect);
   const tilesReadyRef = useRef(onTilesReady);
@@ -159,7 +208,8 @@ export default function MapCanvas({
     let map: LeafletMap | null = null;
     let tiles: TileLayer | null = null;
     let bay: Polygon | null = null;
-    let activeCoordinateSystem: TileCoordinateSystem = "gcj02";
+    const tileProviders = language === "en" ? ENGLISH_TILE_PROVIDERS : CHINESE_TILE_PROVIDERS;
+    let activeCoordinateSystem: TileCoordinateSystem = language === "en" ? "wgs84" : "gcj02";
     let resizeObserver: ResizeObserver | null = null;
     let resizeFrame = 0;
     let fallbackTimer = 0;
@@ -183,8 +233,8 @@ export default function MapCanvas({
         L.control
           .zoom({
             position: "bottomright",
-            zoomInTitle: "放大地图",
-            zoomOutTitle: "缩小地图",
+            zoomInTitle: language === "en" ? "Zoom in" : "放大地图",
+            zoomOutTitle: language === "en" ? "Zoom out" : "缩小地图",
           })
           .addTo(map);
         let tileErrorsInCycle = 0;
@@ -208,7 +258,7 @@ export default function MapCanvas({
 
         const tryNextProvider = (providerIndex: number) => {
           if (cancelled || providerIndex !== tileProviderIndex || providerHasLoadedTile) return;
-          if (providerIndex + 1 < TILE_PROVIDERS.length) {
+          if (providerIndex + 1 < tileProviders.length) {
             startTileProvider(providerIndex + 1);
           } else {
             setLoadFailed(true);
@@ -224,7 +274,7 @@ export default function MapCanvas({
           tileErrorsInCycle = 0;
           setTilesReady(false);
           setLoadFailed(false);
-          const provider = TILE_PROVIDERS[providerIndex]!;
+          const provider = tileProviders[providerIndex]!;
           if (provider.coordinateSystem !== activeCoordinateSystem) {
             activeCoordinateSystem = provider.coordinateSystem;
             setCoordinateSystem(activeCoordinateSystem);
@@ -247,7 +297,10 @@ export default function MapCanvas({
             updateWhenIdle: true,
             updateWhenZooming: false,
             crossOrigin: true,
-            attribution: `${provider.attribution} | 历史观察与学习资料见站内来源说明`,
+            attribution:
+              language === "en"
+                ? `${provider.attribution} | Evidence sources are documented on this site`
+                : `${provider.attribution} | 历史观察与学习资料见站内来源说明`,
           });
           tiles = activeTiles;
           activeTiles.on("loading", () => {
@@ -283,8 +336,27 @@ export default function MapCanvas({
             fillOpacity: 0.06,
           },
         )
-          .bindTooltip("深圳湾水域｜公开海湾边界")
+          .bindTooltip(
+            language === "en"
+              ? "Shenzhen Bay waters | published bay boundary"
+              : "深圳湾水域｜公开海湾边界",
+          )
           .addTo(map);
+
+        if (language === "en") {
+          ENGLISH_REFERENCE_LABELS.forEach((label) => {
+            L.marker([label.latitude, label.longitude], {
+              interactive: false,
+              keyboard: false,
+              icon: L.divIcon({
+                className: "",
+                html: `<span style="display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;border-radius:9999px;background:rgba(255,255,255,.88);padding:3px 8px;color:#082f3a;font-size:11px;font-weight:700;box-shadow:0 1px 5px rgba(8,47,58,.18)">${label.name}</span>`,
+                iconSize: [0, 0],
+                iconAnchor: [0, 0],
+              }),
+            }).addTo(map!);
+          });
+        }
 
         leafletRef.current = leaflet;
         layerRef.current = L.layerGroup().addTo(map);
@@ -327,7 +399,7 @@ export default function MapCanvas({
       layerRef.current = null;
       leafletRef.current = null;
     };
-  }, []);
+  }, [language]);
 
   // 渲染标记：图层 / 年份 / 选中 / 路线 变化都会重绘
   useEffect(() => {
@@ -342,7 +414,7 @@ export default function MapCanvas({
         const dry = false;
         const selected = selectedId === loc.id || currentRouteId === loc.id;
         const markerSize = selected ? 22 : 14;
-        const labelCode = markerCode(loc);
+        const labelCode = markerCode(loc, language);
         const marker = L.marker(mapLatLng(loc.latitude, loc.longitude, coordinateSystem), {
           icon: L.divIcon({
             className: "eco-marker",
@@ -414,12 +486,16 @@ export default function MapCanvas({
       <div
         ref={elRef}
         className="relative z-10 h-full w-full"
-        aria-label="深圳湾生态互动学习地图"
+        aria-label={
+          language === "en"
+            ? "Shenzhen Bay interactive environmental learning map"
+            : "深圳湾生态互动学习地图"
+        }
         role="application"
       />
       {!tilesReady && !loadFailed && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center bg-paleeco/80 text-sm text-muted-foreground">
-          正在连接实时地图…
+          {language === "en" ? "Connecting to the live English map…" : "正在连接实时地图…"}
         </div>
       )}
       {loadFailed && (
@@ -428,7 +504,7 @@ export default function MapCanvas({
           className="absolute inset-x-4 top-1/2 mx-auto w-fit -translate-y-1/2 rounded-md border border-border bg-card px-4 py-2 text-sm shadow"
           onClick={() => window.location.reload()}
         >
-          地图连接失败，点击重试
+          {language === "en" ? "Map connection failed — click to retry" : "地图连接失败，点击重试"}
         </button>
       )}
     </div>
