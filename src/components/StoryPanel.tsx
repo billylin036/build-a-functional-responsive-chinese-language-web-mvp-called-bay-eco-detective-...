@@ -41,10 +41,10 @@ function QuizBlock({ location }: { location: EcoLocation }) {
   const { completedLocationQuizzes, completedBonusQuestions, recordLocationAnswer } = useAppState();
   const done = completedLocationQuizzes.includes(location.id);
   const mainIndex = SAMPLING_QUEST_IDS.indexOf(location.id);
-  const previousMainId = mainIndex > 0 ? SAMPLING_QUEST_IDS[mainIndex - 1] : undefined;
-  const previousMainLocation = locations.find((item) => item.id === previousMainId);
+  const requiredMainId = SAMPLING_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id));
+  const requiredMainLocation = locations.find((item) => item.id === requiredMainId);
   const mainLocked =
-    !done && Boolean(previousMainId) && !completedLocationQuizzes.includes(previousMainId!);
+    mainIndex >= 0 && !done && Boolean(requiredMainId) && requiredMainId !== location.id;
   const [ready, setReady] = useState(done);
   const [picked, setPicked] = useState<number | null>(done ? quiz.answerIndex : null);
   const mainCompleted = SAMPLING_QUEST_IDS.filter((id) =>
@@ -59,7 +59,7 @@ function QuizBlock({ location }: { location: EcoLocation }) {
     setPicked(done ? quiz.answerIndex : null);
   }, [done, location.id, quiz.answerIndex]);
 
-  if (mainLocked && previousMainId) {
+  if (mainLocked && requiredMainId) {
     return (
       <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-4">
         <div className="flex items-start gap-3">
@@ -67,13 +67,13 @@ function QuizBlock({ location }: { location: EcoLocation }) {
           <div>
             <p className="text-sm font-semibold text-navy">主线尚未到达本站</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              先完成上一站「{previousMainLocation?.name ?? "上一站"}」的挑战题，再回来解锁本站。
+              当前应先完成「{requiredMainLocation?.name ?? "主线下一站"}」的挑战题，再回来解锁本站。
             </p>
             <a
-              href={`/?location=${encodeURIComponent(previousMainId)}`}
+              href={`/?location=${encodeURIComponent(requiredMainId)}`}
               className="mt-3 inline-flex rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white"
             >
-              返回主线上一站
+              前往当前主线任务
             </a>
           </div>
         </div>
@@ -541,10 +541,10 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
     ]!;
   const done = completedLocationQuizzes.includes(location.id);
   const mainIndex = SAMPLING_QUEST_IDS.indexOf(location.id);
-  const previousMainId = mainIndex > 0 ? SAMPLING_QUEST_IDS[mainIndex - 1] : undefined;
-  const previousMainLocation = locations.find((item) => item.id === previousMainId);
+  const requiredMainId = SAMPLING_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id));
+  const requiredMainLocation = locations.find((item) => item.id === requiredMainId);
   const mainLocked =
-    !done && Boolean(previousMainId) && !completedLocationQuizzes.includes(previousMainId!);
+    mainIndex >= 0 && !done && Boolean(requiredMainId) && requiredMainId !== location.id;
   const mainCompleted = SAMPLING_QUEST_IDS.filter((id) =>
     completedLocationQuizzes.includes(id),
   ).length;
@@ -557,7 +557,7 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
     setPicked(done ? question.answer : null);
   }, [done, location.id, question.answer]);
 
-  if (mainLocked && previousMainId) {
+  if (mainLocked && requiredMainId) {
     return (
       <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-4">
         <p className="flex items-center gap-2 text-sm font-semibold text-navy">
@@ -565,15 +565,15 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
           Main quest station locked
         </p>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          Complete the previous station, “
-          {previousMainLocation ? locationName(previousMainLocation, "en") : "previous station"}”,
+          Complete the current required station, “
+          {requiredMainLocation ? locationName(requiredMainLocation, "en") : "next main station"}”,
           before attempting this challenge.
         </p>
         <a
-          href={`/?location=${encodeURIComponent(previousMainId)}`}
+          href={`/?location=${encodeURIComponent(requiredMainId)}`}
           className="mt-3 inline-flex rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white"
         >
-          Return to the previous station
+          Go to the current main-quest station
         </a>
       </section>
     );
