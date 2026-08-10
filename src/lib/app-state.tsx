@@ -42,6 +42,7 @@ export interface ActivityRecord {
 }
 
 interface AppState {
+  quizSeed: string;
   completedLocationQuizzes: string[];
   quizAttempts: Record<string, number>;
   completedChapters: string[];
@@ -67,6 +68,7 @@ export interface ClassroomLink {
 export type CloudSyncStatus = "local" | "connecting" | "syncing" | "synced" | "error";
 
 const EMPTY: AppState = {
+  quizSeed: "",
   completedLocationQuizzes: [],
   quizAttempts: {},
   completedChapters: [],
@@ -85,7 +87,13 @@ const KEY = "bay-eco-school-learning-v3";
 const CLASSROOM_LINK_KEY = "bay-eco-classroom-link-v1";
 
 function normalizeProgress(progress: Partial<AppState> | Record<string, unknown>): AppState {
-  return { ...EMPTY, ...(progress as Partial<AppState>) };
+  const normalized = { ...EMPTY, ...(progress as Partial<AppState>) };
+  return { ...normalized, quizSeed: normalized.quizSeed || createQuizSeed() };
+}
+
+function createQuizSeed() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `learner-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 interface Ctx extends AppState {
@@ -127,14 +135,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [cloudLastSyncedAt, setCloudLastSyncedAt] = useState<string | null>(null);
 
   useEffect(() => {
+    let restoredState = EMPTY;
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setState(normalizeProgress(JSON.parse(raw) as Partial<AppState>));
+      if (raw) restoredState = normalizeProgress(JSON.parse(raw) as Partial<AppState>);
       const classroomRaw = localStorage.getItem(CLASSROOM_LINK_KEY);
       if (classroomRaw) setClassroomLink(JSON.parse(classroomRaw) as ClassroomLink);
     } catch {
       /* 忽略损坏的本地学习记录 */
     }
+    setState(
+      restoredState.quizSeed ? restoredState : { ...restoredState, quizSeed: createQuizSeed() },
+    );
     setHydrated(true);
   }, []);
 
@@ -472,7 +484,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((current) => ({ ...current, learnerProfile: profile }));
   }, []);
 
-  const resetLearning = useCallback(() => setState(EMPTY), []);
+  const resetLearning = useCallback(
+    () => setState((current) => ({ ...EMPTY, quizSeed: current.quizSeed || createQuizSeed() })),
+    [],
+  );
   const learningComplete = state.completedChapters.length >= TOTAL_CHAPTERS;
   const completedLocationQuizzes = useMemo(
     () => state.completedLocationQuizzes.filter((id) => VALID_LOCATION_IDS.has(id)),

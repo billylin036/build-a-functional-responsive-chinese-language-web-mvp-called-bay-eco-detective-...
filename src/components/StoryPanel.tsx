@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAppState } from "@/lib/app-state";
 import { useLanguage } from "@/lib/language";
 import { locationCategory, locationName } from "@/data/i18n";
+import { getPersonalizedStationQuiz } from "@/data/station-quiz-bank";
 import outfallImg from "@/assets/outfall.jpg";
 import waterSampleImg from "@/assets/2023-citizen-observation-rapid-test-table.png";
 
@@ -36,9 +37,18 @@ const IMAGES: Record<string, string> = {
 };
 
 function QuizBlock({ location }: { location: EcoLocation }) {
-  const quiz = getLocationQuiz(location);
   const module = getLearningModule(location.id);
-  const { completedLocationQuizzes, completedBonusQuestions, recordLocationAnswer } = useAppState();
+  const {
+    quizSeed,
+    classroomLink,
+    completedLocationQuizzes,
+    completedBonusQuestions,
+    recordLocationAnswer,
+  } = useAppState();
+  const quiz =
+    getPersonalizedStationQuiz(location, "zh", classroomLink?.profileId ?? quizSeed) ??
+    getLocationQuiz(location);
+  const quizVariantKey = "variantKey" in quiz ? quiz.variantKey : location.id;
   const done = completedLocationQuizzes.includes(location.id);
   const mainIndex = SAMPLING_QUEST_IDS.indexOf(location.id);
   const requiredMainId = SAMPLING_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id));
@@ -57,7 +67,7 @@ function QuizBlock({ location }: { location: EcoLocation }) {
   useEffect(() => {
     setReady(done);
     setPicked(done ? quiz.answerIndex : null);
-  }, [done, location.id, quiz.answerIndex]);
+  }, [done, location.id, quiz.answerIndex, quizVariantKey]);
 
   if (mainLocked && requiredMainId) {
     return (
@@ -113,6 +123,7 @@ function QuizBlock({ location }: { location: EcoLocation }) {
           <p className="text-sm font-semibold text-navy">地点挑战题</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             {quiz.skill} · {quiz.difficulty}
+            {"versionLabel" in quiz ? ` · ${quiz.versionLabel}` : ""}
           </p>
         </div>
         <Badge variant={done ? "default" : "secondary"}>{done ? "已完成" : "答对后完成"}</Badge>
@@ -533,12 +544,35 @@ const EN_STATION_QUESTIONS = [
 ] as const;
 
 function EnglishStationQuiz({ location }: { location: EcoLocation }) {
-  const { completedLocationQuizzes, completedBonusQuestions, recordLocationAnswer } = useAppState();
-  const question =
+  const {
+    quizSeed,
+    classroomLink,
+    completedLocationQuizzes,
+    completedBonusQuestions,
+    recordLocationAnswer,
+  } = useAppState();
+  const fallbackQuestion =
     EN_STATION_QUESTIONS[
       (location.waterSample?.sampleNumber ?? Number(location.id.slice(-2))) %
         EN_STATION_QUESTIONS.length
     ]!;
+  const personalizedQuestion = getPersonalizedStationQuiz(
+    location,
+    "en",
+    classroomLink?.profileId ?? quizSeed,
+    locationName(location, "en"),
+  );
+  const question = personalizedQuestion ?? {
+    skill: "Evidence reasoning",
+    difficulty: "Advanced",
+    question: fallbackQuestion.question,
+    options: [...fallbackQuestion.options],
+    answerIndex: fallbackQuestion.answer,
+    hint: "Choose the conclusion or method that stays within the available evidence.",
+    explanation: fallbackQuestion.explanation,
+    versionLabel: "",
+    variantKey: `fallback-${location.id}`,
+  };
   const done = completedLocationQuizzes.includes(location.id);
   const mainIndex = SAMPLING_QUEST_IDS.indexOf(location.id);
   const requiredMainId = SAMPLING_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id));
@@ -551,11 +585,11 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
   const unlockedSurprise = location.type === "sampling" ? milestoneAt(mainCompleted) : undefined;
   const surpriseWaiting =
     unlockedSurprise && !completedBonusQuestions.includes(unlockedSurprise.id);
-  const [picked, setPicked] = useState<number | null>(done ? question.answer : null);
+  const [picked, setPicked] = useState<number | null>(done ? question.answerIndex : null);
 
   useEffect(() => {
-    setPicked(done ? question.answer : null);
-  }, [done, location.id, question.answer]);
+    setPicked(done ? question.answerIndex : null);
+  }, [done, location.id, question.answerIndex, question.variantKey]);
 
   if (mainLocked && requiredMainId) {
     return (
@@ -582,7 +616,13 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
   return (
     <section className="rounded-lg border border-teal/25 bg-paleeco p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-navy">Station challenge</p>
+        <div>
+          <p className="text-sm font-semibold text-navy">Station challenge</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {question.skill} · {question.difficulty}
+            {question.versionLabel ? ` · ${question.versionLabel}` : ""}
+          </p>
+        </div>
         <Badge variant={done ? "default" : "secondary"}>
           {done ? "Completed" : "Unlock the next stop"}
         </Badge>
@@ -596,11 +636,11 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
             disabled={done}
             onClick={() => {
               setPicked(index);
-              recordLocationAnswer(location.id, location.name, index === question.answer);
+              recordLocationAnswer(location.id, location.name, index === question.answerIndex);
             }}
             className={`block w-full rounded-md border px-3 py-2 text-left text-xs ${
               picked === index
-                ? index === question.answer
+                ? index === question.answerIndex
                   ? "border-mangrove bg-white"
                   : "border-coral bg-white"
                 : "border-border bg-white hover:border-teal"
@@ -612,11 +652,11 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
       </div>
       {picked !== null && (
         <p
-          className={`mt-3 text-xs leading-5 ${picked === question.answer ? "text-mangrove" : "text-coral"}`}
+          className={`mt-3 text-xs leading-5 ${picked === question.answerIndex ? "text-mangrove" : "text-coral"}`}
         >
-          {picked === question.answer
+          {picked === question.answerIndex
             ? `Correct. ${question.explanation}`
-            : "Try again: choose the conclusion or method that stays within the available evidence."}
+            : `Try again: ${question.hint}`}
         </p>
       )}
       {done && surpriseWaiting && (

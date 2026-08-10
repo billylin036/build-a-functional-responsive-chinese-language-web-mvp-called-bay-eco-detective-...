@@ -146,7 +146,7 @@ interface MarkerVisualState {
 }
 
 function markerSize(loc: EcoLocation, opts: Pick<MarkerVisualState, "selected" | "current">) {
-  if (loc.type === "sampling") return opts.selected ? 24 : opts.current ? 22 : 18;
+  if (loc.type === "sampling") return opts.selected ? 28 : opts.current ? 26 : 22;
   return opts.selected ? 22 : opts.current ? 20 : 14;
 }
 
@@ -155,15 +155,15 @@ function markerHtml(loc: EcoLocation, opts: MarkerVisualState) {
   const size = markerSize(loc, opts);
 
   if (loc.type === "sampling") {
-    const coreSize = opts.selected ? 10 : opts.current ? 8 : 6;
+    const number = loc.waterSample?.sampleNumber ?? Number(loc.id.split("-")[1]);
     const ring = opts.selected
-      ? "box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(79,70,229,.72),0 5px 14px rgba(8,47,58,.32);"
+      ? "box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(79,70,229,.78),0 6px 16px rgba(8,47,58,.34);"
       : opts.current
-        ? "box-shadow:0 0 0 3px #fff,0 0 0 6px #FF6B4A,0 4px 12px rgba(8,47,58,.3);"
+        ? "box-shadow:0 0 0 3px #fff,0 0 0 6px #FF6B4A,0 5px 14px rgba(8,47,58,.32);"
         : opts.onRoute
-          ? "box-shadow:0 0 0 3px #fff,0 0 0 5px #67A85B,0 3px 10px rgba(8,47,58,.28);"
-          : "box-shadow:0 0 0 2px rgba(255,255,255,.96),0 3px 9px rgba(8,47,58,.42);";
-    return `<span style="display:grid;place-items:center;box-sizing:border-box;width:${size}px;height:${size}px;border-radius:50%;background:#fff;border:3px solid ${color};${ring}"><span style="display:block;box-sizing:border-box;width:${coreSize}px;height:${coreSize}px;border-radius:50%;background:#312E81"></span></span>`;
+          ? "box-shadow:0 0 0 3px #fff,0 0 0 5px #67A85B,0 4px 12px rgba(8,47,58,.3);"
+          : "box-shadow:0 0 0 2px rgba(255,255,255,.98),0 4px 11px rgba(8,47,58,.4);";
+    return `<span style="display:grid;place-items:center;box-sizing:border-box;width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(145deg,#fff 35%,#E9E7FF 100%);border:2.5px solid ${color};color:#312E81;font-family:ui-sans-serif,system-ui,sans-serif;font-size:${size >= 26 ? 11 : 9}px;font-weight:850;line-height:1;letter-spacing:-.04em;${ring}">${number}</span>`;
   }
 
   const ring = opts.selected
