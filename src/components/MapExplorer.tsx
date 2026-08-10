@@ -360,7 +360,7 @@ export function MapExplorer() {
           <aside
             className={`absolute z-[700] overflow-hidden border border-border bg-card shadow-2xl ${
               isCompactMap
-                ? "inset-x-0 bottom-0 h-[min(62%,36rem)] rounded-t-xl"
+                ? "inset-0 rounded-none border-0"
                 : "bottom-2 right-2 top-2 w-[25rem] rounded-xl"
             }`}
             aria-label={`${locationName(selected, language)} ${tr("地点数据", "location evidence")}`}

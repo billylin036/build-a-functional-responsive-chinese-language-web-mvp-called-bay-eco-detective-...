@@ -898,164 +898,169 @@ function EnglishStoryPanel({
   const nextOutfallId = outfallIndex >= 0 ? OUTFALL_QUEST_IDS[outfallIndex + 1] : undefined;
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="relative flex h-24 shrink-0 items-center bg-gradient-to-br from-navy via-teal to-[#4F46E5] px-5 text-white">
-        <div>
-          <p className="font-mono text-[11px] tracking-[0.2em] text-white/70">EVIDENCE STATION</p>
-          <p className="mt-1 text-sm font-semibold">
-            {location.type === "sampling" ? "2023 RAPID-TEST RECORD" : "2015 OUTFALL RECORD"}
-          </p>
-        </div>
-        <button
-          onClick={onClose}
-          aria-label="Close location"
-          className="absolute right-2 top-2 rounded-full bg-card/90 p-1.5 text-navy shadow-sm"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-        <div>
-          <Badge variant="secondary">{locationCategory(location, "en")}</Badge>
-          <h2 className="mt-2 text-lg font-semibold text-navy">{locationName(location, "en")}</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
-          </p>
-        </div>
-
-        {location.waterSample ? (
-          <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-navy">2023 rapid field test</p>
-              <Badge variant="outline">Report row {location.waterSample.sampleNumber}</Badge>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Metric label="pH" value={location.waterSample.pH} />
-              <Metric label="Total phosphorus (TP)" value={location.waterSample.totalPhosphorus} />
-              <Metric label="COD" value={location.waterSample.cod} />
-              <Metric
-                label="Ammonia nitrogen (NH₃-N)"
-                value={location.waterSample.ammoniaNitrogen}
-              />
-            </div>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              Values are transcribed from the report table. The published screenshot does not state
-              units, so this site does not invent them. The report did not publish GPS coordinates;
-              the marker is a place-name-matched reference location.
+    <div className="relative h-full">
+      <div className="flex h-full flex-col overflow-y-auto overscroll-contain lg:overflow-hidden">
+        <div className="relative flex h-24 shrink-0 items-center bg-gradient-to-br from-navy via-teal to-[#4F46E5] px-5 text-white">
+          <div>
+            <p className="font-mono text-[11px] tracking-[0.2em] text-white/70">EVIDENCE STATION</p>
+            <p className="mt-1 text-sm font-semibold">
+              {location.type === "sampling" ? "2023 RAPID-TEST RECORD" : "2015 OUTFALL RECORD"}
             </p>
-          </section>
-        ) : (
-          <section className="rounded-lg border border-teal/25 bg-paleeco p-3">
-            <p className="text-sm font-semibold text-navy">2015 historical outfall survey</p>
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              This marker uses a coordinate and field description published by Green Source. It
-              describes the survey period only and must not be treated as the current condition.
+          </div>
+        </div>
+        <div className="min-h-0 flex-none space-y-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:flex-1 lg:overflow-y-auto">
+          <div>
+            <Badge variant="secondary">{locationCategory(location, "en")}</Badge>
+            <h2 className="mt-2 text-lg font-semibold text-navy">{locationName(location, "en")}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
             </p>
-            <a
-              href={OUTFALL_SOURCE.url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal underline"
-            >
-              Open the official source <ExternalLink className="size-3" />
-            </a>
-          </section>
-        )}
+          </div>
 
-        {outfallIndex >= 0 && (
-          <section className="rounded-lg border border-coral/30 bg-gradient-to-br from-coral/10 to-card p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-[11px] font-semibold text-coral">
-                HISTORICAL OUTFALL QUEST · {outfallIndex + 1}/11
+          {location.waterSample ? (
+            <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-navy">2023 rapid field test</p>
+                <Badge variant="outline">Report row {location.waterSample.sampleNumber}</Badge>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Metric label="pH" value={location.waterSample.pH} />
+                <Metric
+                  label="Total phosphorus (TP)"
+                  value={location.waterSample.totalPhosphorus}
+                />
+                <Metric label="COD" value={location.waterSample.cod} />
+                <Metric
+                  label="Ammonia nitrogen (NH₃-N)"
+                  value={location.waterSample.ammoniaNitrogen}
+                />
+              </div>
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                Values are transcribed from the report table. The published screenshot does not
+                state units, so this site does not invent them. The report did not publish GPS
+                coordinates; the marker is a place-name-matched reference location.
               </p>
-              <Badge variant="outline">{completedOutfalls}/11 complete</Badge>
-            </div>
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              Use the 2015 record to practise location, revisit design, comparison and evidence
-              boundaries—not to claim the outfall's current condition.
-            </p>
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                disabled={!previousOutfallId}
-                onClick={() => previousOutfallId && onNavigate(previousOutfallId)}
-                className="inline-flex items-center gap-1 rounded-md border bg-white px-2.5 py-1.5 text-xs disabled:opacity-40"
+            </section>
+          ) : (
+            <section className="rounded-lg border border-teal/25 bg-paleeco p-3">
+              <p className="text-sm font-semibold text-navy">2015 historical outfall survey</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                This marker uses a coordinate and field description published by Green Source. It
+                describes the survey period only and must not be treated as the current condition.
+              </p>
+              <a
+                href={OUTFALL_SOURCE.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal underline"
               >
-                <ArrowLeft className="size-3.5" /> Previous outfall
-              </button>
-              <button
-                type="button"
-                disabled={!nextOutfallId}
-                onClick={() => nextOutfallId && onNavigate(nextOutfallId)}
-                className="inline-flex items-center gap-1 rounded-md border bg-white px-2.5 py-1.5 text-xs disabled:opacity-40"
-              >
-                Next outfall <ArrowRight className="size-3.5" />
-              </button>
-            </div>
-          </section>
-        )}
+                Open the official source <ExternalLink className="size-3" />
+              </a>
+            </section>
+          )}
 
-        {beat && act && (
-          <section className="rounded-lg border border-[#4F46E5]/30 bg-gradient-to-br from-[#4F46E5]/10 to-card p-4">
-            <p className="font-mono text-[11px] font-medium text-[#4F46E5]">
-              MAIN STORY · STATION {beat.index} / {beat.total}
-            </p>
-            <h3 className="mt-2 text-sm font-semibold text-navy">{act.title}</h3>
-            <p className="mt-2 text-xs leading-5 text-foreground">
-              This station continues a 38-stop evidence journey. Carry the method learned at the
-              previous stop into a new hydrological setting; this is a learning sequence, not a
-              claim that all stations are physically connected.
-            </p>
-            <p className="mt-2 rounded-md bg-white/80 p-3 text-xs leading-5 text-muted-foreground">
-              <span className="font-medium text-teal">Learning goal:</span> {act.goal}
-            </p>
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                disabled={!beat.previousId}
-                onClick={() => beat.previousId && onNavigate(beat.previousId)}
-                className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-3 py-2 text-xs disabled:opacity-40"
-              >
-                <ArrowLeft className="size-3.5" />
-                Previous
-              </button>
-              {next ? (
+          {outfallIndex >= 0 && (
+            <section className="rounded-lg border border-coral/30 bg-gradient-to-br from-coral/10 to-card p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-mono text-[11px] font-semibold text-coral">
+                  HISTORICAL OUTFALL QUEST · {outfallIndex + 1}/11
+                </p>
+                <Badge variant="outline">{completedOutfalls}/11 complete</Badge>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                Use the 2015 record to practise location, revisit design, comparison and evidence
+                boundaries—not to claim the outfall's current condition.
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  disabled={!completed}
-                  onClick={() => completed && onNavigate(next)}
-                  className="inline-flex items-center gap-1 rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white disabled:bg-muted disabled:text-muted-foreground"
+                  disabled={!previousOutfallId}
+                  onClick={() => previousOutfallId && onNavigate(previousOutfallId)}
+                  className="inline-flex items-center gap-1 rounded-md border bg-white px-2.5 py-1.5 text-xs disabled:opacity-40"
                 >
-                  {completed ? "Next station" : "Answer to unlock"}
-                  <ArrowRight className="size-3.5" />
+                  <ArrowLeft className="size-3.5" /> Previous outfall
                 </button>
-              ) : (
-                <Link
-                  to="/learn"
-                  className="rounded-md bg-mangrove px-3 py-2 text-xs font-medium text-white"
+                <button
+                  type="button"
+                  disabled={!nextOutfallId}
+                  onClick={() => nextOutfallId && onNavigate(nextOutfallId)}
+                  className="inline-flex items-center gap-1 rounded-md border bg-white px-2.5 py-1.5 text-xs disabled:opacity-40"
                 >
-                  Finish the quest
-                </Link>
-              )}
-            </div>
-          </section>
-        )}
+                  Next outfall <ArrowRight className="size-3.5" />
+                </button>
+              </div>
+            </section>
+          )}
 
-        <EnglishStationQuiz location={location} />
-        <section className="rounded-lg border border-dashed border-teal/35 bg-card p-3">
-          <p className="text-xs font-semibold text-navy">Need to submit a field observation?</p>
-          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-            Complete the observation away from the computer, then use the separate Field Log page.
-            Joined-class records sync for teacher review.
-          </p>
-          <Link
-            className="mt-2 inline-flex text-xs font-medium text-teal underline"
-            to="/observations"
-          >
-            Open Field Log
-          </Link>
-        </section>
+          {beat && act && (
+            <section className="rounded-lg border border-[#4F46E5]/30 bg-gradient-to-br from-[#4F46E5]/10 to-card p-4">
+              <p className="font-mono text-[11px] font-medium text-[#4F46E5]">
+                MAIN STORY · STATION {beat.index} / {beat.total}
+              </p>
+              <h3 className="mt-2 text-sm font-semibold text-navy">{act.title}</h3>
+              <p className="mt-2 text-xs leading-5 text-foreground">
+                This station continues a 38-stop evidence journey. Carry the method learned at the
+                previous stop into a new hydrological setting; this is a learning sequence, not a
+                claim that all stations are physically connected.
+              </p>
+              <p className="mt-2 rounded-md bg-white/80 p-3 text-xs leading-5 text-muted-foreground">
+                <span className="font-medium text-teal">Learning goal:</span> {act.goal}
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  disabled={!beat.previousId}
+                  onClick={() => beat.previousId && onNavigate(beat.previousId)}
+                  className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-3 py-2 text-xs disabled:opacity-40"
+                >
+                  <ArrowLeft className="size-3.5" />
+                  Previous
+                </button>
+                {next ? (
+                  <button
+                    type="button"
+                    disabled={!completed}
+                    onClick={() => completed && onNavigate(next)}
+                    className="inline-flex items-center gap-1 rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white disabled:bg-muted disabled:text-muted-foreground"
+                  >
+                    {completed ? "Next station" : "Answer to unlock"}
+                    <ArrowRight className="size-3.5" />
+                  </button>
+                ) : (
+                  <Link
+                    to="/learn"
+                    className="rounded-md bg-mangrove px-3 py-2 text-xs font-medium text-white"
+                  >
+                    Finish the quest
+                  </Link>
+                )}
+              </div>
+            </section>
+          )}
+
+          <EnglishStationQuiz location={location} />
+          <section className="rounded-lg border border-dashed border-teal/35 bg-card p-3">
+            <p className="text-xs font-semibold text-navy">Need to submit a field observation?</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+              Complete the observation away from the computer, then use the separate Field Log page.
+              Joined-class records sync for teacher review.
+            </p>
+            <Link
+              className="mt-2 inline-flex text-xs font-medium text-teal underline"
+              to="/observations"
+            >
+              Open Field Log
+            </Link>
+          </section>
+        </div>
       </div>
+      <button
+        onClick={onClose}
+        aria-label="Close location"
+        className="absolute right-2 top-2 z-20 rounded-full bg-card/90 p-1.5 text-navy shadow-sm"
+      >
+        <X className="size-4" />
+      </button>
     </div>
   );
 }
@@ -1121,82 +1126,84 @@ export function StoryPanel({
     (item) => item.label === "2015 年现场记录",
   )?.value;
   return (
-    <div className="flex h-full flex-col">
-      <div className="relative shrink-0">
-        <img
-          src={IMAGES[location.image] ?? outfallImg}
-          alt={`${location.name}现场示意图`}
-          className="h-36 w-full object-cover"
-          loading="lazy"
-        />
-        <button
-          onClick={onClose}
-          aria-label="关闭地点故事"
-          className="absolute right-2 top-2 rounded-full bg-card/90 p-1.5 text-navy shadow-sm"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{location.category}</Badge>
-            {location.type === "sampling" && <Badge variant="outline">2023 · 报告实测表</Badge>}
-          </div>
-          <h2 className="mt-2 text-lg font-semibold text-navy">{location.name}</h2>
-          <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="size-3" />
-            {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-          </p>
+    <div className="relative h-full">
+      <div className="flex h-full flex-col overflow-y-auto overscroll-contain lg:overflow-hidden">
+        <div className="relative shrink-0">
+          <img
+            src={IMAGES[location.image] ?? outfallImg}
+            alt={`${location.name}现场示意图`}
+            className="h-32 w-full object-cover sm:h-36"
+            loading="lazy"
+          />
         </div>
 
-        {location.type === "outfall" && (
-          <div className="grid grid-cols-2 gap-2">
-            <Metric label="公开调查编号" value={surveyCode ?? "待确认"} />
-            <Metric label="公开 GPS 坐标" value={publicCoordinate ?? "待确认"} />
+        <div className="min-h-0 flex-none space-y-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:flex-1 lg:overflow-y-auto">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">{location.category}</Badge>
+              {location.type === "sampling" && <Badge variant="outline">2023 · 报告实测表</Badge>}
+            </div>
+            <h2 className="mt-2 text-lg font-semibold text-navy">{location.name}</h2>
+            <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="size-3" />
+              {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+            </p>
           </div>
-        )}
 
-        {location.type === "outfall" && <OutfallDecadeComparison />}
+          {location.type === "outfall" && (
+            <div className="grid grid-cols-2 gap-2">
+              <Metric label="公开调查编号" value={surveyCode ?? "待确认"} />
+              <Metric label="公开 GPS 坐标" value={publicCoordinate ?? "待确认"} />
+            </div>
+          )}
 
-        {location.type === "outfall" && <OutfallSourceCard />}
+          {location.type === "outfall" && <OutfallDecadeComparison />}
 
-        {location.type === "outfall" && (
-          <OutfallStorylineCard location={location} onNavigate={onNavigate} />
-        )}
+          {location.type === "outfall" && <OutfallSourceCard />}
 
-        {location.type === "sampling" && <WaterSampleCard location={location} />}
+          {location.type === "outfall" && (
+            <OutfallStorylineCard location={location} onNavigate={onNavigate} />
+          )}
 
-        {location.type === "sampling" && (
-          <SamplingStorylineCard location={location} onNavigate={onNavigate} />
-        )}
+          {location.type === "sampling" && <WaterSampleCard location={location} />}
 
-        <StudentReadCard
-          location={location}
-          {...(historicalObservation ? { historicalObservation } : {})}
-        />
+          {location.type === "sampling" && (
+            <SamplingStorylineCard location={location} onNavigate={onNavigate} />
+          )}
 
-        <QuizBlock location={location} />
-        <section className="rounded-lg border border-dashed border-teal/35 bg-card p-3">
-          <p className="text-xs font-semibold text-navy">需要提交现场观察？</p>
-          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-            地图页只负责读资料与答题。观察完成后到独立记录页填写，加入班级后会自动同步给老师。
+          <StudentReadCard
+            location={location}
+            {...(historicalObservation ? { historicalObservation } : {})}
+          />
+
+          <QuizBlock location={location} />
+          <section className="rounded-lg border border-dashed border-teal/35 bg-card p-3">
+            <p className="text-xs font-semibold text-navy">需要提交现场观察？</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+              地图页只负责读资料与答题。观察完成后到独立记录页填写，加入班级后会自动同步给老师。
+            </p>
+            <Link
+              className="mt-2 inline-flex text-xs font-medium text-teal underline"
+              to="/observations"
+            >
+              打开观察记录页
+            </Link>
+          </section>
+
+          <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
+            {location.type === "outfall"
+              ? "来源说明：坐标和现场描述来自绿源 2015 年公开调查；历史记录不代表当前状态。"
+              : "来源说明：四项数据来自绿源 2023 年报告；报告未公开采样 GPS，地图位置是按真实地名匹配的参考位置。"}
           </p>
-          <Link
-            className="mt-2 inline-flex text-xs font-medium text-teal underline"
-            to="/observations"
-          >
-            打开观察记录页
-          </Link>
-        </section>
-
-        <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
-          {location.type === "outfall"
-            ? "来源说明：坐标和现场描述来自绿源 2015 年公开调查；历史记录不代表当前状态。"
-            : "来源说明：四项数据来自绿源 2023 年报告；报告未公开采样 GPS，地图位置是按真实地名匹配的参考位置。"}
-        </p>
+        </div>
       </div>
+      <button
+        onClick={onClose}
+        aria-label="关闭地点故事"
+        className="absolute right-2 top-2 z-20 rounded-full bg-card/90 p-1.5 text-navy shadow-sm"
+      >
+        <X className="size-4" />
+      </button>
     </div>
   );
 }
