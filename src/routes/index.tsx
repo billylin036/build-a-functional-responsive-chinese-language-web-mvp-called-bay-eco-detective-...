@@ -4,13 +4,13 @@ import { MapExplorer } from "@/components/MapExplorer";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "湾区生态侦探 | 深圳湾互动科普地图" },
+      { title: "湾区生态侦探 v1.0 公测版 | 深圳湾互动科普地图" },
       {
         name: "description",
         content:
           "面向学校与学生的深圳湾互动学习地图：探索具有公开坐标和历史水体观察的排口点位，逐点学习并完成测验。",
       },
-      { property: "og:title", content: "湾区生态侦探 | 深圳湾互动科普地图" },
+      { property: "og:title", content: "湾区生态侦探 v1.0 公测版 | 深圳湾互动科普地图" },
       {
         property: "og:description",
         content:

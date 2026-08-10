@@ -39,7 +39,7 @@ import { useLanguage } from "@/lib/language";
 export const Route = createFileRoute("/learn")({
   head: () => ({
     meta: [
-      { title: "学习闯关 | 湾区生态侦探" },
+      { title: "学习闯关 | 湾区生态侦探 v1.0 公测版" },
       {
         name: "description",
         content:

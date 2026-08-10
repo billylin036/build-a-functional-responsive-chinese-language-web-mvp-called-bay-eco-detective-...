@@ -32,7 +32,7 @@ const ENGLISH_GREEN_SOURCE_TITLES: Record<string, string> = {
 export const Route = createFileRoute("/resources")({
   head: () => ({
     meta: [
-      { title: "学习资料库 | 湾区生态侦探" },
+      { title: "学习资料库 | 湾区生态侦探 v1.0 公测版" },
       {
         name: "description",
         content: "查看深圳湾生态学习题目使用的政府标准、专业教育指南与公开数据来源。",

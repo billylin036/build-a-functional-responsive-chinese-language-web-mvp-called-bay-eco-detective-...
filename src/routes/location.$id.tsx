@@ -12,7 +12,9 @@ export const Route = createFileRoute("/location/$id")({
     return { name: loc.name, summary: loc.summary };
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.name} | 湾区生态侦探` : "地点未找到 | 湾区生态侦探";
+    const title = loaderData
+      ? `${loaderData.name} | 湾区生态侦探 v1.0 公测版`
+      : "地点未找到 | 湾区生态侦探 v1.0 公测版";
     const desc = loaderData?.summary ?? "该地点不存在或已被移除。";
     return {
       meta: [

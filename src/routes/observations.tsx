@@ -12,7 +12,7 @@ import { useLanguage } from "@/lib/language";
 export const Route = createFileRoute("/observations")({
   head: () => ({
     meta: [
-      { title: "观察记录 | 湾区生态侦探" },
+      { title: "观察记录 | 湾区生态侦探 v1.0 公测版" },
       {
         name: "description",
         content: "学生完成安全观察后填写结构化记录，并同步到班级教师面板。",

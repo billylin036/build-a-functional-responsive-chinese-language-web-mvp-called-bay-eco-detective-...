@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "湾区生态侦探 · 深圳湾互动科普地图" },
+      { title: "湾区生态侦探 v1.0 公测版 · 深圳湾互动科普地图" },
       {
         name: "description",
         content:
           "面向学校与学生的深圳湾生态学习地图：可靠知识卡、差异化挑战题、互动观察、综合评估与学习证书。",
       },
-      { property: "og:title", content: "湾区生态侦探 · 深圳湾互动科普地图" },
+      { property: "og:title", content: "湾区生态侦探 v1.0 公测版 · 深圳湾互动科普地图" },
       {
         property: "og:description",
         content: "读取证据、提出解释、完成挑战、规范观察。",
@@ -138,25 +138,25 @@ function AppChrome() {
 
   useEffect(() => {
     const englishTitles: Record<string, string> = {
-      "/": "Bay Eco Detective | Interactive Environmental Map",
-      "/learn": "Learning Quest | Bay Eco Detective",
-      "/observations": "Field Log | Bay Eco Detective",
-      "/resources": "Sources | Bay Eco Detective",
-      "/me": "My Progress | Bay Eco Detective",
-      "/about": "About | Bay Eco Detective",
+      "/": "Bay Eco Detective v1.0 Beta | Interactive Environmental Map",
+      "/learn": "Learning Quest | Bay Eco Detective v1.0 Beta",
+      "/observations": "Field Log | Bay Eco Detective v1.0 Beta",
+      "/resources": "Sources | Bay Eco Detective v1.0 Beta",
+      "/me": "My Progress | Bay Eco Detective v1.0 Beta",
+      "/about": "About | Bay Eco Detective v1.0 Beta",
     };
     const chineseTitles: Record<string, string> = {
-      "/": "湾区生态侦探 | 深圳湾互动科普地图",
-      "/learn": "学习闯关 | 湾区生态侦探",
-      "/observations": "观察记录 | 湾区生态侦探",
-      "/resources": "学习资料库 | 湾区生态侦探",
-      "/me": "学习成果 | 湾区生态侦探",
-      "/about": "关于项目与数据说明 | 湾区生态侦探",
+      "/": "湾区生态侦探 v1.0 公测版 | 深圳湾互动科普地图",
+      "/learn": "学习闯关 | 湾区生态侦探 v1.0 公测版",
+      "/observations": "观察记录 | 湾区生态侦探 v1.0 公测版",
+      "/resources": "学习资料库 | 湾区生态侦探 v1.0 公测版",
+      "/me": "学习成果 | 湾区生态侦探 v1.0 公测版",
+      "/about": "关于项目与数据说明 | 湾区生态侦探 v1.0 公测版",
     };
     document.title =
       language === "en"
-        ? (englishTitles[pathname] ?? "Location Evidence | Bay Eco Detective")
-        : (chineseTitles[pathname] ?? "地点证据 | 湾区生态侦探");
+        ? (englishTitles[pathname] ?? "Location Evidence | Bay Eco Detective v1.0 Beta")
+        : (chineseTitles[pathname] ?? "地点证据 | 湾区生态侦探 v1.0 公测版");
   }, [language, pathname]);
 
   return (
@@ -165,6 +165,9 @@ function AppChrome() {
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2.5 sm:px-4">
           <Link to="/" className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
             {tr("湾区生态侦探", "Bay Eco Detective")}
+            <span className="ml-1.5 inline-flex rounded-full border border-coral/60 bg-coral/15 px-1.5 py-0.5 align-middle text-[10px] font-medium leading-none text-coral">
+              {tr("v1.0 公测版", "v1.0 Beta")}
+            </span>
             <span className="ml-2 hidden text-xs font-normal opacity-80 lg:inline">
               {tr("深圳湾互动科普地图", "Interactive environmental learning map")}
             </span>

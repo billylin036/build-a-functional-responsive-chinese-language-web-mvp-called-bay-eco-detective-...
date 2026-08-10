@@ -71,7 +71,7 @@ const ENGLISH_BADGES: Record<string, { title: string; description: string }> = {
 export const Route = createFileRoute("/me")({
   head: () => ({
     meta: [
-      { title: "学习成果 | 湾区生态侦探" },
+      { title: "学习成果 | 湾区生态侦探 v1.0 公测版" },
       {
         name: "description",
         content: "查看深圳湾生态学习进度、测验徽章与学习完成证书。",
@@ -205,7 +205,7 @@ function LearningResultsPage() {
             {learnerProfile.className ? ` · ${learnerProfile.className}` : ""}
           </p>
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-7">
-            已完成“湾区生态侦探”全部 {TOTAL_CHAPTERS} 个真实资料学习章节与连续测验，
+            已完成“湾区生态侦探 v1.0 公测版”全部 {TOTAL_CHAPTERS} 个真实资料学习章节与连续测验，
             并通过深圳湾生态综合测验，成绩为 {finalAssessment.score}/{finalAssessment.total}。
           </p>
           <div className="mx-auto mt-8 grid max-w-xl gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:grid-cols-3">

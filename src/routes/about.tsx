@@ -7,13 +7,13 @@ const githubProfileUrl = "https://github.com/billylin036";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "关于项目与数据说明 | 湾区生态侦探" },
+      { title: "关于项目与数据说明 | 湾区生态侦探 v1.0 公测版" },
       {
         name: "description",
         content:
-          "湾区生态侦探由 Billy Lin 开发，并与深圳市绿源环保志愿者协会开展数据合作，把生态保护资料转化为公众可探索的地图故事。",
+          "湾区生态侦探 v1.0 公测版由 Billy Lin 开发，并与深圳市绿源环保志愿者协会开展数据合作，把生态保护资料转化为公众可探索的地图故事。",
       },
-      { property: "og:title", content: "关于项目与数据说明 | 湾区生态侦探" },
+      { property: "og:title", content: "关于项目与数据说明 | 湾区生态侦探 v1.0 公测版" },
       { property: "og:description", content: "项目背景、数据来源与证据边界说明。" },
     ],
   }),
@@ -27,7 +27,7 @@ function AboutPage() {
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold text-navy">关于项目</h1>
       <p className="mt-3 text-sm leading-7">
-        「湾区生态侦探」由 <strong>Billy Lin</strong> 开发，并与
+        「湾区生态侦探 v1.0 公测版」由 <strong>Billy Lin</strong> 开发，并与
         <strong>深圳市绿源环保志愿者协会</strong>
         开展数据合作。网站把生态保护资料转化为一张面向学校的深圳湾学习地图：学生需要阅读证据、
         解决情境题，并完成可重复的观察记录。
@@ -153,8 +153,8 @@ function EnglishAboutPage() {
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold text-navy">About this project</h1>
       <p className="mt-3 text-sm leading-7">
-        <strong>Bay Eco Detective</strong> was developed by <strong>Billy Lin</strong> in data
-        collaboration with the{" "}
+        <strong>Bay Eco Detective v1.0 Beta</strong> was developed by <strong>Billy Lin</strong> in
+        data collaboration with the{" "}
         <strong>Shenzhen Green Source Environmental Volunteers Association</strong>. It turns
         published environmental material into a school-oriented learning map where students read
         evidence, solve reasoning challenges and design reproducible observations.
