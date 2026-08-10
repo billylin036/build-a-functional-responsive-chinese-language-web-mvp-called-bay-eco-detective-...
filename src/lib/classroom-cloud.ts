@@ -1,9 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const cloudUrl = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
 const cloudKey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string | undefined;
 
-const cloud =
+const buildTimeCloud =
   cloudUrl && cloudKey
     ? createClient(cloudUrl, cloudKey, {
         auth: {
@@ -13,6 +14,8 @@ const cloud =
         },
       })
     : null;
+
+let runtimeCloudPromise: Promise<SupabaseClient | null> | null = null;
 
 export interface CloudProgressRecord {
   profile_id: string;
@@ -30,10 +33,42 @@ export interface RestoredProfile {
   updatedAt: string;
 }
 
-function requireCloud() {
-  if (!cloud) {
-    throw new Error("CLOUD_NOT_CONFIGURED");
+function createCloudClient(url: string, publishableKey: string) {
+  return createClient(url, publishableKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+async function loadRuntimeCloud() {
+  if (buildTimeCloud) return buildTimeCloud;
+  if (typeof window === "undefined") return null;
+  if (!runtimeCloudPromise) {
+    runtimeCloudPromise = fetch("/api/classroom/cloud-config", {
+      headers: { accept: "application/json" },
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const config = (await response.json()) as {
+          url?: unknown;
+          publishableKey?: unknown;
+        };
+        if (typeof config.url !== "string" || typeof config.publishableKey !== "string") {
+          return null;
+        }
+        return createCloudClient(config.url, config.publishableKey);
+      })
+      .catch(() => null);
   }
+  return runtimeCloudPromise;
+}
+
+async function requireCloud() {
+  const cloud = await loadRuntimeCloud();
+  if (!cloud) throw new Error("CLOUD_NOT_CONFIGURED");
   return cloud;
 }
 
@@ -74,13 +109,14 @@ function fail(error: { message?: string } | null) {
 }
 
 export function isCloudConfigured() {
-  return Boolean(cloud);
+  return Boolean(buildTimeCloud) || typeof window !== "undefined";
 }
 
 export async function createLearningClass(name: string) {
   const teacherCode = generateRecoveryCode("TEA");
   const teacherHash = await hashSecret(teacherCode);
-  const { data, error } = await requireCloud().rpc("create_learning_class", {
+  const cloud = await requireCloud();
+  const { data, error } = await cloud.rpc("create_learning_class", {
     p_name: name.trim(),
     p_teacher_hash: teacherHash,
   });
@@ -93,7 +129,8 @@ export async function createLearningClass(name: string) {
 export async function joinLearningClass(classCode: string, displayName: string) {
   const recoveryCode = generateRecoveryCode("STU");
   const recoveryHash = await hashSecret(recoveryCode);
-  const { data, error } = await requireCloud().rpc("join_learning_class", {
+  const cloud = await requireCloud();
+  const { data, error } = await cloud.rpc("join_learning_class", {
     p_class_code: normalizeClassCode(classCode),
     p_display_name: displayName.trim(),
     p_recovery_hash: recoveryHash,
@@ -115,7 +152,8 @@ export async function restoreLearningProfile(
   recoveryCode: string,
 ): Promise<RestoredProfile> {
   const recoveryHash = await hashSecret(recoveryCode);
-  const { data, error } = await requireCloud().rpc("restore_learning_profile", {
+  const cloud = await requireCloud();
+  const { data, error } = await cloud.rpc("restore_learning_profile", {
     p_class_code: normalizeClassCode(classCode),
     p_recovery_hash: recoveryHash,
   });
@@ -147,7 +185,8 @@ export async function saveLearningProgress(
   progress: object,
 ) {
   const recoveryHash = await hashSecret(recoveryCode);
-  const { data, error } = await requireCloud().rpc("save_learning_progress", {
+  const cloud = await requireCloud();
+  const { data, error } = await cloud.rpc("save_learning_progress", {
     p_profile_id: profileId,
     p_recovery_hash: recoveryHash,
     p_progress: progress,
@@ -158,7 +197,8 @@ export async function saveLearningProgress(
 
 export async function getLearningClassProgress(classCode: string, teacherCode: string) {
   const teacherHash = await hashSecret(teacherCode);
-  const { data, error } = await requireCloud().rpc("get_learning_class_progress", {
+  const cloud = await requireCloud();
+  const { data, error } = await cloud.rpc("get_learning_class_progress", {
     p_class_code: normalizeClassCode(classCode),
     p_teacher_hash: teacherHash,
   });

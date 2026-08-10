@@ -7,6 +7,8 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+type RuntimeBindings = Record<string, unknown>;
+
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -16,6 +18,41 @@ async function getServerEntry(): Promise<ServerEntry> {
     );
   }
   return serverEntryPromise;
+}
+
+function readRuntimeString(env: unknown, names: string[]) {
+  const bindings = env && typeof env === "object" ? (env as RuntimeBindings) : {};
+  const nodeEnvironment =
+    typeof process !== "undefined" && process.env ? (process.env as RuntimeBindings) : {};
+
+  for (const name of names) {
+    const value = bindings[name] ?? nodeEnvironment[name];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
+function publicCloudConfig(env: unknown) {
+  const url = readRuntimeString(env, ["VITE_SUPABASE_URL", "SUPABASE_URL"]);
+  const publishableKey = readRuntimeString(env, [
+    "VITE_SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_ANON_KEY",
+  ]);
+
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
+}
+
+function cloudConfigResponse(env: unknown) {
+  const config = publicCloudConfig(env);
+  return Response.json(config ?? { error: "CLOUD_NOT_CONFIGURED" }, {
+    status: config ? 200 : 503,
+    headers: {
+      "cache-control": "no-store",
+      "x-content-type-options": "nosniff",
+    },
+  });
 }
 
 // h3 swallows in-handler throws into a normal 500 Response with body
@@ -47,6 +84,9 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      if (new URL(request.url).pathname === "/api/classroom/cloud-config") {
+        return cloudConfigResponse(env);
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
