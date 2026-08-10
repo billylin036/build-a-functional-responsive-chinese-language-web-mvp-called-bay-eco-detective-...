@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Compass, Crosshair, GraduationCap, Info } from "lucide-react";
+import { CircleHelp, Compass, Crosshair, GraduationCap, Info } from "lucide-react";
 import { locations } from "@/data/locations";
 import type { LocationType } from "@/data/types";
 import { TOTAL_CHAPTERS } from "@/data/learning";
@@ -130,10 +130,15 @@ export function MapExplorer() {
           <div className="rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
             课程 {completedChapters.length} / {TOTAL_CHAPTERS} 章
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
+          <a
+            href="/learn#world-quest-guide"
+            className="flex items-center gap-1.5 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-xs text-navy shadow-sm hover:border-[#4F46E5]/60"
+            aria-label="查看大世界探索新手玩法"
+          >
             <Compass className="size-3.5 text-[#4F46E5]" />
             大世界探索 {samplingQuestProgress} / {SAMPLING_QUEST_IDS.length}
-          </div>
+            <CircleHelp className="size-3.5 text-muted-foreground" />
+          </a>
         </div>
 
         {!selected && (

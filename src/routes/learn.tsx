@@ -6,6 +6,7 @@ import {
   BookOpenCheck,
   CheckCircle2,
   ChevronRight,
+  CircleHelp,
   ClipboardCheck,
   Compass,
   ExternalLink,
@@ -76,6 +77,10 @@ function LearnPage() {
   const explorationProgress = Math.round(
     (completedSamplingQuizzes.length / SAMPLING_QUEST_IDS.length) * 100,
   );
+  const firstWorldQuestId =
+    SAMPLING_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id)) ??
+    SAMPLING_QUEST_IDS[0]!;
+  const firstWorldQuestLocation = locations.find((location) => location.id === firstWorldQuestId);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -111,7 +116,10 @@ function LearnPage() {
         </div>
       </section>
 
-      <section className="mt-8 overflow-hidden rounded-xl border border-teal/25 bg-navy text-white">
+      <section
+        id="world-quest-guide"
+        className="mt-8 scroll-mt-20 overflow-hidden rounded-xl border border-teal/25 bg-navy text-white"
+      >
         <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-end">
           <div>
             <Badge className="bg-coral text-white hover:bg-coral">OPEN WORLD QUEST</Badge>
@@ -136,6 +144,49 @@ function LearnPage() {
               {explorationProgress}% · 每区完成 3 个点位可得徽章
             </p>
           </div>
+        </div>
+
+        <div className="mx-5 mb-5 rounded-xl border border-teal-200/25 bg-white/10 p-4 sm:mx-7 sm:mb-7 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-semibold">
+                <CircleHelp className="size-5 text-teal-200" />
+                新手怎么玩？四步就能开始
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-white/65">
+                不用亲自前往现实地点，也不用按固定顺序；点击“开始第一站”，地图会自动带你到采样点。
+              </p>
+            </div>
+            <a
+              href={`/?location=${encodeURIComponent(firstWorldQuestId)}`}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-coral px-4 py-2.5 text-sm font-semibold text-white hover:bg-coral/90"
+            >
+              <MapPin className="size-4" />
+              {completedSamplingQuizzes.length > 0 ? "继续下一站" : "开始第一站"}
+              {firstWorldQuestLocation ? `：${firstWorldQuestLocation.name}` : ""}
+            </a>
+          </div>
+
+          <ol className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["选择任务线", "从下方四个流域任选一条，不需要全部一起完成。"],
+              ["跳转到地点", "点击“前往”，地图会自动定位并打开该地点的资料卡。"],
+              ["寻找线索", "阅读 SIDE QUEST、地点角色和指标线索，再点击“我已阅读”。"],
+              ["答题领奖励", "答对地点微测验即可保存进度；每个流域完成任意 3 站解锁徽章。"],
+            ].map(([title, text], index) => (
+              <li key={title} className="rounded-lg border border-white/10 bg-navy/35 p-3">
+                <p className="font-mono text-[11px] text-teal-200">
+                  STEP {String(index + 1).padStart(2, "0")}
+                </p>
+                <p className="mt-1 text-sm font-semibold">{title}</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">{text}</p>
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-3 text-[11px] leading-5 text-white/55">
+            小提示：答错可以重试，学习进度会保存在当前浏览器。若参加实地观察，必须由教师组织并遵守安全要求。
+          </p>
         </div>
 
         <div className="grid border-t border-white/10 md:grid-cols-2 xl:grid-cols-4">
