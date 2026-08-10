@@ -32,8 +32,16 @@ export default function LiveMapCanvas(props: MapCanvasProps) {
         <LeafletMapCanvas {...props} onTilesReady={handleTilesReady} />
       )}
       <div className="pointer-events-none absolute bottom-2 left-2 z-400 rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
-        {useAMap ? "高德地图 JS API" : (leafletProvider ?? "正在连接国内地图")}
-        {` · 活动范围约 ${MAP_LIMIT_RADIUS_KM} 公里`}
+        {props.language === "zh"
+          ? useAMap
+            ? "高德地图 JS API"
+            : (leafletProvider ?? "正在连接国内地图")
+          : useAMap
+            ? "Amap JS API"
+            : (leafletProvider ?? "Connecting to map tiles")}
+        {props.language === "zh"
+          ? ` · 活动范围约 ${MAP_LIMIT_RADIUS_KM} 公里`
+          : ` · Study area about ${MAP_LIMIT_RADIUS_KM} km`}
       </div>
     </div>
   );

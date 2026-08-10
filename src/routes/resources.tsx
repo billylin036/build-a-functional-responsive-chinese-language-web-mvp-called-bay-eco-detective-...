@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import reportPatrolFindings from "@/assets/2023-citizen-observation-patrol-findings.png";
 import reportRapidTestTable from "@/assets/2023-citizen-observation-rapid-test-table.png";
 import reportSitesMap from "@/assets/2023-citizen-observation-sites-map.png";
+import { useLanguage } from "@/lib/language";
 
 const reportStats = [
   { value: "73 起", label: "水环境污染信息" },
@@ -31,6 +32,8 @@ export const Route = createFileRoute("/resources")({
 });
 
 function ResourcesPage() {
+  const { language } = useLanguage();
+  if (language === "en") return <EnglishResourcesPage />;
   const groups = [
     {
       title: "绿源官方资料",
@@ -218,6 +221,79 @@ function ResourcesPage() {
           <li>3. 页面展示的是原始数据、解释还是示例？</li>
           <li>4. 还有哪些缺失条件会改变结论？</li>
         </ol>
+      </section>
+    </main>
+  );
+}
+
+function EnglishResourcesPage() {
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-8">
+      <section className="rounded-xl border border-teal/20 bg-gradient-to-br from-paleeco to-card p-7">
+        <Badge className="bg-teal text-white">TRACEABLE SOURCES</Badge>
+        <h1 className="mt-3 text-3xl font-semibold text-navy">Learning Sources</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+          Map records and course explanations keep their source links. Local facts come from Green
+          Source publications; professional and government guidance supports monitoring methods and
+          evidence quality. Missing original data is never replaced with an estimate.
+        </p>
+      </section>
+      <section className="mt-8 grid gap-4 md:grid-cols-3">
+        <Principle
+          icon={<ShieldCheck className="size-5" />}
+          title="Trace the source"
+          text="Check the publisher, date and original context before interpreting a value."
+        />
+        <Principle
+          icon={<Microscope className="size-5" />}
+          title="Separate evidence from conclusions"
+          text="A field observation is a clue; causes and long-term classes require comparable repeated evidence."
+        />
+        <Principle
+          icon={<BookOpenCheck className="size-5" />}
+          title="Allow unknowns"
+          text="Missing, untested and unpublished do not mean zero. Transparent limits are part of science."
+        />
+      </section>
+      <section className="mt-9 rounded-xl border bg-card p-6">
+        <h2 className="text-xl font-semibold text-navy">Primary Green Source material</h2>
+        <div className="mt-4 grid gap-3">
+          {learningSources
+            .filter((source) => source.kind === "绿源官方资料")
+            .map((source) => (
+              <a
+                key={source.id}
+                href={source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg border p-4 hover:border-teal"
+              >
+                <p className="text-sm font-semibold text-navy">{source.title}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {source.publisher} · {source.publishedAt}
+                </p>
+                <span className="mt-2 inline-flex items-center gap-1 text-xs text-teal underline">
+                  Open original <ExternalLink className="size-3" />
+                </span>
+              </a>
+            ))}
+        </div>
+      </section>
+      <section className="mt-7 rounded-xl border bg-card p-6">
+        <h2 className="text-xl font-semibold text-navy">2023 citizen-observation report</h2>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          The 38 rapid-test rows used on the map are transcribed from the report table. The table
+          screenshot does not show units and the report does not publish sampling GPS coordinates,
+          so the site preserves those limitations.
+        </p>
+        <a
+          href="https://mp.weixin.qq.com/s/6e_1tieqb8zGIk2zBL4Hhg"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-1 text-sm text-teal underline"
+        >
+          Open the published article <ExternalLink className="size-4" />
+        </a>
       </section>
     </main>
   );

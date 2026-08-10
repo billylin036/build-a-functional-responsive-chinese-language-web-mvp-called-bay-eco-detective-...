@@ -9,13 +9,17 @@ import {
   MapPin,
   ShieldAlert,
   X,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import type { EcoLocation } from "@/data/types";
-import { OUTFALL_DECADE_COMPARISON } from "@/data/locations";
-import { getSamplingPointProfile } from "@/data/exploration";
+import { OUTFALL_DECADE_COMPARISON, OUTFALL_SOURCE } from "@/data/locations";
+import { getSamplingPointProfile, getSamplingStoryBeat } from "@/data/exploration";
 import { getLearningModule, getLocationQuiz, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { Badge } from "@/components/ui/badge";
 import { useAppState } from "@/lib/app-state";
+import { useLanguage } from "@/lib/language";
+import { locationCategory, locationName } from "@/data/i18n";
 import outfallImg from "@/assets/outfall.jpg";
 import waterSampleImg from "@/assets/2023-citizen-observation-rapid-test-table.png";
 
@@ -317,6 +321,352 @@ function WaterSampleCard({ location }: { location: EcoLocation }) {
   );
 }
 
+function SamplingStorylineCard({
+  location,
+  onNavigate,
+}: {
+  location: EcoLocation;
+  onNavigate: (id: string) => void;
+}) {
+  const beat = getSamplingStoryBeat(location.id);
+  const { completedLocationQuizzes } = useAppState();
+  if (!beat) return null;
+  const completed = completedLocationQuizzes.includes(location.id);
+
+  return (
+    <section className="rounded-lg border border-[#4F46E5]/30 bg-gradient-to-br from-[#4F46E5]/10 to-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="font-mono text-[11px] font-medium text-[#4F46E5]">
+          主线故事 · 第 {beat.index} / {beat.total} 站
+        </p>
+        <Badge variant="outline">第 {beat.actNumber} 幕</Badge>
+      </div>
+      <h3 className="mt-2 text-sm font-semibold text-navy">{beat.title}</h3>
+      <p className="mt-2 text-xs leading-5 text-foreground">{beat.narrative}</p>
+      <div className="mt-3 rounded-md bg-white/80 p-3">
+        <p className="text-[11px] font-medium text-teal">本幕目标</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{beat.actGoal}</p>
+        <p className="mt-2 text-[11px] font-medium text-teal">本站能力</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{beat.learningGoal}</p>
+      </div>
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">{beat.transition}</p>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          disabled={!beat.previousId}
+          onClick={() => beat.previousId && onNavigate(beat.previousId)}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-3 py-2 text-xs text-navy disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <ArrowLeft className="size-3.5" />
+          上一站
+        </button>
+        {beat.nextId ? (
+          <button
+            type="button"
+            disabled={!completed}
+            title={completed ? "进入下一站" : "答对本站挑战题后解锁"}
+            onClick={() => completed && onNavigate(beat.nextId!)}
+            className="inline-flex items-center gap-1 rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+          >
+            {completed ? "下一站" : "答题后解锁"}
+            <ArrowRight className="size-3.5" />
+          </button>
+        ) : (
+          <Link
+            to="/learn"
+            className="inline-flex items-center gap-1 rounded-md bg-mangrove px-3 py-2 text-xs font-medium text-white"
+          >
+            完成主线总结
+            <ArrowRight className="size-3.5" />
+          </Link>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function OutfallSourceCard() {
+  return (
+    <section className="rounded-lg border border-teal/25 bg-paleeco p-3">
+      <p className="text-sm font-semibold text-navy">这 11 个排口的数据从哪里来？</p>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">
+        {OUTFALL_SOURCE.publisher}官网于 {OUTFALL_SOURCE.pagePublished} 发布
+        {OUTFALL_SOURCE.title}；文内调查报告日期为 {OUTFALL_SOURCE.reportDate}。
+        {OUTFALL_SOURCE.note}
+      </p>
+      <a
+        href={OUTFALL_SOURCE.url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal underline underline-offset-2"
+      >
+        查看绿源官网原文
+        <ExternalLink className="size-3" />
+      </a>
+    </section>
+  );
+}
+
+const EN_ACTS = [
+  {
+    title: "Act I · Establish the evidence baseline",
+    goal: "Read raw values and separate an observation from an interpretation or verdict.",
+  },
+  {
+    title: "Act II · Trace mixing and comparison",
+    goal: "Use upstream, tributary and downstream controls to build a spatial comparison.",
+  },
+  {
+    title: "Act III · Enter the urban water network",
+    goal: "Recognize rainfall, time, flow and human activity as possible confounding factors.",
+  },
+  {
+    title: "Act IV · Reach the river–estuary zone",
+    goal: "Include tide, freshwater–saltwater mixing and repeat sampling in the final design.",
+  },
+] as const;
+
+const EN_STATION_QUESTIONS = [
+  {
+    question: "What is the strongest conclusion supported by one rapid field-test record?",
+    options: [
+      "It provides a clue for follow-up investigation",
+      "It proves the long-term water-quality class",
+      "It identifies the pollution source",
+      "It proves the whole basin has the same condition",
+    ],
+    answer: 0,
+    explanation:
+      "A single rapid test is useful evidence, but it cannot establish a long-term class or cause by itself.",
+  },
+  {
+    question:
+      "Before comparing this station with another one, which information is most important?",
+    options: [
+      "Whether units, methods, timing and field conditions are comparable",
+      "Which station name is shorter",
+      "Which marker is closer on the screen",
+      "Which value looks more dramatic",
+    ],
+    answer: 0,
+    explanation:
+      "A comparison is only meaningful when measurement and sampling conditions are sufficiently comparable.",
+  },
+  {
+    question: "If two stations differ, what should a student investigator do next?",
+    options: [
+      "Treat the difference as a clue and collect repeat or control evidence",
+      "Immediately name a polluter",
+      "Delete the inconvenient value",
+      "Assume the difference will never change",
+    ],
+    answer: 0,
+    explanation:
+      "A difference can guide the next investigation, but it does not explain its own cause.",
+  },
+  {
+    question: "Which plan is most reproducible?",
+    options: [
+      "Record location, time, weather and water conditions, then repeat with the same method",
+      "Visit once and rely on memory",
+      "Change the method at every station",
+      "Record only the most unusual observation",
+    ],
+    answer: 0,
+    explanation: "A reproducible record lets another team understand and repeat the observation.",
+  },
+] as const;
+
+function EnglishStationQuiz({ location }: { location: EcoLocation }) {
+  const { completedLocationQuizzes, recordLocationAnswer } = useAppState();
+  const question =
+    EN_STATION_QUESTIONS[
+      (location.waterSample?.sampleNumber ?? Number(location.id.slice(-2))) %
+        EN_STATION_QUESTIONS.length
+    ]!;
+  const done = completedLocationQuizzes.includes(location.id);
+  const [picked, setPicked] = useState<number | null>(done ? question.answer : null);
+
+  useEffect(() => {
+    setPicked(done ? question.answer : null);
+  }, [done, location.id, question.answer]);
+
+  return (
+    <section className="rounded-lg border border-teal/25 bg-paleeco p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-navy">Station challenge</p>
+        <Badge variant={done ? "default" : "secondary"}>
+          {done ? "Completed" : "Unlock the next stop"}
+        </Badge>
+      </div>
+      <p className="mt-2 text-sm leading-6">{question.question}</p>
+      <div className="mt-3 space-y-1.5">
+        {question.options.map((option, index) => (
+          <button
+            key={option}
+            type="button"
+            disabled={done}
+            onClick={() => {
+              setPicked(index);
+              recordLocationAnswer(location.id, location.name, index === question.answer);
+            }}
+            className={`block w-full rounded-md border px-3 py-2 text-left text-xs ${
+              picked === index
+                ? index === question.answer
+                  ? "border-mangrove bg-white"
+                  : "border-coral bg-white"
+                : "border-border bg-white hover:border-teal"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      {picked !== null && (
+        <p
+          className={`mt-3 text-xs leading-5 ${picked === question.answer ? "text-mangrove" : "text-coral"}`}
+        >
+          {picked === question.answer
+            ? `Correct. ${question.explanation}`
+            : "Try again: choose the conclusion or method that stays within the available evidence."}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function EnglishStoryPanel({
+  location,
+  onClose,
+  onNavigate,
+}: {
+  location: EcoLocation;
+  onClose: () => void;
+  onNavigate: (id: string) => void;
+}) {
+  const beat = getSamplingStoryBeat(location.id);
+  const { completedLocationQuizzes } = useAppState();
+  const completed = completedLocationQuizzes.includes(location.id);
+  const act = beat ? EN_ACTS[beat.actNumber - 1]! : null;
+  const next = beat?.nextId;
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="relative shrink-0">
+        <img
+          src={IMAGES[location.image] ?? outfallImg}
+          alt="Field evidence"
+          className="h-32 w-full object-cover"
+          loading="lazy"
+        />
+        <button
+          onClick={onClose}
+          aria-label="Close location"
+          className="absolute right-2 top-2 rounded-full bg-card/90 p-1.5 text-navy shadow-sm"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        <div>
+          <Badge variant="secondary">{locationCategory(location, "en")}</Badge>
+          <h2 className="mt-2 text-lg font-semibold text-navy">{locationName(location, "en")}</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+          </p>
+        </div>
+
+        {location.waterSample ? (
+          <section className="rounded-lg border border-[#4F46E5]/25 bg-[#4F46E5]/5 p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-navy">2023 rapid field test</p>
+              <Badge variant="outline">Report row {location.waterSample.sampleNumber}</Badge>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Metric label="pH" value={location.waterSample.pH} />
+              <Metric label="Total phosphorus (TP)" value={location.waterSample.totalPhosphorus} />
+              <Metric label="COD" value={location.waterSample.cod} />
+              <Metric
+                label="Ammonia nitrogen (NH₃-N)"
+                value={location.waterSample.ammoniaNitrogen}
+              />
+            </div>
+            <p className="mt-3 text-xs leading-5 text-muted-foreground">
+              Values are transcribed from the report table. The published screenshot does not state
+              units, so this site does not invent them. The report did not publish GPS coordinates;
+              the marker is a place-name-matched reference location.
+            </p>
+          </section>
+        ) : (
+          <section className="rounded-lg border border-teal/25 bg-paleeco p-3">
+            <p className="text-sm font-semibold text-navy">2015 historical outfall survey</p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              This marker uses a coordinate and field description published by Green Source. It
+              describes the survey period only and must not be treated as the current condition.
+            </p>
+            <a
+              href={OUTFALL_SOURCE.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-teal underline"
+            >
+              Open the official source <ExternalLink className="size-3" />
+            </a>
+          </section>
+        )}
+
+        {beat && act && (
+          <section className="rounded-lg border border-[#4F46E5]/30 bg-gradient-to-br from-[#4F46E5]/10 to-card p-4">
+            <p className="font-mono text-[11px] font-medium text-[#4F46E5]">
+              MAIN STORY · STATION {beat.index} / {beat.total}
+            </p>
+            <h3 className="mt-2 text-sm font-semibold text-navy">{act.title}</h3>
+            <p className="mt-2 text-xs leading-5 text-foreground">
+              This station continues a 38-stop evidence journey. Carry the method learned at the
+              previous stop into a new hydrological setting; this is a learning sequence, not a
+              claim that all stations are physically connected.
+            </p>
+            <p className="mt-2 rounded-md bg-white/80 p-3 text-xs leading-5 text-muted-foreground">
+              <span className="font-medium text-teal">Learning goal:</span> {act.goal}
+            </p>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                disabled={!beat.previousId}
+                onClick={() => beat.previousId && onNavigate(beat.previousId)}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-3 py-2 text-xs disabled:opacity-40"
+              >
+                <ArrowLeft className="size-3.5" />
+                Previous
+              </button>
+              {next ? (
+                <button
+                  type="button"
+                  disabled={!completed}
+                  onClick={() => completed && onNavigate(next)}
+                  className="inline-flex items-center gap-1 rounded-md bg-[#4F46E5] px-3 py-2 text-xs font-medium text-white disabled:bg-muted disabled:text-muted-foreground"
+                >
+                  {completed ? "Next station" : "Answer to unlock"}
+                  <ArrowRight className="size-3.5" />
+                </button>
+              ) : (
+                <Link
+                  to="/learn"
+                  className="rounded-md bg-mangrove px-3 py-2 text-xs font-medium text-white"
+                >
+                  Finish the quest
+                </Link>
+              )}
+            </div>
+          </section>
+        )}
+
+        <EnglishStationQuiz location={location} />
+      </div>
+    </div>
+  );
+}
+
 function StudentReadCard({
   location,
   historicalObservation,
@@ -361,11 +711,17 @@ function StudentReadCard({
 export function StoryPanel({
   location,
   onClose,
+  onNavigate,
 }: {
   location: EcoLocation;
   year: number;
   onClose: () => void;
+  onNavigate: (id: string) => void;
 }) {
+  const { language } = useLanguage();
+  if (language === "en") {
+    return <EnglishStoryPanel location={location} onClose={onClose} onNavigate={onNavigate} />;
+  }
   const surveyCode = location.indicators?.find((item) => item.label === "调查编号")?.value;
   const publicCoordinate = location.indicators?.find((item) => item.label === "公开坐标")?.value;
   const historicalObservation = location.indicators?.find(
@@ -411,9 +767,18 @@ export function StoryPanel({
 
         {location.type === "outfall" && <OutfallDecadeComparison />}
 
+        {location.type === "outfall" && <OutfallSourceCard />}
+
         {location.type === "sampling" && <WaterSampleCard location={location} />}
 
-        <StudentReadCard location={location} historicalObservation={historicalObservation} />
+        {location.type === "sampling" && (
+          <SamplingStorylineCard location={location} onNavigate={onNavigate} />
+        )}
+
+        <StudentReadCard
+          location={location}
+          {...(historicalObservation ? { historicalObservation } : {})}
+        />
 
         <QuizBlock location={location} />
         <ActivityBlock location={location} />

@@ -17,6 +17,15 @@ export const OUTFALL_DECADE_COMPARISON = {
     "公开纪事确认 2025 年开展了深圳湾排水口十年调查回访；逐排口的 2025 原始观察与检测表尚未提供，因此不能把整体结果写成某一个排口的现状。",
 } as const;
 
+export const OUTFALL_SOURCE = {
+  title: "《深·水｜共爱深圳计划深圳湾排水口污染现状》",
+  publisher: "深圳市绿源环保志愿者协会",
+  pagePublished: "2015-06-06",
+  reportDate: "2015-04-15",
+  url: "https://www.szhb.org/5383.html",
+  note: "原文表二和表四公开了 B1–B4、D1、4-1 至 4-6 共 11 个排口的坐标与现场描述。原坐标采用度和十进制分，本站换算为十进制度用于地图定位。",
+} as const;
+
 /**
  * 绿源 2015 年深圳湾排水口调查正文中公开了 11 个 GPS 坐标。
  * 原报告采用度和十进制分格式，这里转换为 WGS84 十进制度，直接与 OSM 对齐。

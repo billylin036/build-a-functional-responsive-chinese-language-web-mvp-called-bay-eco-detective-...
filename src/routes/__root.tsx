@@ -12,7 +12,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppStateProvider } from "../lib/app-state";
+import { LanguageProvider, useLanguage } from "../lib/language";
 import { Toaster } from "../components/ui/sonner";
+import { Languages } from "lucide-react";
 
 function NotFoundComponent() {
   return (
@@ -121,49 +123,67 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 const NAV = [
-  { to: "/", label: "地图" },
-  { to: "/learn", label: "学习闯关" },
-  { to: "/resources", label: "资料库" },
-  { to: "/me", label: "学习成果" },
-  { to: "/about", label: "关于" },
+  { to: "/", zh: "地图", en: "Map" },
+  { to: "/learn", zh: "学习闯关", en: "Learning Quest" },
+  { to: "/resources", zh: "资料库", en: "Sources" },
+  { to: "/me", zh: "学习成果", en: "My Progress" },
+  { to: "/about", zh: "关于", en: "About" },
 ] as const;
+
+function AppChrome() {
+  const { language, toggleLanguage, tr } = useLanguage();
+
+  return (
+    <div className="app-shell flex flex-col">
+      <header className="sticky top-0 z-[1200] shrink-0 border-b border-border bg-navy">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2.5 sm:px-4">
+          <Link to="/" className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
+            {tr("湾区生态侦探", "Bay Eco Detective")}
+            <span className="ml-2 hidden text-xs font-normal opacity-80 lg:inline">
+              {tr("深圳湾互动科普地图", "Interactive environmental learning map")}
+            </span>
+          </Link>
+          <nav className="flex min-w-0 gap-1 overflow-x-auto text-xs">
+            {NAV.map((n) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                activeOptions={{ exact: n.to === "/" }}
+                className="whitespace-nowrap rounded-sm px-2 py-1 text-white/75 transition-colors hover:bg-white/10 hover:text-white data-[status=active]:bg-white/15 data-[status=active]:text-white"
+              >
+                {language === "zh" ? n.zh : n.en}
+              </Link>
+            ))}
+          </nav>
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            aria-label={tr("切换为英文", "Switch to Chinese")}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/25 px-2 py-1 text-xs font-semibold text-white hover:bg-white/10"
+          >
+            <Languages className="size-3.5" />
+            {language === "zh" ? "EN" : "中文"}
+          </button>
+        </div>
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto">
+        <Outlet />
+      </div>
+    </div>
+  );
+}
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppStateProvider>
-        <div className="app-shell flex flex-col">
-          <header className="sticky top-0 z-[1200] shrink-0 border-b border-border bg-navy">
-            <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5">
-              <Link to="/" className="min-w-0 truncate text-sm font-semibold text-white">
-                湾区生态侦探
-                <span className="ml-2 hidden text-xs font-normal opacity-80 sm:inline">
-                  深圳湾互动科普地图
-                </span>
-              </Link>
-              <nav className="flex min-w-0 max-w-[68vw] gap-1 overflow-x-auto text-xs">
-                {NAV.map((n) => (
-                  <Link
-                    key={n.to}
-                    to={n.to}
-                    activeOptions={{ exact: n.to === "/" }}
-                    className="rounded-sm px-2 py-1 text-white/75 transition-colors hover:bg-white/10 hover:text-white data-[status=active]:bg-white/15 data-[status=active]:text-white"
-                  >
-                    {n.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          </header>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <div className="min-h-0 flex-1 overflow-auto">
-            <Outlet />
-          </div>
-        </div>
-        <Toaster position="top-center" />
-      </AppStateProvider>
+      <LanguageProvider>
+        <AppStateProvider>
+          <AppChrome />
+          <Toaster position="top-center" />
+        </AppStateProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

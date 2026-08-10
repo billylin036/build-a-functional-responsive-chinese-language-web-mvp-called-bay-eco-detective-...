@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ExternalLink, Github, Mail } from "lucide-react";
+import { useLanguage } from "@/lib/language";
 
 const githubProfileUrl = "https://github.com/billylin036";
 
@@ -20,6 +21,8 @@ export const Route = createFileRoute("/about")({
 });
 
 function AboutPage() {
+  const { language } = useLanguage();
+  if (language === "en") return <EnglishAboutPage />;
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold text-navy">关于项目</h1>
@@ -108,9 +111,8 @@ function AboutPage() {
           目前尚未获得各排口可公开使用的原始水质指标，因此网站不展示推测的水质评分或达标结论。
         </li>
         <li>
-          地图保留报告正文同时提供公开 GPS 坐标和水体现场描述的 11 个排口，并保留 8
-          个红树林生态学习示例点和 2 个综合学习点。后两类点是空间教学入口，
-          <strong>不是水质监测站，也不展示没有来源的水质框</strong>。
+          地图保留报告正文同时提供公开 GPS 坐标和水体现场描述的 11 个排口，以及 2023 年报告表格中的
+          38 个快速检测点。不存在真实资料支撑的示例点已移除。
         </li>
         <li>
           2025 年十年回访目前只展示 30
@@ -140,6 +142,97 @@ function AboutPage() {
         </Link>
         <Link className="text-teal underline" to="/resources">
           查看可靠资料库
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+function EnglishAboutPage() {
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-8">
+      <h1 className="text-2xl font-semibold text-navy">About this project</h1>
+      <p className="mt-3 text-sm leading-7">
+        <strong>Bay Eco Detective</strong> was developed by <strong>Billy Lin</strong> in data
+        collaboration with the{" "}
+        <strong>Shenzhen Green Source Environmental Volunteers Association</strong>. It turns
+        published environmental material into a school-oriented learning map where students read
+        evidence, solve reasoning challenges and design reproducible observations.
+      </p>
+      <div className="mt-5 grid gap-3 rounded-lg border border-teal/25 bg-paleeco p-4 sm:grid-cols-2">
+        <div>
+          <p className="text-xs font-medium text-teal">Website development</p>
+          <p className="mt-1 text-sm font-semibold text-navy">Billy Lin</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Product design, development and interaction
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-teal">Data collaboration</p>
+          <p className="mt-1 text-sm font-semibold text-navy">
+            Shenzhen Green Source Environmental Volunteers Association
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Environmental project material and data
+          </p>
+        </div>
+      </div>
+      <h2 className="mt-7 text-lg font-semibold text-navy">Contact and project</h2>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <a
+          href="mailto:billylin036@gmail.com"
+          className="flex items-center gap-3 rounded-lg border p-4"
+        >
+          <Mail className="size-5 text-teal" />
+          <span>
+            <span className="block text-xs text-muted-foreground">Email</span>
+            <span className="text-sm font-medium text-navy">billylin036@gmail.com</span>
+          </span>
+        </a>
+        <a
+          href={githubProfileUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-3 rounded-lg border p-4"
+        >
+          <Github className="size-5 text-teal" />
+          <span className="text-sm font-medium text-navy">Billy Lin on GitHub</span>
+          <ExternalLink className="size-3.5" />
+        </a>
+      </div>
+      <h2 className="mt-8 text-lg font-semibold text-navy">Evidence policy</h2>
+      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7">
+        <li>
+          The map includes 11 outfalls with published 2015 coordinates and field descriptions, plus
+          38 rapid-test rows from the 2023 report.
+        </li>
+        <li>
+          The 38 report rows did not publish sampling GPS coordinates. Their markers are
+          place-name-matched reference locations and are labelled accordingly.
+        </li>
+        <li>
+          Missing units, unpublished measurements and unknown current conditions are stated
+          explicitly rather than filled with estimates.
+        </li>
+        <li>
+          Historical observations describe their survey period; they do not establish current water
+          quality.
+        </li>
+        <li>Learning progress remains in the current browser.</li>
+      </ul>
+      <p className="mt-6 text-xs leading-6 text-muted-foreground">
+        © 2026 Billy Lin. Original product design, code and explanatory writing retain attribution.
+        Source organisations retain rights to their own material; see the Sources page.
+      </p>
+      <div className="mt-6 flex gap-4 text-sm">
+        <Link to="/" className="text-teal underline">
+          Open map
+        </Link>
+        <Link to="/learn" className="text-teal underline">
+          Start learning
+        </Link>
+        <Link to="/resources" className="text-teal underline">
+          View sources
         </Link>
       </div>
     </main>

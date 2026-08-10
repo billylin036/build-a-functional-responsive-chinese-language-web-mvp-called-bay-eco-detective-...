@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useIsCompactMap } from "@/hooks/use-mobile";
 import { useAppState } from "@/lib/app-state";
 import MapCanvas from "@/components/map/LiveMapCanvas";
+import { useLanguage } from "@/lib/language";
+import { locationName } from "@/data/i18n";
 
 const ACTIVE_MAP_LAYERS: LocationType[] = ["outfall", "sampling"];
 const SURVEY_YEAR = 2015;
@@ -31,6 +33,7 @@ const TUTORIAL_STEPS = [
 ] as const;
 
 export function MapExplorer() {
+  const { language, tr } = useLanguage();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [recenter, setRecenter] = useState(0);
   const [focus, setFocus] = useState(0);
@@ -45,15 +48,18 @@ export function MapExplorer() {
   const routeIds = completedLocationQuizzes;
   const currentRouteId = null;
 
-  const pick = useCallback((id: string) => {
-    const location = locations.find((item) => item.id === id);
-    setSelectedId(id);
-    setLocatedName(location?.name ?? null);
-    setFocus((f) => f + 1);
-    if (typeof window !== "undefined") {
-      window.history.replaceState(null, "", `/?location=${encodeURIComponent(id)}`);
-    }
-  }, []);
+  const pick = useCallback(
+    (id: string) => {
+      const location = locations.find((item) => item.id === id);
+      setSelectedId(id);
+      setLocatedName(location ? locationName(location, language) : null);
+      setFocus((f) => f + 1);
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", `/?location=${encodeURIComponent(id)}`);
+      }
+    },
+    [language],
+  );
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -94,6 +100,7 @@ export function MapExplorer() {
           onSelect={pick}
           recenterSignal={recenter}
           focusSignal={focus}
+          language={language}
         />
 
         {/* 左上：搜索 + 数据范围说明 */}
@@ -106,19 +113,31 @@ export function MapExplorer() {
               className="pointer-events-none w-fit max-w-full truncate rounded-full bg-navy/90 px-3 py-1 text-[11px] text-white shadow"
               role="status"
             >
-              已定位：{locatedName}
+              {tr("已定位：", "Located: ")}
+              {locatedName}
             </p>
           )}
           <div className="pointer-events-auto hidden rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-sm sm:block">
-            <p className="font-medium text-navy">地图共 {locations.length} 个真实资料点</p>
+            <p className="font-medium text-navy">
+              {tr(
+                `地图共 ${locations.length} 个真实资料点`,
+                `${locations.length} evidence-backed locations`,
+              )}
+            </p>
             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
               <span className="inline-flex items-center gap-1">
                 <span className="size-2 rounded-full bg-teal" />
-                {layerCounts.outfall} 个历史排口
+                {tr(
+                  `${layerCounts.outfall} 个历史排口`,
+                  `${layerCounts.outfall} historical outfalls`,
+                )}
               </span>
               <span className="inline-flex items-center gap-1">
                 <span className="size-2 rounded-full bg-[#4F46E5]" />
-                {layerCounts.sampling} 个 2023 快速检测点
+                {tr(
+                  `${layerCounts.sampling} 个 2023 快速检测点`,
+                  `${layerCounts.sampling} rapid-test stations from 2023`,
+                )}
               </span>
             </div>
             <a
@@ -127,7 +146,7 @@ export function MapExplorer() {
               rel="noreferrer"
               className="mt-1 block font-medium text-teal underline underline-offset-2"
             >
-              查看 2015 排口观察来源
+              {tr("查看 2015 排口观察来源", "View the 2015 outfall source")}
             </a>
           </div>
         </div>
@@ -143,22 +162,25 @@ export function MapExplorer() {
             }}
           >
             <CircleHelp className="size-4" />
-            新手教程
+            {tr("新手教程", "How to play")}
           </Button>
           <Button size="sm" variant="secondary" onClick={() => setRecenter((r) => r + 1)}>
             <Crosshair className="size-4" />
-            回到深圳湾
+            {tr("回到深圳湾", "Back to Shenzhen Bay")}
           </Button>
           <Button size="sm" onClick={() => navigate({ to: "/learn" })}>
             <GraduationCap className="size-4" />
-            学习闯关
+            {tr("学习闯关", "Learning Quest")}
           </Button>
           <div className="rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
-            课程 {completedChapters.length} / {TOTAL_CHAPTERS} 章
+            {tr(
+              `课程 ${completedChapters.length} / ${TOTAL_CHAPTERS} 章`,
+              `Course ${completedChapters.length} / ${TOTAL_CHAPTERS}`,
+            )}
           </div>
           <div className="flex items-center gap-1.5 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
             <Compass className="size-3.5 text-[#4F46E5]" />
-            大世界探索 {samplingQuestProgress} / {SAMPLING_QUEST_IDS.length}
+            {tr("证据主线", "Evidence Quest")} {samplingQuestProgress} / {SAMPLING_QUEST_IDS.length}
           </div>
         </div>
 
@@ -173,15 +195,21 @@ export function MapExplorer() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-mono text-[11px] text-teal">
-                    新手教程 · {tutorialStep + 1}/{TUTORIAL_STEPS.length}
+                    {tr("新手教程", "Tutorial")} · {tutorialStep + 1}/{TUTORIAL_STEPS.length}
                   </p>
                   <h2 id="map-tutorial-title" className="mt-1 text-xl font-semibold text-navy">
-                    {TUTORIAL_STEPS[tutorialStep]!.title}
+                    {language === "zh"
+                      ? TUTORIAL_STEPS[tutorialStep]!.title
+                      : [
+                          "Choose an evidence-backed station",
+                          "Read the record before interpreting it",
+                          "Answer and save your progress",
+                        ][tutorialStep]}
                   </h2>
                 </div>
                 <button
                   type="button"
-                  aria-label="关闭新手教程"
+                  aria-label={tr("关闭新手教程", "Close tutorial")}
                   onClick={() => setTutorialOpen(false)}
                   className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
                 >
@@ -190,7 +218,13 @@ export function MapExplorer() {
               </div>
 
               <p className="mt-4 text-sm leading-7 text-foreground">
-                {TUTORIAL_STEPS[tutorialStep]!.text}
+                {language === "zh"
+                  ? TUTORIAL_STEPS[tutorialStep]!.text
+                  : [
+                      "The map contains only published survey outfalls and stations from the 2023 report. The tutorial opens the first stop in the 38-station evidence quest.",
+                      "Identify the year and raw values first. A rapid field test is evidence, not a complete water-quality verdict.",
+                      "After reading, start the challenge. You can retry a wrong answer; a correct answer unlocks the next station.",
+                    ][tutorialStep]}
               </p>
 
               <div className="mt-4 grid grid-cols-3 gap-2" aria-hidden="true">
@@ -210,7 +244,7 @@ export function MapExplorer() {
                   disabled={tutorialStep === 0}
                   onClick={() => setTutorialStep((step) => Math.max(0, step - 1))}
                 >
-                  上一步
+                  {tr("上一步", "Back")}
                 </Button>
                 {tutorialStep < TUTORIAL_STEPS.length - 1 ? (
                   <Button
@@ -218,7 +252,7 @@ export function MapExplorer() {
                     size="sm"
                     onClick={() => setTutorialStep((step) => step + 1)}
                   >
-                    下一步
+                    {tr("下一步", "Next")}
                   </Button>
                 ) : (
                   <Button
@@ -229,7 +263,7 @@ export function MapExplorer() {
                       pick(tutorialLocationId);
                     }}
                   >
-                    开始第一站
+                    {tr("开始第一站", "Start station 1")}
                   </Button>
                 )}
               </div>
@@ -244,9 +278,14 @@ export function MapExplorer() {
           >
             <div className="mx-auto flex w-fit max-w-full items-center gap-2 rounded-full border border-teal/25 bg-card/95 px-4 py-2 text-xs text-navy shadow-lg backdrop-blur-sm">
               <Info className="size-4 shrink-0 text-teal" />
-              <span className="truncate sm:hidden">点击地图标记查看资料</span>
+              <span className="truncate sm:hidden">
+                {tr("点击地图标记查看资料", "Tap a marker to explore")}
+              </span>
               <span className="hidden sm:inline">
-                点击地图标记查看资料与地点练习；四章主课程请前往“学习闯关”
+                {tr(
+                  "点击地图标记查看资料与地点练习；四章主课程请前往“学习闯关”",
+                  "Open a marker for evidence and a station challenge; use Learning Quest for the four course chapters.",
+                )}
               </span>
             </div>
           </div>
@@ -259,11 +298,12 @@ export function MapExplorer() {
                 ? "inset-x-0 bottom-0 h-[min(62%,36rem)] rounded-t-xl"
                 : "bottom-2 right-2 top-2 w-[25rem] rounded-xl"
             }`}
-            aria-label={`${selected.name}地点数据`}
+            aria-label={`${locationName(selected, language)} ${tr("地点数据", "location evidence")}`}
           >
             <StoryPanel
               location={selected}
               year={SURVEY_YEAR}
+              onNavigate={pick}
               onClose={() => {
                 setSelectedId(null);
                 setLocatedName(null);

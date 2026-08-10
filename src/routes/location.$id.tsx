@@ -65,7 +65,12 @@ function LocationPage() {
         </select>
       </div>
       <div className="overflow-hidden rounded-md border border-border bg-card">
-        <StoryPanel location={loc} year={year} onClose={() => history.back()} />
+        <StoryPanel
+          location={loc}
+          year={year}
+          onClose={() => history.back()}
+          onNavigate={(id) => window.location.assign(`/?location=${encodeURIComponent(id)}`)}
+        />
       </div>
     </main>
   );

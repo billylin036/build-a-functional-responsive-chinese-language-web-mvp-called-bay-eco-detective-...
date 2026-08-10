@@ -11,6 +11,7 @@ import type { EcoLocation, LocationType } from "@/data/types";
 import { loadAMap, type AMapMap, type AMapNamespace, type AMapOverlay } from "@/lib/amap-loader";
 import { wgs84ToGcj02 } from "@/lib/china-coordinates";
 import type { MapCanvasProps } from "@/components/map/MapCanvas";
+import { locationName } from "@/data/i18n";
 
 interface AmapCanvasProps extends MapCanvasProps {
   apiKey: string;
@@ -35,13 +36,14 @@ function createMarkerElement(
   loc: EcoLocation,
   options: { selected: boolean; onRoute: boolean; dry: boolean; year: number },
   onSelect: () => void,
+  displayName: string,
 ) {
   const color = COLORS[loc.type];
   const size = options.selected ? 24 : 16;
   const button = document.createElement("button");
   button.type = "button";
-  button.title = loc.type === "outfall" ? `${loc.name}，2015 年历史观察` : loc.name;
-  button.setAttribute("aria-label", `查看${loc.name}`);
+  button.title = displayName;
+  button.setAttribute("aria-label", displayName);
   button.style.cssText = [
     `width:${size}px`,
     `height:${size}px`,
@@ -85,6 +87,7 @@ export default function AmapCanvas({
   securityCode,
   serviceHost,
   onLoadError,
+  language,
 }: AmapCanvasProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<AMapMap | null>(null);
@@ -169,15 +172,16 @@ export default function AmapCanvas({
             year,
           },
           () => selectRef.current(location.id),
+          locationName(location, language),
         );
         const labelText = selected
-          ? `${location.name}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
+          ? `${locationName(location, language)}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
           : labelCode;
         const marker = new AMap.Marker({
           position: amapLngLat(location.latitude, location.longitude),
           content,
           offset: new AMap.Pixel(-((selected ? 24 : 16) / 2), -((selected ? 24 : 16) / 2)),
-          title: location.name,
+          title: locationName(location, language),
           zIndex: selected ? 160 : routeIds.includes(location.id) ? 140 : 120,
           label: {
             content: `<div style="white-space:nowrap;border:1px solid rgba(11,143,145,.35);border-radius:6px;background:rgba(255,255,255,.96);padding:${selected ? "5px 8px" : "2px 5px"};color:#082f3a;font-size:${selected ? "11px" : "10px"};font-weight:600;box-shadow:0 2px 8px rgba(6,41,54,.16)">${labelText}</div>`,
@@ -208,7 +212,7 @@ export default function AmapCanvas({
           })
         : null;
     if (routeRef.current) map.add(routeRef.current);
-  }, [activeLayers, currentRouteId, mapVersion, routeIds, selectedId, year]);
+  }, [activeLayers, currentRouteId, language, mapVersion, routeIds, selectedId, year]);
 
   useEffect(() => {
     if (recenterSignal > 0) {
@@ -228,6 +232,11 @@ export default function AmapCanvas({
   }, [focusSignal, selectedId]);
 
   return (
-    <div ref={elRef} className="h-full w-full" aria-label="深圳湾高德生态地图" role="application" />
+    <div
+      ref={elRef}
+      className="h-full w-full"
+      aria-label={language === "zh" ? "深圳湾高德生态地图" : "Shenzhen Bay ecological map"}
+      role="application"
+    />
   );
 }

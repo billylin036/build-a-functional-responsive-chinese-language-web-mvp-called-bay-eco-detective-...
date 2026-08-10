@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SAMPLING_QUEST_IDS } from "@/data/exploration";
 import { TOTAL_CHAPTERS, TOTAL_LEARNING_POINTS } from "@/data/learning";
 import { useAppState } from "@/lib/app-state";
+import { useLanguage } from "@/lib/language";
 
 export const Route = createFileRoute("/me")({
   head: () => ({
@@ -16,8 +17,13 @@ export const Route = createFileRoute("/me")({
       },
     ],
   }),
-  component: LearningResultsPage,
+  component: LearningResultsRoute,
 });
+
+function LearningResultsRoute() {
+  const { language } = useLanguage();
+  return language === "en" ? <EnglishLearningResultsPage /> : <LearningResultsPage />;
+}
 
 function LearningResultsPage() {
   const {
@@ -225,6 +231,100 @@ function LearningResultsPage() {
           </ul>
         )}
       </section>
+    </main>
+  );
+}
+
+function EnglishLearningResultsPage() {
+  const {
+    hydrated,
+    completedChapters,
+    completedLocationQuizzes,
+    activityRecords,
+    badges,
+    learnerProfile,
+    finalAssessment,
+    resetLearning,
+  } = useAppState();
+  if (!hydrated)
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-12 text-sm text-muted-foreground">
+        Loading progress…
+      </main>
+    );
+  const completedWorld = SAMPLING_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-8">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-navy">My Learning Progress</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Progress is stored in this browser.</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            window.confirm("Clear all learning progress and certificates?") && resetLearning()
+          }
+        >
+          <RotateCcw className="size-4" />
+          Reset
+        </Button>
+      </div>
+      <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Course chapters" value={`${completedChapters.length} / ${TOTAL_CHAPTERS}`} />
+        <Stat label="Evidence story" value={`${completedWorld} / 38`} />
+        <Stat
+          label="Map challenges"
+          value={`${completedLocationQuizzes.length} / ${TOTAL_LEARNING_POINTS}`}
+        />
+        <Stat label="Observation records" value={String(activityRecords.length)} />
+      </section>
+      <section className="mt-7 rounded-xl border bg-card p-6">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-navy">
+          <Award className="size-5 text-teal" />
+          Badges
+        </h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {badges.map((badge) => (
+            <div
+              key={badge.id}
+              className={`rounded-lg border p-4 ${badge.earned ? "border-mangrove/40 bg-paleeco" : "opacity-55"}`}
+            >
+              <p className="text-sm font-semibold text-navy">{badge.id}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{badge.desc}</p>
+              <p className="mt-2 text-xs font-medium text-teal">
+                {badge.earned ? "Unlocked" : "Locked"}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mt-7 rounded-xl border bg-card p-6">
+        <h2 className="text-lg font-semibold text-navy">Learning certificate</h2>
+        {completedChapters.length >= TOTAL_CHAPTERS && finalAssessment ? (
+          <>
+            <p className="mt-3 text-sm leading-7">
+              This certifies that <strong>{learnerProfile.name || "the learner"}</strong>
+              {learnerProfile.school ? ` from ${learnerProfile.school}` : ""} completed the Shenzhen
+              Bay evidence-learning course and final assessment.
+            </p>
+            <Button className="mt-4" variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" />
+              Print certificate
+            </Button>
+          </>
+        ) : (
+          <p className="mt-3 text-sm leading-7 text-muted-foreground">
+            Complete all four chapters and pass the final assessment to unlock the certificate.
+          </p>
+        )}
+      </section>
+      <Link to="/learn" className="mt-6 inline-flex text-sm text-teal underline">
+        Continue learning
+      </Link>
     </main>
   );
 }

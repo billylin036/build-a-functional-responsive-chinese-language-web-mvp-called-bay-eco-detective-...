@@ -11,6 +11,20 @@ export interface SamplingQuestRegion {
   badgeThreshold: number;
 }
 
+export interface SamplingStoryBeat {
+  index: number;
+  total: number;
+  actNumber: number;
+  actTitle: string;
+  actGoal: string;
+  title: string;
+  narrative: string;
+  learningGoal: string;
+  transition: string;
+  previousId?: string;
+  nextId?: string;
+}
+
 export interface SamplingPointProfile {
   region: SamplingQuestRegion;
   missionCode: string;
@@ -75,6 +89,60 @@ export const samplingQuestRegions: SamplingQuestRegion[] = [
 ];
 
 export const SAMPLING_QUEST_IDS = samplingQuestRegions.flatMap((region) => region.sampleIds);
+
+const ACT_GOALS = [
+  "先建立证据底线：读懂原始表值，区分现场记录、解释与结论。",
+  "追踪空间变化：用上游、支流、交汇后点位组成可比较的调查设计。",
+  "进入城市水网：识别降雨、时间、流量与人为活动等混杂因素。",
+  "抵达河海口：把潮位、盐淡水混合和重复采样纳入最终调查方案。",
+] as const;
+
+const LEARNING_GOALS = [
+  "只描述表格真正记录的内容，不把一次快速检测写成完整水质等级。",
+  "比较点位前，先确认单位、方法、时间和环境条件是否一致。",
+  "把观察到的差异当作线索，并提出还需要收集什么证据。",
+  "设计一个包含重复时间、参考点和现场条件的可复核方案。",
+] as const;
+
+/**
+ * 38 个点位按报告序号组成一条“证据探索线”。它是学习顺序，不声称这些
+ * 跨流域点位在自然水系中首尾相接。
+ */
+export function getSamplingStoryBeat(locationId: string): SamplingStoryBeat | null {
+  const index = SAMPLING_QUEST_IDS.indexOf(locationId);
+  const location = locations.find((item) => item.id === locationId);
+  const region = getSamplingQuestRegion(locationId);
+  if (index < 0 || !location || !region) return null;
+
+  const previousId = index > 0 ? SAMPLING_QUEST_IDS[index - 1] : undefined;
+  const nextId = index < SAMPLING_QUEST_IDS.length - 1 ? SAMPLING_QUEST_IDS[index + 1] : undefined;
+  const previous = previousId ? locations.find((item) => item.id === previousId) : undefined;
+  const next = nextId ? locations.find((item) => item.id === nextId) : undefined;
+  const isActOpening = region.sampleIds[0] === locationId;
+
+  return {
+    index: index + 1,
+    total: SAMPLING_QUEST_IDS.length,
+    actNumber: region.chapterNumber,
+    actTitle: region.title,
+    actGoal: ACT_GOALS[region.chapterNumber - 1]!,
+    title: isActOpening
+      ? `第 ${region.chapterNumber} 幕开启：${region.subtitle}`
+      : `证据站 ${index + 1}：${location.name}`,
+    narrative:
+      index === 0
+        ? `你加入珠江流域学生调查队，从 ${location.name} 开始建立第一份证据记录。此后每一站都会在上一站的方法上增加一个新的调查难题。`
+        : isActOpening
+          ? `完成“${previous?.name ?? "上一站"}”后，调查进入第 ${region.chapterNumber} 幕。来到 ${location.name}，你需要把前一幕学到的证据规则带进新的水文情境。`
+          : `带着“${previous?.name ?? "上一站"}”留下的线索，调查队来到 ${location.name}。不要急着比较高低，先判断两站的采样条件是否真的可比。`,
+    learningGoal: LEARNING_GOALS[index % LEARNING_GOALS.length]!,
+    transition: next
+      ? `完成本站挑战后，前往 ${next.name}，检验同一条证据规则在新地点是否仍然成立。`
+      : "这是第 38 站。请把沿途学到的证据规则整理成一份可复核的流域调查方案。",
+    ...(previousId ? { previousId } : {}),
+    ...(nextId ? { nextId } : {}),
+  };
+}
 
 export function getSamplingQuestRegion(locationId: string) {
   return samplingQuestRegions.find((region) => region.sampleIds.includes(locationId));

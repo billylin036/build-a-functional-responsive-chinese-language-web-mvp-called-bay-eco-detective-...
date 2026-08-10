@@ -10,6 +10,8 @@ import {
 } from "@/data/locations";
 import type { EcoLocation, LocationType } from "@/data/types";
 import { wgs84ToGcj02 } from "@/lib/china-coordinates";
+import type { Language } from "@/lib/language";
+import { locationName } from "@/data/i18n";
 
 export interface MapCanvasProps {
   activeLayers: LocationType[];
@@ -20,6 +22,7 @@ export interface MapCanvasProps {
   onSelect: (id: string) => void;
   recenterSignal: number;
   focusSignal: number;
+  language: Language;
 }
 
 interface LeafletMapCanvasProps extends MapCanvasProps {
@@ -124,6 +127,7 @@ export default function MapCanvas({
   onSelect,
   recenterSignal,
   focusSignal,
+  language,
   onTilesReady,
 }: LeafletMapCanvasProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
@@ -348,11 +352,11 @@ export default function MapCanvas({
             tooltipAnchor: [0, -(markerSize / 2 + 4)],
           }),
           keyboard: true,
-          title: loc.name,
+          title: locationName(loc, language),
         });
         marker.bindTooltip(
           selected
-            ? `${loc.name}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
+            ? `${locationName(loc, language)}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
             : labelCode,
           {
             direction: "top",
@@ -375,6 +379,7 @@ export default function MapCanvas({
     mapVersion,
     compactLabels,
     coordinateSystem,
+    language,
   ]);
 
   // 回到深圳湾
