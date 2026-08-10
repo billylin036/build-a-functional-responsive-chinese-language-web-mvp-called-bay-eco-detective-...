@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as LearnRouteImport } from './routes/learn'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as ObservationsRouteImport } from './routes/observations'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as LocationIdRouteImport } from './routes/location.$id'
 
@@ -36,6 +37,11 @@ const MeRoute = MeRouteImport.update({
   path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ObservationsRoute = ObservationsRouteImport.update({
+  id: '/observations',
+  path: '/observations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResourcesRoute = ResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/learn': typeof LearnRoute
   '/me': typeof MeRoute
+  '/observations': typeof ObservationsRoute
   '/resources': typeof ResourcesRoute
   '/location/$id': typeof LocationIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/learn': typeof LearnRoute
   '/me': typeof MeRoute
+  '/observations': typeof ObservationsRoute
   '/resources': typeof ResourcesRoute
   '/location/$id': typeof LocationIdRoute
 }
@@ -69,20 +77,36 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/learn': typeof LearnRoute
   '/me': typeof MeRoute
+  '/observations': typeof ObservationsRoute
   '/resources': typeof ResourcesRoute
   '/location/$id': typeof LocationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/learn' | '/me' | '/resources' | '/location/$id'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/learn'
+    | '/me'
+    | '/observations'
+    | '/resources'
+    | '/location/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/learn' | '/me' | '/resources' | '/location/$id'
+  to:
+    | '/'
+    | '/about'
+    | '/learn'
+    | '/me'
+    | '/observations'
+    | '/resources'
+    | '/location/$id'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/learn'
     | '/me'
+    | '/observations'
     | '/resources'
     | '/location/$id'
   fileRoutesById: FileRoutesById
@@ -92,6 +116,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   LearnRoute: typeof LearnRoute
   MeRoute: typeof MeRoute
+  ObservationsRoute: typeof ObservationsRoute
   ResourcesRoute: typeof ResourcesRoute
   LocationIdRoute: typeof LocationIdRoute
 }
@@ -126,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/observations': {
+      id: '/observations'
+      path: '/observations'
+      fullPath: '/observations'
+      preLoaderRoute: typeof ObservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resources': {
       id: '/resources'
       path: '/resources'
@@ -148,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   LearnRoute: LearnRoute,
   MeRoute: MeRoute,
+  ObservationsRoute: ObservationsRoute,
   ResourcesRoute: ResourcesRoute,
   LocationIdRoute: LocationIdRoute,
 }

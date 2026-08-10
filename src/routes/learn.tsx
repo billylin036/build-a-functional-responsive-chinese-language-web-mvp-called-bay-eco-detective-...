@@ -32,7 +32,7 @@ import {
   TOTAL_CHAPTERS,
   TOTAL_LEARNING_POINTS,
 } from "@/data/learning";
-import { locations } from "@/data/locations";
+import { locations, OUTFALL_QUEST_IDS } from "@/data/locations";
 import { useAppState } from "@/lib/app-state";
 import { useLanguage } from "@/lib/language";
 
@@ -50,6 +50,16 @@ export const Route = createFileRoute("/learn")({
   component: LearnRoutePage,
 });
 
+function completedChapterQuestionCount(
+  chapterId: string,
+  total: number,
+  completedChapters: string[],
+  progress: Record<string, { completedQuestionIds: string[]; total: number }>,
+) {
+  if (completedChapters.includes(chapterId)) return total;
+  return Math.min(progress[chapterId]?.completedQuestionIds.length ?? 0, total);
+}
+
 function LearnRoutePage() {
   const { language } = useLanguage();
   return language === "en" ? <EnglishLearnPage /> : <LearnPage />;
@@ -59,6 +69,7 @@ function LearnPage() {
   const {
     completedChapters,
     chapterAttempts,
+    chapterQuestionProgress,
     completedLocationQuizzes,
     finalAssessment,
     activityRecords,
@@ -66,6 +77,7 @@ function LearnPage() {
     learningComplete,
     updateLearnerProfile,
     completeChapter,
+    recordChapterQuestion,
     completeFinalAssessment,
   } = useAppState();
   const firstChapter = learningChapters[0]!;
@@ -77,10 +89,31 @@ function LearnPage() {
   const [review, setReview] = useState<Record<string, boolean> | null>(null);
   const activeChapter =
     learningChapters.find((chapter) => chapter.id === activeChapterId) ?? firstChapter;
-  const chapterProgress = Math.round((completedChapters.length / TOTAL_CHAPTERS) * 100);
+  const totalCourseQuestions = learningChapters.reduce(
+    (total, chapter) => total + chapter.quiz.length,
+    0,
+  );
+  const completedCourseQuestions = learningChapters.reduce(
+    (total, chapter) =>
+      total +
+      completedChapterQuestionCount(
+        chapter.id,
+        chapter.quiz.length,
+        completedChapters,
+        chapterQuestionProgress,
+      ),
+    0,
+  );
+  const chapterProgress = Math.round((completedCourseQuestions / totalCourseQuestions) * 100);
   const completedSamplingQuizzes = SAMPLING_QUEST_IDS.filter((id) =>
     completedLocationQuizzes.includes(id),
   );
+  const completedOutfallQuizzes = OUTFALL_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  );
+  const nextOutfallId =
+    OUTFALL_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id)) ?? OUTFALL_QUEST_IDS[0]!;
+  const nextOutfall = locations.find((location) => location.id === nextOutfallId);
   const explorationProgress = Math.round(
     (completedSamplingQuizzes.length / SAMPLING_QUEST_IDS.length) * 100,
   );
@@ -102,9 +135,9 @@ function LearnPage() {
           </div>
           <div className="rounded-lg border border-white/70 bg-white/85 p-4 shadow-sm">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-navy">章节进度</span>
+              <span className="font-medium text-navy">课程题目进度</span>
               <span className="text-teal">
-                {completedChapters.length} / {TOTAL_CHAPTERS}
+                {completedCourseQuestions} / {totalCourseQuestions}
               </span>
             </div>
             <Progress value={chapterProgress} className="mt-2" />
@@ -211,6 +244,40 @@ function LearnPage() {
         </div>
       </section>
 
+      <section className="mt-6 overflow-hidden rounded-xl border border-coral/25 bg-gradient-to-br from-coral/10 via-card to-card p-5 sm:p-6">
+        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_17rem] md:items-center">
+          <div>
+            <Badge className="bg-coral text-white hover:bg-coral">
+              HISTORICAL EVIDENCE SIDE QUEST
+            </Badge>
+            <h2 className="mt-3 text-xl font-semibold text-navy">2015 历史排口调查支线</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              11 个有公开 GPS
+              与现场描述的排口现在组成一条独立支线。每站训练不同能力：坐标重访、监测元数据、潮汐对照、异常描述、历史与现状边界等。答题完成会保存到班级进度。
+            </p>
+          </div>
+          <div className="rounded-lg border border-white/80 bg-white/90 p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-navy">排口支线进度</span>
+              <span className="font-mono text-coral">{completedOutfallQuizzes.length}/11</span>
+            </div>
+            <Progress
+              value={(completedOutfallQuizzes.length / OUTFALL_QUEST_IDS.length) * 100}
+              className="mt-2"
+            />
+            <a
+              href={`/?location=${encodeURIComponent(nextOutfallId)}`}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-coral px-3 py-2 text-xs font-semibold text-white"
+            >
+              <MapPin className="size-3.5" />
+              {completedOutfallQuizzes.length === 11
+                ? "重新查看 B1"
+                : `继续 ${nextOutfall?.name ?? "下一排口"}`}
+            </a>
+          </div>
+        </div>
+      </section>
+
       <QuestRewardsHub language="zh" />
 
       <section className="mt-8 rounded-lg border border-border bg-card p-4">
@@ -274,6 +341,12 @@ function LearnPage() {
               ? chapter.exploration.sampleIds.filter((id) => completedLocationQuizzes.includes(id))
                   .length
               : 0;
+            const questionProgress = completedChapterQuestionCount(
+              chapter.id,
+              chapter.quiz.length,
+              completedChapters,
+              chapterQuestionProgress,
+            );
             return (
               <button
                 key={chapter.id}
@@ -307,8 +380,14 @@ function LearnPage() {
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">{chapter.subtitle}</p>
                 <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
                   <span>{chapter.duration}</span>
-                  <span>{chapter.quiz.length} 题</span>
+                  <span>
+                    {questionProgress}/{chapter.quiz.length} 题完成
+                  </span>
                 </div>
+                <Progress
+                  value={(questionProgress / chapter.quiz.length) * 100}
+                  className="mt-2 h-1.5"
+                />
                 {chapter.exploration && (
                   <p className="mt-2 border-t border-current/10 pt-2 text-[11px] text-teal">
                     主线探索 {regionProgress}/{chapter.exploration.sampleIds.length}
@@ -321,10 +400,15 @@ function LearnPage() {
       </section>
 
       <ChapterLesson
+        key={`${activeChapter.id}-${completedChapters.includes(activeChapter.id) ? "complete" : "active"}`}
         chapter={activeChapter}
         completed={completedChapters.includes(activeChapter.id)}
         previousAttempts={chapterAttempts[activeChapter.id] ?? 0}
         completedLocationQuizzes={completedLocationQuizzes}
+        completedQuestionIds={chapterQuestionProgress[activeChapter.id]?.completedQuestionIds ?? []}
+        onQuestionComplete={(questionId) =>
+          recordChapterQuestion(activeChapter.id, questionId, activeChapter.quiz.length)
+        }
         onComplete={(attempts) => completeChapter(activeChapter.id, activeChapter.title, attempts)}
       />
 
@@ -788,16 +872,30 @@ const ENGLISH_FINAL_QUESTIONS: EnglishQuestion[] = [
 function EnglishLearnPage() {
   const {
     completedChapters,
+    chapterQuestionProgress,
     completedLocationQuizzes,
     finalAssessment,
     completeChapter,
+    recordChapterQuestion,
     completeFinalAssessment,
   } = useAppState();
   const [chapterIndex, setChapterIndex] = useState(() => {
     const next = ENGLISH_CHAPTERS.findIndex((chapter) => !completedChapters.includes(chapter.id));
     return next < 0 ? 0 : next;
   });
-  const [questionIndex, setQuestionIndex] = useState(0);
+  const [questionIndex, setQuestionIndex] = useState(() => {
+    const initialChapter =
+      ENGLISH_CHAPTERS[
+        ENGLISH_CHAPTERS.findIndex((item) => !completedChapters.includes(item.id)) < 0
+          ? 0
+          : ENGLISH_CHAPTERS.findIndex((item) => !completedChapters.includes(item.id))
+      ]!;
+    const completedIds = chapterQuestionProgress[initialChapter.id]?.completedQuestionIds ?? [];
+    const next = initialChapter.questions.findIndex(
+      (_, index) => !completedIds.includes(`${initialChapter.id}-q${index + 1}`),
+    );
+    return next < 0 ? 0 : next;
+  });
   const [picked, setPicked] = useState<number | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [finalAnswers, setFinalAnswers] = useState<Record<number, number>>({});
@@ -808,10 +906,35 @@ function EnglishLearnPage() {
   const completedStations = SAMPLING_QUEST_IDS.filter((id) =>
     completedLocationQuizzes.includes(id),
   ).length;
+  const completedOutfalls = OUTFALL_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
+  const nextEnglishOutfallId =
+    OUTFALL_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id)) ?? OUTFALL_QUEST_IDS[0]!;
+  const totalCourseQuestions = ENGLISH_CHAPTERS.reduce(
+    (total, item) => total + item.questions.length,
+    0,
+  );
+  const completedCourseQuestions = ENGLISH_CHAPTERS.reduce(
+    (total, item) =>
+      total +
+      completedChapterQuestionCount(
+        item.id,
+        item.questions.length,
+        completedChapters,
+        chapterQuestionProgress,
+      ),
+    0,
+  );
 
   const openChapter = (index: number) => {
+    const target = ENGLISH_CHAPTERS[index]!;
+    const completedIds = chapterQuestionProgress[target.id]?.completedQuestionIds ?? [];
+    const next = target.questions.findIndex(
+      (_, questionNumber) => !completedIds.includes(`${target.id}-q${questionNumber + 1}`),
+    );
     setChapterIndex(index);
-    setQuestionIndex(0);
+    setQuestionIndex(next < 0 ? 0 : next);
     setPicked(null);
     setAttempts(0);
   };
@@ -826,10 +949,12 @@ function EnglishLearnPage() {
           investigation, ecosystem evaluation and responsible citizen science. Questions test
           reasoning—not memory of event details.
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg border bg-white p-4">
-            <p className="text-sm font-medium text-navy">Course chapters</p>
-            <p className="mt-1 text-2xl font-semibold text-teal">{completedChapters.length} / 4</p>
+            <p className="text-sm font-medium text-navy">Course question progress</p>
+            <p className="mt-1 text-2xl font-semibold text-teal">
+              {completedCourseQuestions} / {totalCourseQuestions}
+            </p>
           </div>
           <div className="rounded-lg border bg-white p-4">
             <p className="text-sm font-medium text-navy">38-station evidence story</p>
@@ -841,6 +966,16 @@ function EnglishLearnPage() {
               Start or continue on the map
             </a>
           </div>
+          <div className="rounded-lg border bg-white p-4">
+            <p className="text-sm font-medium text-navy">2015 historical outfall quest</p>
+            <p className="mt-1 text-2xl font-semibold text-coral">{completedOutfalls} / 11</p>
+            <a
+              href={`/?location=${encodeURIComponent(nextEnglishOutfallId)}`}
+              className="mt-2 inline-flex text-xs font-medium text-teal underline"
+            >
+              Continue the outfall archive
+            </a>
+          </div>
         </div>
       </section>
 
@@ -850,6 +985,12 @@ function EnglishLearnPage() {
         {ENGLISH_CHAPTERS.map((item, index) => {
           const unlocked =
             index === 0 || completedChapters.includes(ENGLISH_CHAPTERS[index - 1]!.id);
+          const questionProgress = completedChapterQuestionCount(
+            item.id,
+            item.questions.length,
+            completedChapters,
+            chapterQuestionProgress,
+          );
           return (
             <button
               key={item.id}
@@ -863,6 +1004,13 @@ function EnglishLearnPage() {
                 {item.title.replace(/^Chapter \d · /, "")}
               </h2>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.subtitle}</p>
+              <p className="mt-2 text-xs font-medium text-teal">
+                {questionProgress}/{item.questions.length} questions
+              </p>
+              <Progress
+                value={(questionProgress / item.questions.length) * 100}
+                className="mt-2 h-1.5"
+              />
               {completedChapters.includes(item.id) && (
                 <p className="mt-2 text-xs font-medium text-mangrove">Completed</p>
               )}
@@ -906,6 +1054,13 @@ function EnglishLearnPage() {
                   onClick={() => {
                     setPicked(index);
                     setAttempts((value) => value + 1);
+                    if (index === question.answer) {
+                      recordChapterQuestion(
+                        chapter.id,
+                        `${chapter.id}-q${questionIndex + 1}`,
+                        chapter.questions.length,
+                      );
+                    }
                   }}
                   className={`block w-full rounded-lg border px-4 py-3 text-left text-sm ${picked === index ? (index === question.answer ? "border-mangrove bg-paleeco" : "border-coral bg-coral/5") : "hover:border-teal"}`}
                 >
@@ -1046,18 +1201,28 @@ function ChapterLesson({
   completed,
   previousAttempts,
   completedLocationQuizzes,
+  completedQuestionIds,
+  onQuestionComplete,
   onComplete,
 }: {
   chapter: CourseChapter;
   completed: boolean;
   previousAttempts: number;
   completedLocationQuizzes: string[];
+  completedQuestionIds: string[];
+  onQuestionComplete: (questionId: string) => void;
   onComplete: (attempts: number) => void;
 }) {
+  const firstIncompleteQuestionIndex = () => {
+    const index = chapter.quiz.findIndex(
+      (questionItem) => !completedQuestionIds.includes(questionItem.id),
+    );
+    return index < 0 ? 0 : index;
+  };
   const [stage, setStage] = useState<"reading" | "quiz" | "complete">(
     completed ? "complete" : "reading",
   );
-  const [questionIndex, setQuestionIndex] = useState(0);
+  const [questionIndex, setQuestionIndex] = useState(firstIncompleteQuestionIndex);
   const [picked, setPicked] = useState<number | null>(null);
   const [correct, setCorrect] = useState(false);
   const [attempts, setAttempts] = useState(0);
@@ -1072,14 +1237,6 @@ function ChapterLesson({
       chapter.exploration.sampleIds[0])
     : undefined;
   const nextQuestLocation = locations.find((location) => location.id === nextQuestId);
-
-  useEffect(() => {
-    setStage(completed ? "complete" : "reading");
-    setQuestionIndex(0);
-    setPicked(null);
-    setCorrect(false);
-    setAttempts(0);
-  }, [chapter.id, completed]);
 
   const restart = () => {
     setStage("reading");
@@ -1211,7 +1368,7 @@ function ChapterLesson({
             <Button
               onClick={() => {
                 setStage("quiz");
-                setQuestionIndex(0);
+                setQuestionIndex(firstIncompleteQuestionIndex());
                 setPicked(null);
                 setCorrect(false);
               }}
@@ -1258,9 +1415,11 @@ function ChapterLesson({
                     aria-pressed={selected}
                     onClick={() => {
                       if (correct) return;
+                      const isCorrect = optionIndex === question.answerIndex;
                       setAttempts((current) => current + 1);
                       setPicked(optionIndex);
-                      setCorrect(optionIndex === question.answerIndex);
+                      setCorrect(isCorrect);
+                      if (isCorrect) onQuestionComplete(question.id);
                     }}
                     className={`rounded-lg border px-4 py-3 text-left text-sm leading-6 transition-colors ${
                       selectedCorrect

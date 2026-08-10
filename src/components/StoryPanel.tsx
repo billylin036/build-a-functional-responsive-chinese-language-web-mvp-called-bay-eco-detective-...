@@ -15,7 +15,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { EcoLocation } from "@/data/types";
-import { locations, OUTFALL_DECADE_COMPARISON, OUTFALL_SOURCE } from "@/data/locations";
+import {
+  locations,
+  OUTFALL_DECADE_COMPARISON,
+  OUTFALL_QUEST_IDS,
+  OUTFALL_SOURCE,
+} from "@/data/locations";
 import {
   getSamplingPointProfile,
   getSamplingStoryBeat,
@@ -451,6 +456,62 @@ function SamplingStorylineCard({
   );
 }
 
+function OutfallStorylineCard({
+  location,
+  onNavigate,
+}: {
+  location: EcoLocation;
+  onNavigate: (id: string) => void;
+}) {
+  const index = OUTFALL_QUEST_IDS.indexOf(location.id);
+  const { completedLocationQuizzes } = useAppState();
+  if (index < 0) return null;
+  const module = getLearningModule(location.id);
+  const completedCount = OUTFALL_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
+  const previousId = OUTFALL_QUEST_IDS[index - 1];
+  const nextId = OUTFALL_QUEST_IDS[index + 1];
+
+  return (
+    <section className="rounded-lg border border-coral/30 bg-gradient-to-br from-coral/10 to-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="font-mono text-[11px] font-semibold text-coral">
+          历史排口支线 · 第 {index + 1} / {OUTFALL_QUEST_IDS.length} 站
+        </p>
+        <Badge variant="outline">
+          已完成 {completedCount}/{OUTFALL_QUEST_IDS.length}
+        </Badge>
+      </div>
+      <h3 className="mt-2 text-sm font-semibold text-navy">本关能力：{module.quiz.skill}</h3>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">{module.objective}</p>
+      <p className="mt-2 rounded-md bg-white/85 p-2.5 text-xs leading-5 text-navy">
+        任务不是判断这个排口今天是否污染，而是用 2015 年记录学习如何定位、重访、比较和表达历史证据。
+      </p>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          disabled={!previousId}
+          onClick={() => previousId && onNavigate(previousId)}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs text-navy disabled:opacity-40"
+        >
+          <ArrowLeft className="size-3.5" />
+          上一排口
+        </button>
+        <button
+          type="button"
+          disabled={!nextId}
+          onClick={() => nextId && onNavigate(nextId)}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs text-navy disabled:opacity-40"
+        >
+          下一排口
+          <ArrowRight className="size-3.5" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function OutfallSourceCard() {
   return (
     <section className="rounded-lg border border-teal/25 bg-paleeco p-3">
@@ -543,6 +604,144 @@ const EN_STATION_QUESTIONS = [
   },
 ] as const;
 
+const EN_OUTFALL_QUESTIONS = [
+  {
+    question: "What does B1's published GPS coordinate most directly support?",
+    options: [
+      "Returning to the documented site",
+      "Assigning a current water-quality class",
+      "Identifying a pollutant",
+      "Calculating annual discharge",
+    ],
+    answer: 0,
+    explanation:
+      "A coordinate answers where the historical observation was made; condition and cause require new evidence.",
+  },
+  {
+    question: "Which revisit note would make B2 most comparable over time?",
+    options: [
+      "Site, date, time, tide, rainfall, method and direct observations",
+      "The water looked bad",
+      "A photograph without time or place",
+      "The nearest building name only",
+    ],
+    answer: 0,
+    explanation: "Structured metadata lets another team understand and repeat the observation.",
+  },
+  {
+    question:
+      "The 2015 record at B3 mentioned odour and dark standing water. What is the defensible conclusion?",
+    options: [
+      "These were field clues recorded in 2015 and need current verification",
+      "They identify one pollutant with certainty",
+      "They prove the same condition today",
+      "They replace sampling",
+    ],
+    answer: 0,
+    explanation:
+      "Sensory observations are useful screening clues, but they are dated and do not identify chemicals by themselves.",
+  },
+  {
+    question: "B4 was described as having a relatively large flow. What should a revisit add?",
+    options: [
+      "A consistent flow estimate plus tide, rainfall and observation time",
+      "Only a closer photograph",
+      "A guess about annual volume",
+      "A different method at every visit",
+    ],
+    answer: 0,
+    explanation:
+      "Flow descriptions become more useful when the method and changing hydrological conditions are recorded.",
+  },
+  {
+    question:
+      "Why is D1 useful in a historical comparison even though its 2015 description was less dramatic?",
+    options: [
+      "Contrasting observations help prevent selecting only visibly unusual sites",
+      "It proves the site was pollution-free",
+      "It can replace all other outfalls",
+      "Clear water guarantees chemical safety",
+    ],
+    answer: 0,
+    explanation:
+      "Including quieter or less visible conditions reduces selection bias; appearance alone is not a safety test.",
+  },
+  {
+    question:
+      "What is the best way to test whether the condition at outfall 4-1 has changed since 2015?",
+    options: [
+      "Revisit the published coordinate with a documented, comparable method",
+      "Compare two unrelated online photographs",
+      "Treat the old description as current",
+      "Move the marker to a convenient site",
+    ],
+    answer: 0,
+    explanation: "A same-site revisit with transparent methods supports a historical comparison.",
+  },
+  {
+    question: "At 4-2, how should black colour, odour and sediment be used in an investigation?",
+    options: [
+      "As several field clues that guide sampling and alternative hypotheses",
+      "As proof of one responsible source",
+      "As exact chemical concentrations",
+      "As evidence that no repeat is needed",
+    ],
+    answer: 0,
+    explanation:
+      "Multiple sensory clues can guide follow-up, but source attribution needs controls and measurements.",
+  },
+  {
+    question: "The 4-3 record mentioned an oily-looking surface. What should a student report?",
+    options: [
+      "An observed surface film, with date and conditions, without naming its chemistry",
+      "Confirmed petroleum pollution",
+      "The responsible company",
+      "A laboratory result",
+    ],
+    answer: 0,
+    explanation:
+      "Visual appearance should be described precisely without turning it into an untested chemical identification.",
+  },
+  {
+    question:
+      "What is the most important lesson from the relatively clear 2015 description at 4-4?",
+    options: [
+      "Appearance is one dated observation and cannot establish current or complete water quality",
+      "Clear-looking water needs no monitoring",
+      "Colour gives every chemical concentration",
+      "One visit represents a decade",
+    ],
+    answer: 0,
+    explanation:
+      "Clear appearance is limited evidence; date, method and measured indicators still matter.",
+  },
+  {
+    question:
+      "How could 4-5 and 4-6 be compared without treating two nearby markers as independent proof?",
+    options: [
+      "Record connectivity, distance and identical methods, then repeat both sites",
+      "Count them as two separate causes",
+      "Use different units",
+      "Keep only the higher result",
+    ],
+    answer: 0,
+    explanation:
+      "Nearby outfalls may share hydrological context, so spatial dependence and comparable repeats should be documented.",
+  },
+  {
+    question: "After studying all 11 historical outfalls, what is the strongest final product?",
+    options: [
+      "A transparent revisit plan that preserves 2015 evidence and collects comparable current records",
+      "A claim that every site is unchanged",
+      "A ranking based only on old wording",
+      "A map without source dates",
+    ],
+    answer: 0,
+    explanation:
+      "Historical evidence is most useful when it guides a reproducible revisit without being misrepresented as current status.",
+  },
+] as const;
+
 function EnglishStationQuiz({ location }: { location: EcoLocation }) {
   const {
     quizSeed,
@@ -551,11 +750,14 @@ function EnglishStationQuiz({ location }: { location: EcoLocation }) {
     completedBonusQuestions,
     recordLocationAnswer,
   } = useAppState();
+  const outfallIndex = OUTFALL_QUEST_IDS.indexOf(location.id);
   const fallbackQuestion =
-    EN_STATION_QUESTIONS[
-      (location.waterSample?.sampleNumber ?? Number(location.id.slice(-2))) %
-        EN_STATION_QUESTIONS.length
-    ]!;
+    outfallIndex >= 0
+      ? EN_OUTFALL_QUESTIONS[outfallIndex]!
+      : EN_STATION_QUESTIONS[
+          (location.waterSample?.sampleNumber ?? Number(location.id.slice(-2))) %
+            EN_STATION_QUESTIONS.length
+        ]!;
   const personalizedQuestion = getPersonalizedStationQuiz(
     location,
     "en",
@@ -688,6 +890,12 @@ function EnglishStoryPanel({
   const completed = completedLocationQuizzes.includes(location.id);
   const act = beat ? EN_ACTS[beat.actNumber - 1]! : null;
   const next = beat?.nextId;
+  const outfallIndex = OUTFALL_QUEST_IDS.indexOf(location.id);
+  const completedOutfalls = OUTFALL_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
+  const previousOutfallId = outfallIndex > 0 ? OUTFALL_QUEST_IDS[outfallIndex - 1] : undefined;
+  const nextOutfallId = outfallIndex >= 0 ? OUTFALL_QUEST_IDS[outfallIndex + 1] : undefined;
 
   return (
     <div className="flex h-full flex-col">
@@ -754,6 +962,39 @@ function EnglishStoryPanel({
           </section>
         )}
 
+        {outfallIndex >= 0 && (
+          <section className="rounded-lg border border-coral/30 bg-gradient-to-br from-coral/10 to-card p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-mono text-[11px] font-semibold text-coral">
+                HISTORICAL OUTFALL QUEST · {outfallIndex + 1}/11
+              </p>
+              <Badge variant="outline">{completedOutfalls}/11 complete</Badge>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              Use the 2015 record to practise location, revisit design, comparison and evidence
+              boundaries—not to claim the outfall's current condition.
+            </p>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                disabled={!previousOutfallId}
+                onClick={() => previousOutfallId && onNavigate(previousOutfallId)}
+                className="inline-flex items-center gap-1 rounded-md border bg-white px-2.5 py-1.5 text-xs disabled:opacity-40"
+              >
+                <ArrowLeft className="size-3.5" /> Previous outfall
+              </button>
+              <button
+                type="button"
+                disabled={!nextOutfallId}
+                onClick={() => nextOutfallId && onNavigate(nextOutfallId)}
+                className="inline-flex items-center gap-1 rounded-md border bg-white px-2.5 py-1.5 text-xs disabled:opacity-40"
+              >
+                Next outfall <ArrowRight className="size-3.5" />
+              </button>
+            </div>
+          </section>
+        )}
+
         {beat && act && (
           <section className="rounded-lg border border-[#4F46E5]/30 bg-gradient-to-br from-[#4F46E5]/10 to-card p-4">
             <p className="font-mono text-[11px] font-medium text-[#4F46E5]">
@@ -801,6 +1042,19 @@ function EnglishStoryPanel({
         )}
 
         <EnglishStationQuiz location={location} />
+        <section className="rounded-lg border border-dashed border-teal/35 bg-card p-3">
+          <p className="text-xs font-semibold text-navy">Need to submit a field observation?</p>
+          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+            Complete the observation away from the computer, then use the separate Field Log page.
+            Joined-class records sync for teacher review.
+          </p>
+          <Link
+            className="mt-2 inline-flex text-xs font-medium text-teal underline"
+            to="/observations"
+          >
+            Open Field Log
+          </Link>
+        </section>
       </div>
     </div>
   );
@@ -908,6 +1162,10 @@ export function StoryPanel({
 
         {location.type === "outfall" && <OutfallSourceCard />}
 
+        {location.type === "outfall" && (
+          <OutfallStorylineCard location={location} onNavigate={onNavigate} />
+        )}
+
         {location.type === "sampling" && <WaterSampleCard location={location} />}
 
         {location.type === "sampling" && (
@@ -920,7 +1178,18 @@ export function StoryPanel({
         />
 
         <QuizBlock location={location} />
-        <ActivityBlock location={location} />
+        <section className="rounded-lg border border-dashed border-teal/35 bg-card p-3">
+          <p className="text-xs font-semibold text-navy">需要提交现场观察？</p>
+          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+            地图页只负责读资料与答题。观察完成后到独立记录页填写，加入班级后会自动同步给老师。
+          </p>
+          <Link
+            className="mt-2 inline-flex text-xs font-medium text-teal underline"
+            to="/observations"
+          >
+            打开观察记录页
+          </Link>
+        </section>
 
         <p className="pb-2 text-[11px] leading-5 text-muted-foreground">
           {location.type === "outfall"

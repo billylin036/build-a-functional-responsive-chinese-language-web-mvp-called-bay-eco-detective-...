@@ -180,6 +180,8 @@ const waterSampleLocations: EcoLocation[] = WATER_SAMPLES_2023.map((sample) => (
 /** 地图只展示有公开调查或报告表值支撑的地点。 */
 export const locations: EcoLocation[] = [...outfallLocations, ...waterSampleLocations];
 
+export const OUTFALL_QUEST_IDS = outfallLocations.map((location) => location.id);
+
 export const getLocation = (id: string) => locations.find((l) => l.id === id);
 
 export const getAnnual = (loc: EcoLocation, year: number) =>

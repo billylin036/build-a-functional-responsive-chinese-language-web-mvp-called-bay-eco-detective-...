@@ -41,12 +41,18 @@ export interface ActivityRecord {
   completedAt: string;
 }
 
+export interface ChapterQuestionProgress {
+  completedQuestionIds: string[];
+  total: number;
+}
+
 interface AppState {
   quizSeed: string;
   completedLocationQuizzes: string[];
   quizAttempts: Record<string, number>;
   completedChapters: string[];
   chapterAttempts: Record<string, number>;
+  chapterQuestionProgress: Record<string, ChapterQuestionProgress>;
   finalAssessment: FinalAssessmentResult | null;
   learnerProfile: LearnerProfile;
   learningHistory: LearningHistoryItem[];
@@ -73,6 +79,7 @@ const EMPTY: AppState = {
   quizAttempts: {},
   completedChapters: [],
   chapterAttempts: {},
+  chapterQuestionProgress: {},
   finalAssessment: null,
   learnerProfile: { name: "", school: "", className: "" },
   learningHistory: [],
@@ -106,6 +113,7 @@ interface Ctx extends AppState {
   badges: { id: string; desc: string; earned: boolean }[];
   recordLocationAnswer: (locationId: string, locationName: string, correct: boolean) => void;
   completeChapter: (chapterId: string, chapterTitle: string, attempts: number) => void;
+  recordChapterQuestion: (chapterId: string, questionId: string, total: number) => void;
   saveActivityRecord: (
     locationId: string,
     locationName: string,
@@ -373,6 +381,30 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const recordChapterQuestion = useCallback(
+    (chapterId: string, questionId: string, total: number) => {
+      setState((current) => {
+        const existing = current.chapterQuestionProgress[chapterId];
+        if (existing?.completedQuestionIds.includes(questionId) && existing.total === total) {
+          return current;
+        }
+        return {
+          ...current,
+          chapterQuestionProgress: {
+            ...current.chapterQuestionProgress,
+            [chapterId]: {
+              completedQuestionIds: existing?.completedQuestionIds.includes(questionId)
+                ? existing.completedQuestionIds
+                : [...(existing?.completedQuestionIds ?? []), questionId],
+              total,
+            },
+          },
+        };
+      });
+    },
+    [],
+  );
+
   const completeFinalAssessment = useCallback((score: number, total: number) => {
     const completedAt = new Date().toISOString();
     const certificateId = `SZBE-${completedAt.slice(0, 10).replaceAll("-", "")}-${Date.now().toString().slice(-6)}`;
@@ -565,6 +597,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     badges,
     recordLocationAnswer,
     completeChapter,
+    recordChapterQuestion,
     saveActivityRecord,
     completeFinalAssessment,
     recordBonusAnswer,

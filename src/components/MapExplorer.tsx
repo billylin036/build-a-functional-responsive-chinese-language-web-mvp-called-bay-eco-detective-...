@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, CircleHelp, Compass, Crosshair, GraduationCap, Info, X } from "lucide-react";
-import { locations } from "@/data/locations";
+import {
+  ArrowRight,
+  CircleHelp,
+  Compass,
+  Crosshair,
+  GraduationCap,
+  History,
+  Info,
+  X,
+} from "lucide-react";
+import { locations, OUTFALL_QUEST_IDS } from "@/data/locations";
 import type { LocationType } from "@/data/types";
 import { TOTAL_CHAPTERS } from "@/data/learning";
 import { SAMPLING_QUEST_IDS } from "@/data/exploration";
@@ -53,6 +62,11 @@ export function MapExplorer() {
   const currentQuestStation = currentRouteId
     ? SAMPLING_QUEST_IDS.indexOf(currentRouteId) + 1
     : SAMPLING_QUEST_IDS.length;
+  const currentOutfallId =
+    OUTFALL_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id)) ?? OUTFALL_QUEST_IDS[0]!;
+  const outfallQuestProgress = OUTFALL_QUEST_IDS.filter((id) =>
+    completedLocationQuizzes.includes(id),
+  ).length;
 
   const pick = useCallback(
     (id: string) => {
@@ -215,6 +229,23 @@ export function MapExplorer() {
               </span>
             </span>
             <ArrowRight className="ml-1 size-3.5 text-[#4F46E5] transition group-hover:translate-x-0.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => pick(currentOutfallId)}
+            className="group flex items-center gap-2 rounded-md border border-coral/30 bg-card/95 px-3 py-2 text-left text-xs text-navy shadow-sm transition hover:-translate-y-0.5 hover:border-coral/60 hover:shadow-md"
+            aria-label={tr("继续历史排口支线", "Continue the historical outfall quest")}
+          >
+            <span className="grid size-6 place-items-center rounded-full bg-coral/10">
+              <History className="size-3.5 text-coral" />
+            </span>
+            <span>
+              <span className="block font-medium">{tr("历史排口支线", "Outfall Archive")}</span>
+              <span className="block text-[10px] text-muted-foreground">
+                {tr(`继续 · ${outfallQuestProgress}/11`, `Continue · ${outfallQuestProgress}/11`)}
+              </span>
+            </span>
+            <ArrowRight className="ml-1 size-3.5 text-coral transition group-hover:translate-x-0.5" />
           </button>
         </div>
 

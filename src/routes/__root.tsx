@@ -126,6 +126,7 @@ function RootShell({ children }: { children: ReactNode }) {
 const NAV = [
   { to: "/", zh: "地图", en: "Map" },
   { to: "/learn", zh: "学习闯关", en: "Learning Quest" },
+  { to: "/observations", zh: "观察记录", en: "Field Log" },
   { to: "/resources", zh: "资料库", en: "Sources" },
   { to: "/me", zh: "学习成果", en: "My Progress" },
   { to: "/about", zh: "关于", en: "About" },
@@ -139,6 +140,7 @@ function AppChrome() {
     const englishTitles: Record<string, string> = {
       "/": "Bay Eco Detective | Interactive Environmental Map",
       "/learn": "Learning Quest | Bay Eco Detective",
+      "/observations": "Field Log | Bay Eco Detective",
       "/resources": "Sources | Bay Eco Detective",
       "/me": "My Progress | Bay Eco Detective",
       "/about": "About | Bay Eco Detective",
@@ -146,6 +148,7 @@ function AppChrome() {
     const chineseTitles: Record<string, string> = {
       "/": "湾区生态侦探 | 深圳湾互动科普地图",
       "/learn": "学习闯关 | 湾区生态侦探",
+      "/observations": "观察记录 | 湾区生态侦探",
       "/resources": "学习资料库 | 湾区生态侦探",
       "/me": "学习成果 | 湾区生态侦探",
       "/about": "关于项目与数据说明 | 湾区生态侦探",

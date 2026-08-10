@@ -26,6 +26,9 @@ import {
   type CloudProgressRecord,
 } from "@/lib/classroom-cloud";
 import { useAppState } from "@/lib/app-state";
+import { learningChapters } from "@/data/learning";
+import { OUTFALL_QUEST_IDS } from "@/data/locations";
+import { SAMPLING_QUEST_IDS } from "@/data/exploration";
 
 type Language = "zh" | "en";
 type StudentMode = "join" | "restore";
@@ -57,9 +60,50 @@ function getErrorMessage(error: unknown, language: Language) {
   return (ERROR_MESSAGES[code] ?? ERROR_MESSAGES["CLOUD_REQUEST_FAILED"])![language];
 }
 
-function progressCount(row: CloudProgressRecord, key: string) {
+function completedIds(row: CloudProgressRecord, key: string) {
   const value = row.progress[key];
-  return Array.isArray(value) ? value.length : 0;
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function chapterQuestionSummary(
+  row: CloudProgressRecord,
+  chapterId: string,
+  fallbackTotal: number,
+) {
+  const chapterCompleted = completedIds(row, "completedChapters").includes(chapterId);
+  const progress = row.progress["chapterQuestionProgress"];
+  if (!progress || typeof progress !== "object" || Array.isArray(progress)) {
+    return { completed: chapterCompleted ? fallbackTotal : 0, total: fallbackTotal };
+  }
+  const entry = (progress as Record<string, unknown>)[chapterId];
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    return { completed: chapterCompleted ? fallbackTotal : 0, total: fallbackTotal };
+  }
+  const data = entry as Record<string, unknown>;
+  const ids = Array.isArray(data["completedQuestionIds"])
+    ? data["completedQuestionIds"].filter((item): item is string => typeof item === "string")
+    : [];
+  const total = typeof data["total"] === "number" ? data["total"] : fallbackTotal;
+  return { completed: chapterCompleted ? total : Math.min(ids.length, total), total };
+}
+
+function observationRecords(row: CloudProgressRecord) {
+  const value = row.progress["activityRecords"];
+  return Array.isArray(value)
+    ? value.filter(
+        (
+          item,
+        ): item is {
+          id: string;
+          locationName: string;
+          activityTitle: string;
+          responses: Record<string, string>;
+          completedAt: string;
+        } => Boolean(item && typeof item === "object" && "id" in item),
+      )
+    : [];
 }
 
 export function ClassroomSyncPanel({ language }: { language: Language }) {
@@ -88,6 +132,7 @@ export function ClassroomSyncPanel({ language }: { language: Language }) {
     teacherCode: string;
   } | null>(null);
   const [teacherRows, setTeacherRows] = useState<CloudProgressRecord[] | null>(null);
+  const [selectedTeacherProfileId, setSelectedTeacherProfileId] = useState<string | null>(null);
   const [teacherBusy, setTeacherBusy] = useState(false);
 
   const statusText = (() => {
@@ -472,51 +517,154 @@ export function ClassroomSyncPanel({ language }: { language: Language }) {
           </div>
 
           {teacherRows ? (
-            <div className="mt-5 overflow-x-auto rounded-lg border border-border">
-              <table className="w-full min-w-[680px] text-left text-xs">
-                <thead className="bg-muted/60 text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2 font-medium">{t("昵称", "Nickname")}</th>
-                    <th className="px-3 py-2 font-medium">{t("章节", "Chapters")}</th>
-                    <th className="px-3 py-2 font-medium">{t("地图站点", "Map stations")}</th>
-                    <th className="px-3 py-2 font-medium">Bonus</th>
-                    <th className="px-3 py-2 font-medium">{t("证书", "Certificate")}</th>
-                    <th className="px-3 py-2 font-medium">{t("最近同步", "Last synced")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teacherRows.length === 0 ? (
+            <div className="mt-5">
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full min-w-[1040px] text-left text-xs">
+                  <thead className="bg-muted/60 text-muted-foreground">
                     <tr>
-                      <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
-                        {t("还没有学生加入。", "No learners have joined yet.")}
-                      </td>
+                      <th className="px-3 py-2 font-medium">{t("昵称", "Nickname")}</th>
+                      {learningChapters.map((chapter) => (
+                        <th key={chapter.id} className="px-3 py-2 font-medium">
+                          {t(`第${chapter.number}章题目`, `Chapter ${chapter.number}`)}
+                        </th>
+                      ))}
+                      <th className="px-3 py-2 font-medium">{t("38站主线", "38 stations")}</th>
+                      <th className="px-3 py-2 font-medium">{t("11排口支线", "11 outfalls")}</th>
+                      <th className="px-3 py-2 font-medium">{t("观察记录", "Field logs")}</th>
+                      <th className="px-3 py-2 font-medium">{t("最近同步", "Last synced")}</th>
+                      <th className="px-3 py-2 font-medium">{t("详情", "Details")}</th>
                     </tr>
-                  ) : (
-                    teacherRows.map((row) => (
-                      <tr key={row.profile_id} className="border-t border-border">
-                        <td className="px-3 py-2 font-medium text-navy">{row.display_name}</td>
-                        <td className="px-3 py-2">{progressCount(row, "completedChapters")} / 4</td>
-                        <td className="px-3 py-2">
-                          {progressCount(row, "completedLocationQuizzes")} / 38
-                        </td>
-                        <td className="px-3 py-2">
-                          {progressCount(row, "completedBonusQuestions")} / 7
-                        </td>
-                        <td className="px-3 py-2">
-                          {row.progress["finalAssessment"]
-                            ? t("已获得", "Earned")
-                            : t("未获得", "Not yet")}
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground">
-                          {new Date(row.updated_at).toLocaleString(
-                            language === "zh" ? "zh-CN" : "en-GB",
-                          )}
+                  </thead>
+                  <tbody>
+                    {teacherRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground">
+                          {t("还没有学生加入。", "No learners have joined yet.")}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      teacherRows.map((row) => {
+                        const locationIds = completedIds(row, "completedLocationQuizzes");
+                        return (
+                          <tr key={row.profile_id} className="border-t border-border">
+                            <td className="px-3 py-2 font-medium text-navy">{row.display_name}</td>
+                            {learningChapters.map((chapter) => {
+                              const summary = chapterQuestionSummary(
+                                row,
+                                chapter.id,
+                                chapter.quiz.length,
+                              );
+                              return (
+                                <td key={chapter.id} className="px-3 py-2 font-medium text-teal">
+                                  {summary.completed}/{summary.total}
+                                </td>
+                              );
+                            })}
+                            <td className="px-3 py-2">
+                              {SAMPLING_QUEST_IDS.filter((id) => locationIds.includes(id)).length} /
+                              38
+                            </td>
+                            <td className="px-3 py-2">
+                              {OUTFALL_QUEST_IDS.filter((id) => locationIds.includes(id)).length} /
+                              11
+                            </td>
+                            <td className="px-3 py-2">{observationRecords(row).length}</td>
+                            <td className="px-3 py-2 text-muted-foreground">
+                              {new Date(row.updated_at).toLocaleString(
+                                language === "zh" ? "zh-CN" : "en-GB",
+                              )}
+                            </td>
+                            <td className="px-3 py-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSelectedTeacherProfileId((current) =>
+                                    current === row.profile_id ? null : row.profile_id,
+                                  )
+                                }
+                                className="font-medium text-teal underline"
+                              >
+                                {selectedTeacherProfileId === row.profile_id
+                                  ? t("收起", "Hide")
+                                  : t("查看", "View")}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {selectedTeacherProfileId &&
+                (() => {
+                  const row = teacherRows.find(
+                    (item) => item.profile_id === selectedTeacherProfileId,
+                  );
+                  if (!row) return null;
+                  const records = observationRecords(row);
+                  return (
+                    <section className="mt-3 rounded-lg border border-teal/20 bg-paleeco p-4">
+                      <h3 className="text-sm font-semibold text-navy">
+                        {row.display_name} · {t("学习与观察详情", "Learning and field-log details")}
+                      </h3>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        {learningChapters.map((chapter) => {
+                          const summary = chapterQuestionSummary(
+                            row,
+                            chapter.id,
+                            chapter.quiz.length,
+                          );
+                          return (
+                            <div key={chapter.id} className="rounded-md border bg-white p-3">
+                              <p className="text-[11px] text-muted-foreground">
+                                {t(`第 ${chapter.number} 章`, `Chapter ${chapter.number}`)}
+                              </p>
+                              <p className="mt-1 text-lg font-semibold text-teal">
+                                {summary.completed}/{summary.total}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <h4 className="mt-4 text-xs font-semibold text-navy">
+                        {t(`观察记录（${records.length}）`, `Field logs (${records.length})`)}
+                      </h4>
+                      {records.length === 0 ? (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {t(
+                            "该学生尚未提交观察记录。",
+                            "This learner has not submitted a field log yet.",
+                          )}
+                        </p>
+                      ) : (
+                        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                          {records.slice(0, 20).map((record) => (
+                            <article key={record.id} className="rounded-md border bg-white p-3">
+                              <p className="text-xs font-semibold text-navy">
+                                {record.activityTitle}
+                              </p>
+                              <p className="mt-1 text-[11px] text-muted-foreground">
+                                {record.locationName} ·{" "}
+                                {new Date(record.completedAt).toLocaleString(
+                                  language === "zh" ? "zh-CN" : "en-GB",
+                                )}
+                              </p>
+                              <dl className="mt-2 space-y-1 text-[11px] leading-5 text-muted-foreground">
+                                {Object.entries(record.responses).map(([key, value]) => (
+                                  <div key={key}>
+                                    <dt className="inline font-medium text-navy">{key}: </dt>
+                                    <dd className="inline">{value}</dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })()}
             </div>
           ) : null}
 
@@ -524,8 +672,8 @@ export function ClassroomSyncPanel({ language }: { language: Language }) {
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-mangrove" />
             <p>
               {t(
-                "隐私设计：只保存昵称、学习进度和更新时间；不收集邮箱、电话或生日。恢复码和教师码分别控制访问权限。",
-                "Privacy: only nickname, learning progress, and update time are stored. No email, phone number, or birthday. Recovery and teacher codes control access.",
+                "隐私设计：保存昵称、学习进度、学生主动提交的观察记录和更新时间；不收集邮箱、电话或生日。恢复码和教师码分别控制访问权限。",
+                "Privacy: nickname, learning progress, learner-submitted field logs and update time are stored. No email, phone number or birthday is collected. Recovery and teacher codes control access.",
               )}
             </p>
           </div>
