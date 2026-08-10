@@ -138,14 +138,41 @@ function mapBounds(coordinateSystem: TileCoordinateSystem): [[number, number], [
   ];
 }
 
-function markerHtml(loc: EcoLocation, opts: { selected: boolean; onRoute: boolean; dry: boolean }) {
+interface MarkerVisualState {
+  selected: boolean;
+  current: boolean;
+  onRoute: boolean;
+  dry: boolean;
+}
+
+function markerSize(loc: EcoLocation, opts: Pick<MarkerVisualState, "selected" | "current">) {
+  if (loc.type === "sampling") return opts.selected ? 28 : opts.current ? 24 : 20;
+  return opts.selected ? 22 : opts.current ? 20 : 14;
+}
+
+function markerHtml(loc: EcoLocation, opts: MarkerVisualState) {
   const color = COLORS[loc.type];
-  const size = opts.selected ? 22 : 14;
+  const size = markerSize(loc, opts);
+
+  if (loc.type === "sampling") {
+    const coreSize = opts.selected ? 12 : opts.current ? 10 : 8;
+    const ring = opts.selected
+      ? "box-shadow:0 0 0 4px rgba(79,70,229,.24),0 5px 14px rgba(8,47,58,.28);"
+      : opts.current
+        ? "box-shadow:0 0 0 4px rgba(255,107,74,.38),0 3px 10px rgba(8,47,58,.2);"
+        : opts.onRoute
+          ? "box-shadow:0 0 0 3px rgba(103,168,91,.34),0 2px 8px rgba(8,47,58,.16);"
+          : "box-shadow:0 2px 8px rgba(8,47,58,.18);";
+    return `<span style="display:grid;place-items:center;box-sizing:border-box;width:${size}px;height:${size}px;border-radius:50%;background:rgba(79,70,229,.14);border:1px solid rgba(79,70,229,.45);${ring}"><span style="display:block;box-sizing:border-box;width:${coreSize}px;height:${coreSize}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,.96)"></span></span>`;
+  }
+
   const ring = opts.selected
-    ? "box-shadow:0 0 0 4px rgba(11,143,145,.35);"
-    : opts.onRoute
-      ? "box-shadow:0 0 0 3px rgba(255,107,74,.55);"
-      : "";
+    ? "box-shadow:0 0 0 4px rgba(11,143,145,.28),0 4px 12px rgba(8,47,58,.22);"
+    : opts.current
+      ? "box-shadow:0 0 0 4px rgba(255,107,74,.38);"
+      : opts.onRoute
+        ? "box-shadow:0 0 0 3px rgba(103,168,91,.34);"
+        : "box-shadow:0 1px 5px rgba(8,47,58,.2);";
   return `<span style="display:block;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;${ring}"></span>`;
 }
 
@@ -421,39 +448,52 @@ export default function MapCanvas({
       .filter((l) => activeLayers.includes(l.type))
       .forEach((loc) => {
         const dry = false;
-        const selected = selectedId === loc.id || currentRouteId === loc.id;
-        const markerSize = selected ? 22 : 14;
+        const selected = selectedId === loc.id;
+        const current = currentRouteId === loc.id;
+        const iconSize = markerSize(loc, { selected, current });
         const labelCode = markerCode(loc, language);
         const marker = L.marker(mapLatLng(loc.latitude, loc.longitude, coordinateSystem), {
           icon: L.divIcon({
             className: "eco-marker",
-            html: markerHtml(loc, { selected, onRoute: routeIds.includes(loc.id), dry }),
-            iconSize: [markerSize, markerSize],
-            iconAnchor: [markerSize / 2, markerSize / 2],
-            tooltipAnchor: [0, -(markerSize / 2 + 4)],
+            html: markerHtml(loc, {
+              selected,
+              current,
+              onRoute: routeIds.includes(loc.id),
+              dry,
+            }),
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [iconSize / 2, iconSize / 2],
+            tooltipAnchor: [0, -(iconSize / 2 + 4)],
           }),
           keyboard: true,
           title: locationName(loc, language),
+          zIndexOffset: selected ? 300 : current ? 220 : loc.type === "sampling" ? 100 : 0,
         });
         marker.bindTooltip(
           language === "en"
             ? selected
               ? `${locationName(loc, language)} | ${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
-              : labelCode
+              : current
+                ? `Continue · ${labelCode}`
+                : labelCode
             : selected
               ? `${locationName(loc, language)}｜${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`
-              : labelCode,
+              : current
+                ? `继续·${labelCode}`
+                : labelCode,
           {
             direction: "top",
-            permanent: loc.type !== "sampling" && (!compactLabels || selected),
+            permanent: current || (loc.type !== "sampling" && (!compactLabels || selected)),
             className: selected
               ? "eco-data-label eco-data-label--selected"
-              : "eco-data-label eco-data-label--compact",
+              : current
+                ? "eco-data-label eco-data-label--selected"
+                : "eco-data-label eco-data-label--compact",
           },
         );
         marker.on("click", () => selectRef.current(loc.id));
         marker.addTo(group);
-        if (selected) marker.openTooltip();
+        if (selected || current) marker.openTooltip();
       });
   }, [
     activeLayers,

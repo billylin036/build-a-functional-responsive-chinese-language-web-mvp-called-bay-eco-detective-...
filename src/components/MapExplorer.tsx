@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { CircleHelp, Compass, Crosshair, GraduationCap, Info, X } from "lucide-react";
+import { ArrowRight, CircleHelp, Compass, Crosshair, GraduationCap, Info, X } from "lucide-react";
 import { locations } from "@/data/locations";
 import type { LocationType } from "@/data/types";
 import { TOTAL_CHAPTERS } from "@/data/learning";
@@ -46,7 +46,13 @@ export function MapExplorer() {
 
   const selected = useMemo(() => locations.find((l) => l.id === selectedId) ?? null, [selectedId]);
   const routeIds = completedLocationQuizzes;
-  const currentRouteId = null;
+  const currentRouteId =
+    SAMPLING_QUEST_IDS.find((id) => !completedLocationQuizzes.includes(id)) ??
+    SAMPLING_QUEST_IDS.at(-1) ??
+    null;
+  const currentQuestStation = currentRouteId
+    ? SAMPLING_QUEST_IDS.indexOf(currentRouteId) + 1
+    : SAMPLING_QUEST_IDS.length;
 
   const pick = useCallback(
     (id: string) => {
@@ -137,8 +143,10 @@ export function MapExplorer() {
                   `${layerCounts.outfall} historical outfalls`,
                 )}
               </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="size-2 rounded-full bg-[#4F46E5]" />
+              <span className="inline-flex items-center gap-1.5">
+                <span className="grid size-3.5 place-items-center rounded-full border border-[#4F46E5]/45 bg-[#4F46E5]/15 shadow-sm">
+                  <span className="size-1.5 rounded-full bg-[#4F46E5]" />
+                </span>
                 {tr(
                   `${layerCounts.sampling} 个 2023 快速检测点`,
                   `${layerCounts.sampling} rapid-test stations from 2023`,
@@ -183,10 +191,31 @@ export function MapExplorer() {
               `Course ${completedChapters.length} / ${TOTAL_CHAPTERS}`,
             )}
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-xs text-navy shadow-sm">
-            <Compass className="size-3.5 text-[#4F46E5]" />
-            {tr("证据主线", "Evidence Quest")} {samplingQuestProgress} / {SAMPLING_QUEST_IDS.length}
-          </div>
+          <button
+            type="button"
+            onClick={() => currentRouteId && pick(currentRouteId)}
+            className="group flex items-center gap-2 rounded-md border border-[#4F46E5]/30 bg-card/95 px-3 py-2 text-left text-xs text-navy shadow-sm transition hover:-translate-y-0.5 hover:border-[#4F46E5]/60 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/35"
+            aria-label={tr(
+              `继续证据主线第 ${currentQuestStation} 站`,
+              `Continue the Evidence Quest at station ${currentQuestStation}`,
+            )}
+          >
+            <span className="grid size-6 place-items-center rounded-full bg-[#4F46E5]/10">
+              <Compass className="size-3.5 text-[#4F46E5]" />
+            </span>
+            <span>
+              <span className="block font-medium">{tr("证据主线", "Evidence Quest")}</span>
+              <span className="block text-[10px] text-muted-foreground">
+                {samplingQuestProgress === SAMPLING_QUEST_IDS.length
+                  ? tr("已完成·回看第 38 站", "Complete · revisit station 38")
+                  : tr(
+                      `继续第 ${currentQuestStation} 站 · ${samplingQuestProgress}/38`,
+                      `Continue station ${currentQuestStation} · ${samplingQuestProgress}/38`,
+                    )}
+              </span>
+            </span>
+            <ArrowRight className="ml-1 size-3.5 text-[#4F46E5] transition group-hover:translate-x-0.5" />
+          </button>
         </div>
 
         {tutorialOpen && (

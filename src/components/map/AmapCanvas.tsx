@@ -34,12 +34,29 @@ function amapLngLat(latitude: number, longitude: number): [number, number] {
 
 function createMarkerElement(
   loc: EcoLocation,
-  options: { selected: boolean; onRoute: boolean; dry: boolean; year: number },
+  options: {
+    selected: boolean;
+    current: boolean;
+    onRoute: boolean;
+    dry: boolean;
+    year: number;
+  },
   onSelect: () => void,
   displayName: string,
 ) {
   const color = COLORS[loc.type];
-  const size = options.selected ? 24 : 16;
+  const isSampling = loc.type === "sampling";
+  const size = isSampling
+    ? options.selected
+      ? 28
+      : options.current
+        ? 24
+        : 20
+    : options.selected
+      ? 22
+      : options.current
+        ? 20
+        : 14;
   const button = document.createElement("button");
   button.type = "button";
   button.title = displayName;
@@ -47,17 +64,36 @@ function createMarkerElement(
   button.style.cssText = [
     `width:${size}px`,
     `height:${size}px`,
-    "display:block",
+    "box-sizing:border-box",
+    "padding:0",
+    isSampling ? "display:grid" : "display:block",
+    isSampling ? "place-items:center" : "",
     "border-radius:9999px",
-    `background:${color}`,
-    "border:2px solid white",
+    isSampling ? "background:rgba(79,70,229,.14)" : `background:${color}`,
+    isSampling ? "border:1px solid rgba(79,70,229,.45)" : "border:2px solid white",
     "cursor:pointer",
     options.selected
-      ? "box-shadow:0 0 0 5px rgba(11,143,145,.35)"
-      : options.onRoute
-        ? "box-shadow:0 0 0 4px rgba(255,107,74,.48)"
-        : "box-shadow:0 1px 4px rgba(9,30,66,.3)",
+      ? "box-shadow:0 0 0 4px rgba(79,70,229,.24),0 5px 14px rgba(8,47,58,.28)"
+      : options.current
+        ? "box-shadow:0 0 0 4px rgba(255,107,74,.38),0 3px 10px rgba(8,47,58,.2)"
+        : options.onRoute
+          ? "box-shadow:0 0 0 3px rgba(103,168,91,.34),0 2px 8px rgba(8,47,58,.16)"
+          : "box-shadow:0 2px 8px rgba(8,47,58,.18)",
   ].join(";");
+  if (isSampling) {
+    const core = document.createElement("span");
+    const coreSize = options.selected ? 12 : options.current ? 10 : 8;
+    core.style.cssText = [
+      `width:${coreSize}px`,
+      `height:${coreSize}px`,
+      "display:block",
+      "box-sizing:border-box",
+      "border-radius:9999px",
+      `background:${color}`,
+      "border:2px solid rgba(255,255,255,.96)",
+    ].join(";");
+    button.appendChild(core);
+  }
   button.addEventListener("click", onSelect);
   return button;
 }
@@ -161,12 +197,14 @@ export default function AmapCanvas({
     markerRef.current = locations
       .filter((location) => activeLayers.includes(location.type))
       .map((location) => {
-        const selected = selectedId === location.id || currentRouteId === location.id;
+        const selected = selectedId === location.id;
+        const current = currentRouteId === location.id;
         const labelCode = markerCode(location);
         const content = createMarkerElement(
           location,
           {
             selected,
+            current,
             onRoute: routeIds.includes(location.id),
             dry: false,
             year,
@@ -176,13 +214,29 @@ export default function AmapCanvas({
         );
         const labelText = selected
           ? `${locationName(location, language)}｜${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
-          : labelCode;
+          : current
+            ? language === "en"
+              ? `Continue · ${labelCode}`
+              : `继续·${labelCode}`
+            : labelCode;
+        const iconSize =
+          location.type === "sampling"
+            ? selected
+              ? 28
+              : current
+                ? 24
+                : 20
+            : selected
+              ? 22
+              : current
+                ? 20
+                : 14;
         const marker = new AMap.Marker({
           position: amapLngLat(location.latitude, location.longitude),
           content,
-          offset: new AMap.Pixel(-((selected ? 24 : 16) / 2), -((selected ? 24 : 16) / 2)),
+          offset: new AMap.Pixel(-(iconSize / 2), -(iconSize / 2)),
           title: locationName(location, language),
-          zIndex: selected ? 160 : routeIds.includes(location.id) ? 140 : 120,
+          zIndex: selected ? 180 : current ? 160 : routeIds.includes(location.id) ? 140 : 120,
           label: {
             content: `<div style="white-space:nowrap;border:1px solid rgba(11,143,145,.35);border-radius:6px;background:rgba(255,255,255,.96);padding:${selected ? "5px 8px" : "2px 5px"};color:#082f3a;font-size:${selected ? "11px" : "10px"};font-weight:600;box-shadow:0 2px 8px rgba(6,41,54,.16)">${labelText}</div>`,
             direction: "top" as const,
