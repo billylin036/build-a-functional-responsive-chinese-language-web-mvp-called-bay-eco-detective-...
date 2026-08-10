@@ -48,10 +48,10 @@ function createMarkerElement(
   const isSampling = loc.type === "sampling";
   const size = isSampling
     ? options.selected
-      ? 28
+      ? 24
       : options.current
-        ? 24
-        : 20
+        ? 22
+        : 18
     : options.selected
       ? 22
       : options.current
@@ -69,28 +69,27 @@ function createMarkerElement(
     isSampling ? "display:grid" : "display:block",
     isSampling ? "place-items:center" : "",
     "border-radius:9999px",
-    isSampling ? "background:rgba(79,70,229,.14)" : `background:${color}`,
-    isSampling ? "border:1px solid rgba(79,70,229,.45)" : "border:2px solid white",
+    isSampling ? "background:#fff" : `background:${color}`,
+    isSampling ? `border:3px solid ${color}` : "border:2px solid white",
     "cursor:pointer",
     options.selected
-      ? "box-shadow:0 0 0 4px rgba(79,70,229,.24),0 5px 14px rgba(8,47,58,.28)"
+      ? "box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(79,70,229,.72),0 5px 14px rgba(8,47,58,.32)"
       : options.current
-        ? "box-shadow:0 0 0 4px rgba(255,107,74,.38),0 3px 10px rgba(8,47,58,.2)"
+        ? "box-shadow:0 0 0 3px #fff,0 0 0 6px #FF6B4A,0 4px 12px rgba(8,47,58,.3)"
         : options.onRoute
-          ? "box-shadow:0 0 0 3px rgba(103,168,91,.34),0 2px 8px rgba(8,47,58,.16)"
-          : "box-shadow:0 2px 8px rgba(8,47,58,.18)",
+          ? "box-shadow:0 0 0 3px #fff,0 0 0 5px #67A85B,0 3px 10px rgba(8,47,58,.28)"
+          : "box-shadow:0 0 0 2px rgba(255,255,255,.96),0 3px 9px rgba(8,47,58,.42)",
   ].join(";");
   if (isSampling) {
     const core = document.createElement("span");
-    const coreSize = options.selected ? 12 : options.current ? 10 : 8;
+    const coreSize = options.selected ? 10 : options.current ? 8 : 6;
     core.style.cssText = [
       `width:${coreSize}px`,
       `height:${coreSize}px`,
       "display:block",
       "box-sizing:border-box",
       "border-radius:9999px",
-      `background:${color}`,
-      "border:2px solid rgba(255,255,255,.96)",
+      "background:#312E81",
     ].join(";");
     button.appendChild(core);
   }
@@ -222,10 +221,10 @@ export default function AmapCanvas({
         const iconSize =
           location.type === "sampling"
             ? selected
-              ? 28
+              ? 24
               : current
-                ? 24
-                : 20
+                ? 22
+                : 18
             : selected
               ? 22
               : current

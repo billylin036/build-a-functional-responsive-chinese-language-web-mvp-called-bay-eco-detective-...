@@ -144,8 +144,8 @@ export function MapExplorer() {
                 )}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="grid size-3.5 place-items-center rounded-full border border-[#4F46E5]/45 bg-[#4F46E5]/15 shadow-sm">
-                  <span className="size-1.5 rounded-full bg-[#4F46E5]" />
+                <span className="grid size-3.5 place-items-center rounded-full border-2 border-[#4F46E5] bg-white shadow-sm ring-1 ring-white">
+                  <span className="size-1 rounded-full bg-[#312E81]" />
                 </span>
                 {tr(
                   `${layerCounts.sampling} 个 2023 快速检测点`,
