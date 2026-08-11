@@ -11,7 +11,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "湾区生态侦探 v1.0 公测版由 Billy Lin 开发，并与深圳市绿源环保志愿者协会开展数据合作，把生态保护资料转化为公众可探索的地图故事。",
+          "湾区生态侦探 v1.0 公测版由 Billy Lin 开发，网站数据来源为深圳市绿源环保志愿者协会，并把生态保护资料转化为公众可探索的地图故事。",
       },
       { property: "og:title", content: "关于项目与数据说明 | 湾区生态侦探 v1.0 公测版" },
       { property: "og:description", content: "项目背景、数据来源与证据边界说明。" },
@@ -27,10 +27,9 @@ function AboutPage() {
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold text-navy">关于项目</h1>
       <p className="mt-3 text-sm leading-7">
-        「湾区生态侦探 v1.0 公测版」由 <strong>Billy Lin</strong> 开发，并与
+        「湾区生态侦探 v1.0 公测版」由 <strong>Billy Lin</strong> 开发，网站数据来源为
         <strong>深圳市绿源环保志愿者协会</strong>
-        开展数据合作。网站把生态保护资料转化为一张面向学校的深圳湾学习地图：学生需要阅读证据、
-        解决情境题，并完成可重复的观察记录。
+        。网站把生态保护资料转化为一张面向学校的深圳湾学习地图：学生需要阅读证据、解决情境题，并完成可重复的观察记录。
       </p>
       <div className="mt-4 grid gap-3 rounded-lg border border-teal/25 bg-paleeco p-4 sm:grid-cols-2">
         <div>
@@ -41,9 +40,9 @@ function AboutPage() {
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium text-teal">数据合作</p>
+          <p className="text-xs font-medium text-teal">数据来源</p>
           <p className="mt-1 text-sm font-semibold text-navy">深圳市绿源环保志愿者协会</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">生态项目资料与环境数据合作</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">生态项目资料与环境数据来源</p>
         </div>
       </div>
 
@@ -90,7 +89,7 @@ function AboutPage() {
         </p>
       </section>
       <p className="mt-4 text-sm leading-7">
-        协会长期从事滨海湿地修复、生态保护、公众教育与环境监测工作。合作资料记录了坝光 8
+        协会长期从事滨海湿地修复、生态保护、公众教育与环境监测工作。绿源发布的资料记录了坝光 8
         个红树林修复区域的整体成果，以及 2015 年深圳湾 30 个排口首次调查和 2025
         年十年回访的总体结果。
       </p>
@@ -153,8 +152,8 @@ function EnglishAboutPage() {
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold text-navy">About this project</h1>
       <p className="mt-3 text-sm leading-7">
-        <strong>Bay Eco Detective v1.0 Beta</strong> was developed by <strong>Billy Lin</strong> in
-        data collaboration with the{" "}
+        <strong>Bay Eco Detective v1.0 Beta</strong> was developed by <strong>Billy Lin</strong>,
+        with data sourced from the{" "}
         <strong>Shenzhen Green Source Environmental Volunteers Association</strong>. It turns
         published environmental material into a school-oriented learning map where students read
         evidence, solve reasoning challenges and design reproducible observations.
@@ -168,12 +167,12 @@ function EnglishAboutPage() {
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium text-teal">Data collaboration</p>
+          <p className="text-xs font-medium text-teal">Data source</p>
           <p className="mt-1 text-sm font-semibold text-navy">
             Shenzhen Green Source Environmental Volunteers Association
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Environmental project material and data
+            Source of environmental project material and data
           </p>
         </div>
       </div>

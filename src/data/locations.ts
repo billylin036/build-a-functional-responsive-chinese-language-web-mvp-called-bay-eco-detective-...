@@ -11,7 +11,7 @@ export const OUTFALL_DECADE_COMPARISON = {
   revisitComplianceRate: 96.7,
   complianceChangePoints: 43.4,
   dryOutfallRate: 73.3,
-  sourceLabel: "绿源数据合作资料（截至 2026 年 3 月）",
+  sourceLabel: "数据来源：深圳市绿源环保志愿者协会（截至 2026 年 3 月）",
   publicRevisitSourceUrl: "https://www.szhb.org/about/jishi",
   pointLevelNote:
     "公开纪事确认 2025 年开展了深圳湾排水口十年调查回访；逐排口的 2025 原始观察与检测表尚未提供，因此不能把整体结果写成某一个排口的现状。",

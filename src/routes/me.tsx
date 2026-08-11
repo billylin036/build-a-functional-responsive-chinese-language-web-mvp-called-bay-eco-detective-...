@@ -225,7 +225,7 @@ function LearningResultsPage() {
             </div>
           </div>
           <p className="mt-6 text-[11px] text-muted-foreground">
-            数据合作：深圳市绿源环保志愿者协会
+            数据来源：深圳市绿源环保志愿者协会
           </p>
           <Button className="no-print mt-6" onClick={() => window.print()}>
             <Printer className="size-4" />
